@@ -1,0 +1,11 @@
+{
+  "name": "周期生活助手",
+  "short_name": "周期助手",
+  "description": "离线优先的经期、趋势与生活调养记录工具",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#171318",
+  "theme_color": "#171318",
+  "lang": "zh-CN",
+  "icons": []
+}

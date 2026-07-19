@@ -1,0 +1,22 @@
+name: 经期邮件提醒
+on:
+  schedule:
+    - cron: '17 17 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --omit=dev --ignore-scripts
+      - run: npm run remind
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
+          PARTNER_EMAIL: ${{ secrets.PARTNER_EMAIL }}

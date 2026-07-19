@@ -1,0 +1,13 @@
+{
+  "name": "period-life-helper",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/validate-data.mjs",
+    "remind": "node scripts/send-reminders.mjs"
+  },
+  "dependencies": {
+    "nodemailer": "^7.0.5"
+  }
+}

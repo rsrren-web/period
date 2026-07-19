@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#171318">
+  <meta name="description" content="离线优先的经期、周期趋势与生活调养记录工具">
+  <meta property="og:title" content="周期生活助手">
+  <meta property="og:description" content="记录 · 提醒 · 趋势 · 生活调养">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rsrren-web.github.io/period/">
+  <meta property="og:image" content="https://rsrren-web.github.io/period/public/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <title>周期生活助手</title>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">周期生活助手</p>
+      <h1>今天，听身体说话</h1>
+    </div>
+    <button id="installBtn" class="ghost" hidden>安装到手机</button>
+  </header>
+
+  <main>
+    <section id="hero" class="hero card" aria-live="polite">
+      <div class="phase-orbit"><span id="cycleDay">—</span><small>周期日</small></div>
+      <div class="hero-copy">
+        <span id="phasePill" class="pill">载入中</span>
+        <h2 id="nextPeriod">正在计算下一次经期</h2>
+        <p id="predictionDetail" class="muted"></p>
+        <div class="hero-actions">
+          <button id="startPeriodBtn" class="primary">今天月经开始</button>
+          <button id="openLogBtn" class="secondary">记录今天</button>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="主要页面">
+      <button class="tab active" data-view="today">今天</button>
+      <button class="tab" data-view="calendar">日历</button>
+      <button class="tab" data-view="insights">趋势</button>
+      <button class="tab" data-view="family">家人</button>
+      <button class="tab" data-view="settings">设置</button>
+    </nav>
+
+    <section id="today" class="view active">
+      <div class="grid two">
+        <article class="card advice-card">
+          <div class="section-head"><h2>今日节奏</h2><span class="tag">生活建议</span></div>
+          <div id="dailyAdvice"></div>
+        </article>
+        <article class="card tcm-card">
+          <div class="section-head"><h2>中医调养观察</h2><span class="tag amber">传统观点</span></div>
+          <div id="tcmAdvice"></div>
+          <p class="fineprint">依据自愿记录提供证候线索与食物级调养参考，不构成诊断或处方。</p>
+        </article>
+      </div>
+      <article class="card quick-log">
+        <div class="section-head"><h2>快速记录</h2><span id="saveState" class="muted">保存在本设备</span></div>
+        <form id="dailyForm">
+          <div class="metric-grid">
+            <label>情绪 <input name="mood" type="range" min="1" max="5" value="3"><output>平稳</output></label>
+            <label>精力 <input name="energy" type="range" min="1" max="5" value="3"><output>一般</output></label>
+            <label>睡眠 <input name="sleep" type="range" min="1" max="5" value="3"><output>一般</output></label>
+            <label>活动 <input name="activity" type="range" min="1" max="5" value="3"><output>适中</output></label>
+            <label>疼痛 <input name="pain" type="range" min="0" max="10" value="0"><output>0</output></label>
+            <label>压力 <input name="stress" type="range" min="1" max="5" value="3"><output>一般</output></label>
+          </div>
+          <fieldset>
+            <legend>今天出现了什么？</legend>
+            <div class="chips">
+              <label><input type="checkbox" name="symptom" value="嗜睡"><span>嗜睡</span></label>
+              <label><input type="checkbox" name="symptom" value="烦躁"><span>烦躁</span></label>
+              <label><input type="checkbox" name="symptom" value="情绪敏感"><span>情绪敏感</span></label>
+              <label><input type="checkbox" name="symptom" value="腹胀"><span>腹胀</span></label>
+              <label><input type="checkbox" name="symptom" value="头痛"><span>头痛</span></label>
+              <label><input type="checkbox" name="symptom" value="腰腹不适"><span>腰腹不适</span></label>
+              <label><input type="checkbox" name="symptom" value="怕冷"><span>怕冷</span></label>
+              <label><input type="checkbox" name="symptom" value="食欲变化"><span>食欲变化</span></label>
+            </div>
+          </fieldset>
+          <details>
+            <summary>可选敏感记录</summary>
+            <div class="optional-grid">
+              <label>基础体温（°C）<input name="temperature" type="number" min="34" max="42" step="0.01"></label>
+              <label>分泌物<select name="discharge"><option value="">未记录</option><option>干燥</option><option>黏稠</option><option>乳霜状</option><option>蛋清状</option><option>水样</option></select></label>
+              <label class="check"><input name="sexualActivity" type="checkbox">记录性生活</label>
+            </div>
+          </details>
+          <label class="notes">自由备注<textarea name="notes" rows="3" placeholder="身体感受、饮食、工作或其他想记的事……"></textarea></label>
+          <button class="primary" type="submit">保存今天记录</button>
+        </form>
+      </article>
+    </section>
+
+    <section id="calendar" class="view">
+      <article class="card">
+        <div class="section-head">
+          <button id="prevMonth" class="icon-btn" aria-label="上个月">‹</button>
+          <h2 id="calendarTitle"></h2>
+          <button id="nextMonth" class="icon-btn" aria-label="下个月">›</button>
+        </div>
+        <div class="weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+        <div class="legend"><span><i class="dot recorded"></i>已记录</span><span><i class="dot predicted"></i>预测范围</span><span><i class="dot ovulation"></i>排卵估算</span></div>
+      </article>
+      <article class="card history-card"><div class="section-head"><h2>完整周期历史</h2><span id="historyCount"></span></div><div id="historyList" class="history-list"></div></article>
+    </section>
+
+    <section id="insights" class="view">
+      <div id="summaryStats" class="stat-grid"></div>
+      <article class="card"><div class="section-head"><h2>周期长度变化</h2><span class="muted">最近36次</span></div><div id="cycleChart" class="bar-chart" role="img" aria-label="周期长度趋势图"></div></article>
+      <div class="grid two">
+        <article class="card"><h2>情绪与周期</h2><div id="moodInsight"></div></article>
+        <article class="card"><h2>睡眠 · 精力 · 活动</h2><div id="lifestyleInsight"></div></article>
+      </div>
+      <article class="card"><h2>数据质量与特殊变化</h2><div id="qualityInsight"></div></article>
+    </section>
+
+    <section id="family" class="view">
+      <article class="card family-card">
+        <span class="pill">家人只读视图</span>
+        <h2 id="familyPhase">当前周期状态</h2>
+        <p id="familySummary"></p>
+        <div id="familySupport" class="support-box"></div>
+        <p class="fineprint">家人可查看完整周期、基础体温和自由备注；性生活与分泌物不会显示。</p>
+      </article>
+      <article class="card"><h2>伴侣通知预览</h2><div id="emailPreview" class="email-preview"></div></article>
+    </section>
+
+    <section id="settings" class="view">
+      <div class="grid two">
+        <article class="card">
+          <h2>记录与共享</h2>
+          <label>使用阶段<select id="lifeStage"><option value="menarche">初潮阶段</option><option value="regular">常规周期</option><option value="perimenopause">围绝经期</option></select></label>
+          <label>共享编辑口令<input id="editPasscode" type="password" placeholder="仅在本设备验证"></label>
+          <button id="savePasscode" class="secondary">设置/更新口令</button>
+          <p class="fineprint">这是防误操作措施，不是账户系统；公开仓库中的经期历史仍可被互联网访问。</p>
+        </article>
+        <article class="card">
+          <h2>通知</h2>
+          <p>本人和伴侣：提前1天，计划每日约 9:17–10:17（温哥华当地时间，随夏令时变化）。</p>
+          <label class="check"><input id="ownerNotify" type="checkbox" checked>本人邮件</label>
+          <label class="check"><input id="partnerNotify" type="checkbox" checked>伴侣邮件</label>
+          <p class="fineprint">邮箱和 Gmail 应用密码通过 GitHub Secrets 配置，不写入公开代码。</p>
+        </article>
+      </div>
+      <article class="card">
+        <h2>数据与离线</h2>
+        <p id="offlineStatus"></p>
+        <div class="button-row">
+          <button id="exportBtn" class="secondary">导出完整备份</button>
+          <label class="file-btn">导入备份<input id="importInput" type="file" accept="application/json,.json"></label>
+          <button id="resetLocalBtn" class="danger">清除本设备新增记录</button>
+        </div>
+        <p class="fineprint">离线新增记录保存在当前浏览器；跨设备同步需要把导出的备份更新到 GitHub，或后续启用安全中转服务。</p>
+      </article>
+      <article class="card"><h2>版本信息</h2><p>数据架构 v1 · 预测规则 v1 · 截图历史导入 146 次</p></article>
+    </section>
+  </main>
+
+  <dialog id="periodDialog">
+    <form method="dialog" id="periodForm">
+      <div class="section-head"><h2>记录经期</h2><button value="cancel" class="icon-btn" aria-label="关闭">×</button></div>
+      <label>开始日期<input name="start" type="date" required></label>
+      <label>结束日期<input name="end" type="date"></label>
+      <label>类型<select name="type"><option value="period">正式月经</option><option value="spotting">点滴出血</option><option value="uncertain">暂不确定</option></select></label>
+      <div class="button-row"><button value="cancel" class="secondary">取消</button><button id="savePeriod" value="default" class="primary">保存</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
