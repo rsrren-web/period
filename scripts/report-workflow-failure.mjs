@@ -1,0 +1,12 @@
+const {GITHUB_TOKEN,GITHUB_REPOSITORY,GITHUB_RUN_ID,ALERT_TITLE,ALERT_MESSAGE}=process.env;
+if(!GITHUB_TOKEN||!GITHUB_REPOSITORY||!ALERT_TITLE)process.exit(0);
+const api=`https://api.github.com/repos/${GITHUB_REPOSITORY}`;
+const headers={accept:'application/vnd.github+json',authorization:`Bearer ${GITHUB_TOKEN}`,'x-github-api-version':'2022-11-28','content-type':'application/json'};
+const runUrl=`https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`;
+const body=`${ALERT_MESSAGE||'自动任务执行失败。'}\n\n运行记录：${runUrl}\n\n此告警不包含症状、口令、Token或邮件密码。`;
+const issues=await fetch(`${api}/issues?state=open&per_page=100`,{headers}).then(r=>r.ok?r.json():[]);
+const existing=issues.find(issue=>issue.title===ALERT_TITLE);
+const target=existing?`${api}/issues/${existing.number}/comments`:`${api}/issues`;
+const payload=existing?{body}:{title:ALERT_TITLE,body};
+const response=await fetch(target,{method:'POST',headers,body:JSON.stringify(payload)});
+if(!response.ok)throw new Error(`创建GitHub告警失败：${response.status}`);

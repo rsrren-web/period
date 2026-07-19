@@ -4,6 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#171318">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="周期助手">
   <meta name="description" content="离线优先的经期、周期趋势与生活调养记录工具">
   <meta property="og:title" content="周期生活助手">
   <meta property="og:description" content="记录 · 提醒 · 趋势 · 生活调养">
@@ -11,7 +15,8 @@
   <meta property="og:url" content="https://rsrren-web.github.io/period/">
   <meta property="og:image" content="https://rsrren-web.github.io/period/public/og.png">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" href="public/og.png" type="image/png">
+  <link rel="icon" href="public/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="public/icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
   <title>周期生活助手</title>
@@ -26,6 +31,7 @@
   </header>
 
   <main>
+    <div id="systemAlert" class="system-alert" role="alert" hidden></div>
     <section id="hero" class="hero card" aria-live="polite">
       <div class="phase-orbit"><span id="cycleDay">—</span><small>周期日</small></div>
       <div class="hero-copy">
@@ -92,7 +98,7 @@
             </div>
           </details>
           <label class="notes">自由备注<textarea name="notes" rows="3" placeholder="身体感受、饮食、工作或其他想记的事……"></textarea></label>
-          <button class="primary" type="submit">保存今天记录</button>
+          <div class="button-row"><button class="primary" type="submit">保存今天记录</button><button id="deleteTodayBtn" class="danger" type="button">删除今天记录</button></div>
         </form>
       </article>
     </section>
@@ -141,9 +147,10 @@
         <article class="card">
           <h2>记录与共享</h2>
           <label>使用阶段<select id="lifeStage"><option value="menarche">初潮阶段</option><option value="regular">常规周期</option><option value="perimenopause">围绝经期</option></select></label>
-          <label>共享编辑口令<input id="editPasscode" type="password" placeholder="仅在本设备验证"></label>
-          <button id="savePasscode" class="secondary">设置/更新口令</button>
-          <p class="fineprint">这是防误操作措施，不是账户系统；公开仓库中的经期历史仍可被互联网访问。</p>
+          <label>共享编辑口令<input id="editPasscode" type="password" minlength="12" maxlength="128" autocomplete="current-password" placeholder="至少12位，建议16–24位随机口令"></label>
+          <div class="button-row"><button id="savePasscode" class="secondary">验证此设备</button><button id="forgetDeviceBtn" class="ghost">忘记此设备</button></div>
+          <p id="deviceStatus" class="status-line"></p>
+          <p class="fineprint">每台设备首次验证一次，设备凭证有效180天；不会把口令写入 GitHub 或浏览器存储。公开仓库中的经期历史仍可被互联网访问。</p>
         </article>
         <article class="card">
           <h2>通知</h2>
@@ -156,6 +163,7 @@
       <article class="card">
         <h2>数据与离线</h2>
         <p id="offlineStatus"></p>
+        <p id="installStatus" class="status-line"></p>
         <div class="button-row">
           <button id="exportBtn" class="secondary">导出完整备份</button>
           <label class="file-btn">导入备份<input id="importInput" type="file" accept="application/json,.json"></label>

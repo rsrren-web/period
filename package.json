@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "check": "node scripts/validate-data.mjs",
+    "check": "node scripts/validate-data.mjs && node scripts/test-sync.mjs",
     "remind": "node scripts/send-reminders.mjs"
   },
   "dependencies": {
-    "nodemailer": "^7.0.5"
+    "nodemailer": "9.0.3"
   }
 }

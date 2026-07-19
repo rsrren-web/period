@@ -1,0 +1,27 @@
+name: 同步服务与Token到期检查
+on:
+  schedule:
+    - cron: '23 17 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 检查Worker和GitHub Token
+        run: node scripts/check-maintenance.mjs
+        env:
+          SYNC_STATUS_URL: https://period-sync.rsr-ren.workers.dev/status
+      - name: 创建明显的同步维护告警
+        if: ${{ failure() }}
+        run: node scripts/report-workflow-failure.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALERT_TITLE: '[同步维护] Worker异常或GitHub Token即将到期'
+          ALERT_MESSAGE: '同步服务检查失败，或GitHub Token已进入30天到期提醒期；请打开运行记录查看具体原因。'

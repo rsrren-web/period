@@ -11,6 +11,7 @@ on:
         default: false
 permissions:
   contents: read
+  issues: write
 jobs:
   remind:
     runs-on: ubuntu-latest
@@ -19,7 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --omit=dev --ignore-scripts
+      - run: npm ci --omit=dev --ignore-scripts
       - run: npm run remind
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
@@ -27,3 +28,10 @@ jobs:
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
           PARTNER_EMAIL: ${{ secrets.PARTNER_EMAIL }}
           FORCE_SEND_TEST: ${{ inputs.send_test || 'false' }}
+      - name: 创建明显的邮件失败告警
+        if: ${{ failure() }}
+        run: node scripts/report-workflow-failure.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALERT_TITLE: '[自动提醒故障] 经期邮件发送失败'
+          ALERT_MESSAGE: '经期提醒邮件任务失败；请打开运行记录检查 Gmail 应用密码、收件地址或依赖安装。'
