@@ -3,6 +3,12 @@ on:
   schedule:
     - cron: '17 17 * * *'
   workflow_dispatch:
+    inputs:
+      send_test:
+        description: '立即向本人和伴侣发送测试邮件'
+        required: true
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -20,3 +26,4 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
           PARTNER_EMAIL: ${{ secrets.PARTNER_EMAIL }}
+          FORCE_SEND_TEST: ${{ inputs.send_test || 'false' }}
