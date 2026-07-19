@@ -1,6 +1,8 @@
 const DATA_URL='./outputs/meiyou_periods_draft.csv';
 const STORE_KEY='period-helper-state-v1';
 const SETTINGS_KEY='period-helper-settings-v1';
+const SYNC_PENDING_KEY='period-helper-sync-pending-v1';
+const SYNC_URL=String(globalThis.PERIOD_SYNC_URL||'').replace(/\/$/,'');
 const DAY=86400000;
 const fmt=new Intl.DateTimeFormat('zh-CN',{month:'long',day:'numeric'});
 const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
@@ -18,6 +20,7 @@ let state=JSON.parse(localStorage.getItem(STORE_KEY)||'{"periods":[],"logs":{}}'
 let settings={lifeStage:'regular',ownerNotify:true,partnerNotify:true,...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')};
 let calendarCursor=new Date();
 let deferredInstall;
+let syncTimer;
 
 async function loadBase(){
   const text=await fetch(DATA_URL).then(r=>{if(!r.ok)throw new Error('历史数据载入失败');return r.text()});
@@ -48,8 +51,42 @@ function phaseInfo(){
   if(inPeriod){key='period';name='经期'}else if(today>=addDays(ovulation,-2)&&today<=addDays(ovulation,2)){key='ovulation';name='排卵估算期'}else if(today>=pmsStart){key='pms';name='经前阶段'}
   return {...m,today,cycleDay:cd,key,name,ovulation,pmsStart};
 }
-function save(){localStorage.setItem(STORE_KEY,JSON.stringify(state));render();showToast('已离线保存在本设备')}
+function save(){localStorage.setItem(STORE_KEY,JSON.stringify(state));localStorage.setItem(SYNC_PENDING_KEY,'yes');render();showToast(SYNC_URL?'已保存在本设备，准备同步':'已离线保存在本设备');scheduleSync()}
 function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
+function mergeUserState(local,remote){
+  const pending=localStorage.getItem(SYNC_PENDING_KEY)==='yes';
+  const ordered=pending?[...(remote.periods||[]),...(local.periods||[])]:[...(local.periods||[]),...(remote.periods||[])];
+  const periods=new Map(ordered.map(period=>[period.id||`${period.start}|${period.type||'period'}`,period]));
+  const logs={...(local.logs||{})};
+  Object.entries(remote.logs||{}).forEach(([date,log])=>{if(!logs[date]||String(log.updatedAt||'')>=String(logs[date].updatedAt||''))logs[date]=log});
+  return {periods:[...periods.values()],logs};
+}
+function setSyncStatus(text){const el=document.querySelector('#saveState');if(el)el.textContent=text}
+async function pullRemote(){
+  if(!SYNC_URL||!navigator.onLine)return;
+  try{
+    setSyncStatus('正在读取云端记录…');
+    const response=await fetch(`${SYNC_URL}/state`,{cache:'no-store'});const result=await response.json();
+    if(!response.ok||!result.ok)throw new Error(result.error||'读取失败');
+    state=mergeUserState(state,result.state||{});localStorage.setItem(STORE_KEY,JSON.stringify(state));
+    if(result.state?.settings&&localStorage.getItem(SYNC_PENDING_KEY)!=='yes'){settings={...settings,...result.state.settings};saveSettings()}
+    setSyncStatus(localStorage.getItem(SYNC_PENDING_KEY)==='yes'?'本设备有记录等待同步':'已与 GitHub 同步');
+  }catch(error){console.error(error);setSyncStatus('云端读取失败，本地记录仍可使用')}
+}
+function scheduleSync(){if(!SYNC_URL)return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(),500)}
+async function syncNow(){
+  if(!SYNC_URL)return;
+  if(!navigator.onLine){setSyncStatus('离线，联网后将自动同步');return}
+  let password=sessionStorage.getItem('period-sync-password');
+  if(!password){password=prompt('请输入云端共享编辑口令以同步到 GitHub')||'';if(!password){setSyncStatus('尚未同步：需要编辑口令');return}sessionStorage.setItem('period-sync-password',password)}
+  try{
+    setSyncStatus('正在同步到 GitHub…');
+    const response=await fetch(`${SYNC_URL}/sync`,{method:'POST',headers:{'content-type':'application/json','x-edit-password':password},body:JSON.stringify({schemaVersion:1,mutationId:crypto.randomUUID(),state:{periods:state.periods,logs:state.logs,settings:{lifeStage:settings.lifeStage,ownerNotify:settings.ownerNotify,partnerNotify:settings.partnerNotify}}})});
+    const result=await response.json();
+    if(!response.ok||!result.ok){if(response.status===401)sessionStorage.removeItem('period-sync-password');throw new Error(result.error||'同步失败')}
+    state=mergeUserState(state,result.state);localStorage.setItem(STORE_KEY,JSON.stringify(state));localStorage.removeItem(SYNC_PENDING_KEY);setSyncStatus('已同步到 GitHub');showToast('已同步到 GitHub');
+  }catch(error){console.error(error);localStorage.setItem(SYNC_PENDING_KEY,'yes');setSyncStatus(`${error.message}，点击记录后重试`)}
+}
 
 function render(){renderHero();renderAdvice();renderDailyForm();renderCalendar();renderHistory();renderInsights();renderFamily();renderSettings()}
 function renderHero(){
@@ -68,7 +105,7 @@ function renderDailyForm(){
   form.querySelectorAll('[name="symptom"]').forEach(input=>input.checked=(log.symptoms||[]).includes(input.value));
   form.elements.sexualActivity.checked=Boolean(log.sexualActivity);
   form.querySelectorAll('input[type=range]').forEach(input=>{input.nextElementSibling.textContent=input.name==='pain'?input.value:labels5[input.value-1]});
-  document.querySelector('#saveState').textContent=log.updatedAt?'今天的记录已保存在本设备':'保存在本设备';
+  document.querySelector('#saveState').textContent=SYNC_URL?(localStorage.getItem(SYNC_PENDING_KEY)==='yes'?'等待同步到 GitHub':'已与 GitHub 同步'):(log.updatedAt?'今天的记录已保存在本设备':'保存在本设备');
 }
 function renderAdvice(){
   const p=phaseInfo(),log=currentLog();
@@ -140,12 +177,12 @@ function renderSettings(){document.querySelector('#lifeStage').value=settings.li
 function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===id));window.scrollTo({top:0,behavior:'smooth'})}
 function showToast(msg){const t=document.querySelector('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 async function hash(text){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function ensureEditor(){if(!settings.passcodeHash)return true;if(sessionStorage.getItem('period-editor')==='yes')return true;const entered=prompt('请输入共享编辑口令');if(entered&&await hash(entered)===settings.passcodeHash){sessionStorage.setItem('period-editor','yes');return true}showToast('口令不正确');return false}
+async function ensureEditor(){if(!settings.passcodeHash)return true;if(sessionStorage.getItem('period-editor')==='yes')return true;const entered=prompt('请输入共享编辑口令');if(entered&&await hash(entered)===settings.passcodeHash){sessionStorage.setItem('period-editor','yes');sessionStorage.setItem('period-sync-password',entered);return true}showToast('口令不正确');return false}
 
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
 document.querySelector('#openLogBtn').addEventListener('click',()=>{showView('today');document.querySelector('.quick-log').scrollIntoView({behavior:'smooth'})});
 document.querySelector('#startPeriodBtn').addEventListener('click',async()=>{if(!await ensureEditor())return;const d=document.querySelector('#periodDialog'),today=iso(new Date());d.querySelector('[name=start]').value=today;d.querySelector('[name=end]').value=today;d.showModal()});
-document.querySelector('#periodForm').addEventListener('submit',async e=>{if(e.submitter?.value==='cancel')return; e.preventDefault();const f=new FormData(e.currentTarget),start=f.get('start'),end=f.get('end')||start;if(end<start)return showToast('结束日期不能早于开始日期');state.periods.push({start,end,type:f.get('type'),source:'本设备',status:'confirmed'});save();document.querySelector('#periodDialog').close()});
+document.querySelector('#periodForm').addEventListener('submit',async e=>{if(e.submitter?.value==='cancel')return; e.preventDefault();const f=new FormData(e.currentTarget),start=f.get('start'),end=f.get('end')||start;if(end<start)return showToast('结束日期不能早于开始日期');state.periods.push({id:crypto.randomUUID(),start,end,type:f.get('type'),source:'本设备',status:'confirmed',updatedAt:new Date().toISOString()});save();document.querySelector('#periodDialog').close()});
 document.querySelector('#dailyForm').addEventListener('submit',async e=>{e.preventDefault();if(!await ensureEditor())return;const f=new FormData(e.currentTarget);state.logs[iso(new Date())]={mood:f.get('mood'),energy:f.get('energy'),sleep:f.get('sleep'),activity:f.get('activity'),pain:f.get('pain'),stress:f.get('stress'),symptoms:f.getAll('symptom'),temperature:f.get('temperature'),discharge:f.get('discharge'),sexualActivity:f.get('sexualActivity')==='on',notes:f.get('notes'),updatedAt:new Date().toISOString()};save()});
 document.querySelectorAll('input[type=range]').forEach(input=>input.addEventListener('input',()=>{input.nextElementSibling.textContent=input.name==='pain'?input.value:labels5[input.value-1]}));
 document.querySelector('#prevMonth').addEventListener('click',()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar()});
@@ -153,13 +190,13 @@ document.querySelector('#nextMonth').addEventListener('click',()=>{calendarCurso
 document.querySelector('#lifeStage').addEventListener('change',e=>{settings.lifeStage=e.target.value;saveSettings();render()});
 document.querySelector('#ownerNotify').addEventListener('change',e=>{settings.ownerNotify=e.target.checked;saveSettings()});
 document.querySelector('#partnerNotify').addEventListener('change',e=>{settings.partnerNotify=e.target.checked;saveSettings()});
-document.querySelector('#savePasscode').addEventListener('click',async()=>{const v=document.querySelector('#editPasscode').value;if(v.length<4)return showToast('口令至少4位');settings.passcodeHash=await hash(v);saveSettings();sessionStorage.setItem('period-editor','yes');document.querySelector('#editPasscode').value='';showToast('编辑口令已设置在本设备')});
+document.querySelector('#savePasscode').addEventListener('click',async()=>{const v=document.querySelector('#editPasscode').value;if(v.length<4)return showToast('口令至少4位');settings.passcodeHash=await hash(v);saveSettings();sessionStorage.setItem('period-editor','yes');sessionStorage.setItem('period-sync-password',v);document.querySelector('#editPasscode').value='';showToast('编辑口令已设置在本设备')});
 document.querySelector('#exportBtn').addEventListener('click',()=>{const payload={schemaVersion:1,exportedAt:new Date().toISOString(),periods:allPeriods(),logs:state.logs,settings:{lifeStage:settings.lifeStage,ownerNotify:settings.ownerNotify,partnerNotify:settings.partnerNotify}};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));a.download=`period-backup-${iso(new Date())}.json`;a.click();URL.revokeObjectURL(a.href)});
 document.querySelector('#importInput').addEventListener('change',async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(data.schemaVersion!==1||!Array.isArray(data.periods))throw new Error();state.periods=data.periods.filter(p=>p.source!=='美柚截图');state.logs=data.logs||{};save()}catch{showToast('备份文件格式不正确')}});
 document.querySelector('#resetLocalBtn').addEventListener('click',async()=>{if(!await ensureEditor())return;if(confirm('只清除本设备新增记录？公开历史不会删除。')){state={periods:[],logs:{}};save()}});
-window.addEventListener('online',renderSettings);window.addEventListener('offline',renderSettings);
+window.addEventListener('online',()=>{renderSettings();if(localStorage.getItem(SYNC_PENDING_KEY)==='yes')syncNow()});window.addEventListener('offline',()=>{renderSettings();setSyncStatus('离线，联网后将自动同步')});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;document.querySelector('#installBtn').hidden=false});
 document.querySelector('#installBtn').addEventListener('click',async()=>{if(deferredInstall){deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;document.querySelector('#installBtn').hidden=true}});
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
-try{await loadBase();render();const params=new URLSearchParams(location.search);if(params.get('view')==='family'){showView('family');document.querySelector('.tabs').hidden=true;document.querySelector('.hero-actions').hidden=true}}catch(err){document.querySelector('#nextPeriod').textContent='历史数据载入失败';document.querySelector('#predictionDetail').textContent='请联网刷新或检查数据文件。';console.error(err)}
+try{await loadBase();await pullRemote();render();if(localStorage.getItem(SYNC_PENDING_KEY)==='yes')scheduleSync();const params=new URLSearchParams(location.search);if(params.get('view')==='family'){showView('family');document.querySelector('.tabs').hidden=true;document.querySelector('.hero-actions').hidden=true}}catch(err){document.querySelector('#nextPeriod').textContent='历史数据载入失败';document.querySelector('#predictionDetail').textContent='请联网刷新或检查数据文件。';console.error(err)}

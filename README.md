@@ -11,7 +11,7 @@
 - 可选基础体温、分泌物和性生活记录
 - 家人只读视图；不展示性生活和分泌物
 - 传统中医证候线索和食物级调养建议，不诊断、不推荐中药
-- PWA 离线缓存、JSON 导入导出和本设备编辑口令
+- PWA 离线缓存、JSON 导入导出、本设备编辑口令和 GitHub 自动同步
 - GitHub Actions Gmail 提醒模板
 
 ## 数据边界
@@ -29,9 +29,11 @@
 
 不要把应用密码写入代码、Issue 或普通仓库文件。定时任务每天 17:17 UTC 运行，对应温哥华约上午 9:17（冬令时）或 10:17（夏令时）。只有日期等于中心预测日前一天才发信。
 
-## 当前同步方式
+## 自动同步
 
-纯 GitHub Pages 无法安全地从浏览器直接写回仓库，因为写入凭据不能放在公开网页中。第一版先离线记录并导出 JSON；需要更新公开历史时，将确认后的日期更新到 `outputs/meiyou_periods_draft.csv`。以后如需自动同步，可增加一个只保存写入凭据的免费 Cloudflare Worker。
+手机记录先保存在浏览器，然后由 `period-sync` Cloudflare Worker 验证共享编辑口令，并把新增数据合并写入 `data/user-data.json`。GitHub Token 和编辑口令只存在 Cloudflare Secrets 中，不进入公开网页或仓库。离线时记录保留在本机，恢复网络后重试；JSON 导出继续作为独立备份。
+
+Worker 源码和非敏感配置位于 `worker/`，网页端地址位于 `sync-config.js`。GitHub Actions 邮件提醒同时读取截图历史和已同步的正式月经记录。
 
 ## 本地检查
 

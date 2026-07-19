@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "revision": 0,
+  "updatedAt": null,
+  "periods": [],
+  "logs": {},
+  "settings": {
+    "lifeStage": "regular",
+    "ownerNotify": true,
+    "partnerNotify": true
+  },
+  "appliedMutations": []
+}

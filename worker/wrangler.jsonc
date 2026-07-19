@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "period-sync",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-19",
+  "workers_dev": true,
+  "vars": {
+    "GITHUB_OWNER": "rsrren-web",
+    "GITHUB_REPO": "period",
+    "GITHUB_BRANCH": "main",
+    "DATA_PATH": "data/user-data.json",
+    "ALLOWED_ORIGIN": "https://rsrren-web.github.io"
+  }
+}

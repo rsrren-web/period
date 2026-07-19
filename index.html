@@ -161,9 +161,9 @@
           <label class="file-btn">导入备份<input id="importInput" type="file" accept="application/json,.json"></label>
           <button id="resetLocalBtn" class="danger">清除本设备新增记录</button>
         </div>
-        <p class="fineprint">离线新增记录保存在当前浏览器；跨设备同步需要把导出的备份更新到 GitHub，或后续启用安全中转服务。</p>
+        <p class="fineprint">离线新增记录会先保存在当前浏览器；恢复联网并输入共享编辑口令后，将通过安全中转服务自动写回 GitHub。仍建议定期导出备份。</p>
       </article>
-      <article class="card"><h2>版本信息</h2><p>数据架构 v1 · 预测规则 v1 · 截图历史导入 146 次</p></article>
+      <article class="card"><h2>版本信息</h2><p>数据架构 v1 · 自动同步 v1 · 预测规则 v1 · 截图历史导入 146 次</p></article>
     </section>
   </main>
 
@@ -178,6 +178,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status"></div>
+  <script src="sync-config.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

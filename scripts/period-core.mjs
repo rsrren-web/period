@@ -1,9 +1,22 @@
 import fs from 'node:fs';
 
-export function loadPeriods(path='outputs/meiyou_periods_draft.csv'){
+export function loadUserData(path='data/user-data.json'){
+  if(!fs.existsSync(path))return {periods:[],logs:{},settings:{ownerNotify:true,partnerNotify:true}};
+  return JSON.parse(fs.readFileSync(path,'utf8'));
+}
+
+export function loadPeriods(path='outputs/meiyou_periods_draft.csv',userPath='data/user-data.json'){
   const text=fs.readFileSync(path,'utf8').trim();
   const lines=text.split(/\r?\n/);const headers=lines.shift().split(',');
-  return lines.map(line=>{const parts=line.split(',');return Object.fromEntries(headers.map((h,i)=>[h,parts[i]||'']))}).sort((a,b)=>a.period_start.localeCompare(b.period_start));
+  const imported=lines.map(line=>{const parts=line.split(',');return Object.fromEntries(headers.map((h,i)=>[h,parts[i]||'']))});
+  let added=[];
+  if(fs.existsSync(userPath)){
+    const user=loadUserData(userPath);
+    added=(user.periods||[]).filter(period=>period.type==='period').map(period=>({period_start:period.start,period_end:period.end,source:'synced_web_app',status:period.status||'confirmed'}));
+  }
+  const byStart=new Map(imported.map(period=>[period.period_start,period]));
+  added.forEach(period=>byStart.set(period.period_start,period));
+  return [...byStart.values()].sort((a,b)=>a.period_start.localeCompare(b.period_start));
 }
 export const asDate=s=>new Date(`${s}T12:00:00Z`);
 export const days=(a,b)=>Math.round((asDate(b)-asDate(a))/86400000);
