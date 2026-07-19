@@ -1,13 +1,33 @@
 {
   "schemaVersion": 1,
-  "revision": 0,
-  "updatedAt": null,
+  "revision": 1,
+  "updatedAt": "2026-07-19T22:39:04.808Z",
   "periods": [],
-  "logs": {},
+  "logs": {
+    "2026-07-19": {
+      "mood": "4",
+      "energy": "2",
+      "sleep": "2",
+      "activity": "1",
+      "pain": "0",
+      "stress": "3",
+      "symptoms": [
+        "嗜睡",
+        "情绪敏感"
+      ],
+      "temperature": "",
+      "discharge": "乳霜状",
+      "sexualActivity": false,
+      "notes": "",
+      "updatedAt": "2026-07-19T22:38:53.297Z"
+    }
+  },
   "settings": {
     "lifeStage": "regular",
     "ownerNotify": true,
     "partnerNotify": true
   },
-  "appliedMutations": []
+  "appliedMutations": [
+    "c8dea232-a55f-4cc5-8af6-2e5398d4c575"
+  ]
 }
