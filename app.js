@@ -101,7 +101,14 @@ function renderInsights(){
   const unusual=m.intervals.filter(x=>x.length<21||x.length>35);
   document.querySelector('#qualityInsight').innerHTML=`<p>历史中有 <strong>${unusual.length}</strong> 个周期开始间隔在21–35天之外。它们被保留，不会自动删除。</p><p class="muted">当前历史来自截图转录；已确认的2019年18天周期将保留，但在预测中使用稳健中位数降低单次极端值影响。</p>`;
 }
-function phaseForDate(date,m){if(m.ps.some(p=>inRange(date,p.start,p.end)))return'period';if(inRange(date,addDays(m.next,-16),addDays(m.next,-12)))return'ovulation';if(date>=addDays(m.next,-7))return'pms';return'follicular'}
+function phaseForDate(date,m){
+  if(m.ps.some(p=>inRange(date,p.start,p.end)))return'period';
+  const starts=m.ps.map(p=>p.start).sort();
+  const nextStart=starts.find(start=>start>date)||m.next;
+  if(inRange(date,addDays(nextStart,-16),addDays(nextStart,-12)))return'ovulation';
+  if(inRange(date,addDays(nextStart,-7),addDays(nextStart,-1)))return'pms';
+  return'follicular';
+}
 function phaseAverages(groups,key){const names={period:'经期',follicular:'卵泡期',ovulation:'排卵估算期',pms:'经前阶段'};return Object.entries(groups).filter(([,a])=>a.length).map(([k,a])=>`<div class="insight-line">${names[k]}：${mean(a.map(x=>Number(x[key])||3)).toFixed(1)}/5（${a.length}条）</div>`).join('')}
 function bestPhase(groups,key){const entries=Object.entries(groups).filter(([,a])=>a.length).map(([k,a])=>[k,mean(a.map(x=>Number(x[key])||3))]).sort((a,b)=>b[1]-a[1]);return entries.length?`${({period:'经期',follicular:'卵泡期',ovulation:'排卵估算期',pms:'经前阶段'})[entries[0][0]]}记录相对较高`:'数据不足'}
 function renderFamily(){
