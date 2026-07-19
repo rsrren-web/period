@@ -23,6 +23,10 @@ jobs:
           node-version: 22
       - run: node scripts/validate-data.mjs
       - uses: actions/configure-pages@v5
+        with:
+          # The repository starts without a Pages site. Let this workflow create it
+          # and set the build source to GitHub Actions on the first successful run.
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

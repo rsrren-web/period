@@ -10,6 +10,7 @@ const addDays=(s,n)=>{const d=parseDate(s);d.setDate(d.getDate()+n);return iso(d
 const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[Math.floor(s.length/2)]:0};
 const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 const labels5=['很低','偏低','一般','较好','很好'];
 
 let basePeriods=[];
@@ -50,7 +51,7 @@ function phaseInfo(){
 function save(){localStorage.setItem(STORE_KEY,JSON.stringify(state));render();showToast('已离线保存在本设备')}
 function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
 
-function render(){renderHero();renderAdvice();renderCalendar();renderHistory();renderInsights();renderFamily();renderSettings()}
+function render(){renderHero();renderAdvice();renderDailyForm();renderCalendar();renderHistory();renderInsights();renderFamily();renderSettings()}
 function renderHero(){
   const p=phaseInfo();
   document.querySelector('#cycleDay').textContent=p.cycleDay>0?p.cycleDay:'—';
@@ -59,6 +60,16 @@ function renderHero(){
   document.querySelector('#predictionDetail').textContent=`较可能在 ${fmt.format(parseDate(p.windowStart))}–${fmt.format(parseDate(p.windowEnd))}，预测可信度${p.confidence}；近期中心周期约 ${p.center} 天。`;
 }
 function currentLog(){return state.logs[iso(new Date())]||{}}
+function renderDailyForm(){
+  const form=document.querySelector('#dailyForm'),log=currentLog();
+  ['mood','energy','sleep','activity','pain','stress','temperature','discharge','notes'].forEach(name=>{
+    if(log[name]!==undefined&&form.elements[name])form.elements[name].value=log[name];
+  });
+  form.querySelectorAll('[name="symptom"]').forEach(input=>input.checked=(log.symptoms||[]).includes(input.value));
+  form.elements.sexualActivity.checked=Boolean(log.sexualActivity);
+  form.querySelectorAll('input[type=range]').forEach(input=>{input.nextElementSibling.textContent=input.name==='pain'?input.value:labels5[input.value-1]});
+  document.querySelector('#saveState').textContent=log.updatedAt?'今天的记录已保存在本设备':'保存在本设备';
+}
 function renderAdvice(){
   const p=phaseInfo(),log=currentLog();
   const phaseAdvice={
@@ -91,7 +102,7 @@ function renderHistory(){
 }
 function renderInsights(){
   const m=cycleModel(),cycles=m.intervals.map(x=>x.length),periodDays=m.ps.map(p=>days(p.start,p.end)+1),recent=cycles.slice(-12);
-  const stats=[['29天',`全部中位周期`],[`${mean(recent).toFixed(1)}天`,'近12次平均'],[`${Math.min(...recent)}–${Math.max(...recent)}天`,'近12次范围'],[`${mean(periodDays.slice(-12)).toFixed(1)}天`,'近12次经期']];
+  const stats=[[`${median(cycles)}天`,`全部中位周期`],[`${mean(recent).toFixed(1)}天`,'近12次平均'],[`${Math.min(...recent)}–${Math.max(...recent)}天`,'近12次范围'],[`${mean(periodDays.slice(-12)).toFixed(1)}天`,'近12次经期']];
   document.querySelector('#summaryStats').innerHTML=stats.map(([v,l])=>`<div class="stat"><strong>${v}</strong><span>${l}</span></div>`).join('');
   document.querySelector('#cycleChart').innerHTML=m.intervals.slice(-36).map(x=>`<div class="bar" style="height:${clamp((x.length-15)*8,20,210)}px" data-label="${x.start} · ${x.length}天"></div>`).join('');
   const logs=Object.entries(state.logs);const byPhase={period:[],follicular:[],ovulation:[],pms:[]};
@@ -117,6 +128,13 @@ function renderFamily(){
   const support=p.key==='pms'?'近期可预留更多睡眠和安排缓冲；先询问需要陪伴、准备用品，还是减少打扰。':p.key==='period'?'当前处于已记录经期；可以关心休息、补充用品和当天实际感受。':'维持正常关心即可，不依据周期阶段替本人判断情绪或能力。';
   document.querySelector('#familySupport').textContent=support;
   document.querySelector('#emailPreview').innerHTML=`主题：明天可能进入经期提醒<br><br>预计明天接近经期中心日期。她在这个阶段可能更需要休息或安排缓冲，实际感受以她本人为准。建议先询问今天希望获得怎样的支持。`;
+  const periods=[...p.ps].reverse();
+  const logs=Object.entries(state.logs).filter(([,log])=>log.temperature||log.notes).sort(([a],[b])=>b.localeCompare(a));
+  document.querySelector('#familyHistoryCount').textContent=`${periods.length} 次经期 · ${logs.length} 条体温/备注`;
+  document.querySelector('#familyHistoryList').innerHTML=[
+    ...logs.map(([date,log])=>`<div class="history-row family-log"><strong>${escapeHtml(date)}</strong><span class="family-note">${log.temperature?`基础体温 ${escapeHtml(log.temperature)}℃`:''}${log.temperature&&log.notes?' · ':''}${log.notes?escapeHtml(log.notes):''}</span></div>`),
+    ...periods.map(period=>`<div class="history-row"><strong>${escapeHtml(period.start)} → ${escapeHtml(period.end)}</strong><span>经期 ${days(period.start,period.end)+1} 天</span><span>正式月经</span></div>`)
+  ].join('');
 }
 function renderSettings(){document.querySelector('#lifeStage').value=settings.lifeStage;document.querySelector('#ownerNotify').checked=settings.ownerNotify;document.querySelector('#partnerNotify').checked=settings.partnerNotify;document.querySelector('#offlineStatus').textContent=navigator.onLine?'当前在线；新记录仍会先保存在本设备。':'当前离线；记录功能仍可使用，联网后可重新载入公开历史。'}
 function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===id));window.scrollTo({top:0,behavior:'smooth'})}
