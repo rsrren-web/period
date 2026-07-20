@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "month": "2026-07",
+  "revision": 1,
+  "updatedAt": "2026-07-19T23:27:44.027Z",
+  "entries": {
+    "2026-07-19": {
+      "date": "2026-07-19",
+      "title": "Vibe coding 的一天",
+      "body": "啊 玩了一天vibe coding app你就是我今天创造力的产物 hhhhhh",
+      "tags": [
+        "工作"
+      ],
+      "phase": "follicular",
+      "familyVisible": false,
+      "updatedAt": "2026-07-19T23:27:44.027Z"
+    }
+  },
+  "tombstones": {},
+  "appliedMutations": [
+    "migrate-legacy-note-2026-07-19"
+  ]
+}
