@@ -23,11 +23,6 @@ export default {
         const remote=await readState(env);
         return reply({ok:true,state:remote.state},200,cors);
       }
-      if(url.pathname==='/journals'&&request.method==='GET'){
-        const month=url.searchParams.get('month');
-        if(month){validateMonth(month);const remote=await readJournal(env,month);return reply({ok:true,journal:remote.journal},200,cors)}
-        return reply({ok:true,months:await listJournalMonths(env)},200,cors);
-      }
       if(url.pathname==='/authorize'&&request.method==='POST'){
         requireOrigin(origin,env);
         await enforceLimit(env.AUTH_RATE_LIMITER,clientKey(request),5,60);
@@ -50,17 +45,6 @@ export default {
         const result=await mergeAndWrite(env,incoming);
         safeLog('sync_ok',{requestId,mutation:incoming.mutationId.slice(0,8),revision:result.revision});
         return reply({ok:true,state:result},200,cors);
-      }
-      if(url.pathname==='/journals/sync'&&request.method==='POST'){
-        requireOrigin(origin,env);
-        const device=await authenticateSync(request,env);
-        await enforceLimit(env.SYNC_RATE_LIMITER,device.sub,30,60);
-        requireSmallBody(request,500_000);
-        const incoming=await safeJson(request);
-        validateJournalPayload(incoming);
-        const result=await mergeAndWriteJournal(env,incoming);
-        safeLog('journal_sync_ok',{requestId,mutation:incoming.mutationId.slice(0,8),month:incoming.month,revision:result.revision});
-        return reply({ok:true,journal:result},200,cors);
       }
       return reply({ok:false,error:'Not found'},404,cors);
     }catch(error){
@@ -139,13 +123,13 @@ function validatePeriod(period){
 }
 function validateLog(date,log){
   assertDate(date,'记录');assertObject(log,'每日记录');
+  const allowed=new Set(['mood','energy','sleep','activity','stress','pain','symptoms','temperature','updatedAt']);for(const key of Object.keys(log))if(!allowed.has(key))throw clientError('每日记录包含已停用字段');
   for(const key of ['mood','energy','sleep','activity','stress'])assertRating(log[key],key,1,5);
   assertRating(log.pain,'pain',0,10);
   if(!Array.isArray(log.symptoms)||log.symptoms.length>50)throw clientError('症状列表无效');
   for(const symptom of log.symptoms)assertString(symptom,'症状',50,{allowEmpty:false});
   if(log.temperature!==''&&(!['string','number'].includes(typeof log.temperature)||Number(log.temperature)<34||Number(log.temperature)>42))throw clientError('基础体温超出范围');
-  assertString(log.discharge??'','分泌物',50);if(typeof log.sexualActivity!=='boolean')throw clientError('性生活字段类型无效');
-  assertString(log.notes??'','备注',2000);assertTimestamp(log.updatedAt,'每日记录更新时间');
+  assertTimestamp(log.updatedAt,'每日记录更新时间');
 }
 function validateTombstones(value){
   assertObject(value,'删除记录');assertObject(value.periods,'经期删除记录');assertObject(value.logs,'每日删除记录');
@@ -178,7 +162,7 @@ function validateJournalPayload(payload){
 }
 function daysBetween(a,b){return Math.round((Date.parse(`${b}T12:00:00Z`)-Date.parse(`${a}T12:00:00Z`))/DAY)}
 function emptyState(){return {schemaVersion:1,revision:0,updatedAt:null,periods:[],logs:{},tombstones:{periods:{},logs:{}},settings:{lifeStage:'regular',ownerNotify:true,partnerNotify:true},appliedMutations:[]}}
-function normalizeState(value){const empty=emptyState();return {...empty,...value,periods:Array.isArray(value?.periods)?value.periods:[],logs:value?.logs&&typeof value.logs==='object'&&!Array.isArray(value.logs)?value.logs:{},tombstones:{periods:value?.tombstones?.periods||{},logs:value?.tombstones?.logs||{}},settings:{...empty.settings,...value?.settings},appliedMutations:Array.isArray(value?.appliedMutations)?value.appliedMutations:[]}}
+function normalizeState(value){const empty=emptyState(),source=value?.logs&&typeof value.logs==='object'&&!Array.isArray(value.logs)?value.logs:{},logs=Object.fromEntries(Object.entries(source).map(([date,log])=>{const {discharge,sexualActivity,notes,...safe}=log||{};return[date,safe]}));return {...empty,...value,periods:Array.isArray(value?.periods)?value.periods:[],logs,tombstones:{periods:value?.tombstones?.periods||{},logs:value?.tombstones?.logs||{}},settings:{...empty.settings,...value?.settings},appliedMutations:Array.isArray(value?.appliedMutations)?value.appliedMutations:[]}}
 function periodKey(period){return period.id||`${period.start}|${period.type||'period'}`}
 function newer(a,b){return String(a||'')>=String(b||'')}
 function mergeTombstones(a={},b={}){const out={...a};for(const [key,at] of Object.entries(b))if(!out[key]||newer(at,out[key]))out[key]=at;return out}

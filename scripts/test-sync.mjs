@@ -3,7 +3,7 @@ import {mergeJournal,mergeState,validateJournalPayload,validatePayload} from '..
 
 const at='2026-07-19T12:00:00.000Z';
 const period={id:'period-1',start:'2026-07-10',end:'2026-07-15',type:'period',source:'本设备',status:'confirmed',updatedAt:at};
-const log={mood:'3',energy:'3',sleep:'3',activity:'3',pain:'0',stress:'3',symptoms:['嗜睡'],temperature:'36.50',discharge:'',sexualActivity:false,notes:'',updatedAt:at};
+const log={mood:'3',energy:'3',sleep:'3',activity:'3',pain:'0',stress:'3',symptoms:['嗜睡'],temperature:'36.50',updatedAt:at};
 const state={periods:[period],logs:{'2026-07-19':log},tombstones:{periods:{},logs:{}},settings:{lifeStage:'regular',ownerNotify:true,partnerNotify:true}};
 assert.doesNotThrow(()=>validatePayload({schemaVersion:1,mutationId:'mutation-1',state}));
 assert.throws(()=>validatePayload({schemaVersion:1,mutationId:'bad',state:{...state,logs:{'2026-99-99':log}}}));
