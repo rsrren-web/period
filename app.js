@@ -1,238 +1,98 @@
 const DATA_URL='./outputs/meiyou_periods_draft.csv';
-const STORE_KEY='period-helper-state-v1';
-const SETTINGS_KEY='period-helper-settings-v1';
-const SYNC_PENDING_KEY='period-helper-sync-pending-v1';
-const DEVICE_TOKEN_KEY='period-sync-device-token-v1';
-const DEVICE_TOKEN_EXPIRY_KEY='period-sync-device-expiry-v1';
-const SYNC_LOG_KEY='period-sync-safe-log-v1';
+const STORE_KEY='period-helper-state-v1',SETTINGS_KEY='period-helper-settings-v1',JOURNAL_KEY='period-journals-v1',JOURNAL_PENDING_KEY='period-journals-pending-v1',SYNC_PENDING_KEY='period-helper-sync-pending-v1';
+const DEVICE_TOKEN_KEY='period-sync-device-token-v1',DEVICE_TOKEN_EXPIRY_KEY='period-sync-device-expiry-v1',SYNC_LOG_KEY='period-sync-safe-log-v1';
 const SYNC_URL=String(globalThis.PERIOD_SYNC_URL||'').replace(/\/$/,'');
-const DAY=86400000;
-const fmt=new Intl.DateTimeFormat('zh-CN',{month:'long',day:'numeric'});
+const DAY=86400000,labels5=['很低','偏低','一般','较好','很好'];
+const fmt=new Intl.DateTimeFormat('zh-CN',{month:'long',day:'numeric'}),fullFmt=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric'});
 const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
-const parseDate=s=>new Date(`${s}T12:00:00`);
-const days=(a,b)=>Math.round((parseDate(b)-parseDate(a))/DAY);
-const addDays=(s,n)=>{const d=parseDate(s);d.setDate(d.getDate()+n);return iso(d)};
-const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[Math.floor(s.length/2)]:0};
-const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
-const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-const escapeHtml=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
-const labels5=['很低','偏低','一般','较好','很好'];
+const parseDate=s=>new Date(`${s}T12:00:00`),days=(a,b)=>Math.round((parseDate(b)-parseDate(a))/DAY),addDays=(s,n)=>{const d=parseDate(s);d.setDate(d.getDate()+n);return iso(d)};
+const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[Math.floor(s.length/2)]:0},mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0,clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const escapeHtml=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const nowIso=()=>new Date().toISOString(),monthOf=date=>date.slice(0,7),inRange=(d,a,b)=>d>=a&&d<=b;
 
-let basePeriods=[];
-let state=normalizeLocalState(JSON.parse(localStorage.getItem(STORE_KEY)||'{"periods":[],"logs":{}}'));
+let basePeriods=[],calendarCursor=new Date(),selectedDate=iso(new Date()),deferredInstall,syncTimer,journalTimer;
+let state=normalizeState(JSON.parse(localStorage.getItem(STORE_KEY)||'{}'));
+let journals=normalizeJournals(JSON.parse(localStorage.getItem(JOURNAL_KEY)||'{}'));
 let settings={lifeStage:'regular',ownerNotify:true,partnerNotify:true,...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')};
-let calendarCursor=new Date();
-let deferredInstall;
-let syncTimer;
 
-async function loadBase(){
-  const text=await fetch(DATA_URL).then(r=>{if(!r.ok)throw new Error('历史数据载入失败');return r.text()});
-  const lines=text.trim().split(/\r?\n/);const head=lines.shift().split(',');
-  basePeriods=lines.map(line=>{const parts=line.split(',');return Object.fromEntries(head.map((h,i)=>[h,parts[i]||'']))});
-}
-function allPeriods(){
-  const map=new Map(basePeriods.map(p=>[p.period_start,{start:p.period_start,end:p.period_end,type:'period',source:'美柚截图',status:p.status}]));
-  state.periods.filter(p=>p.type==='period').forEach(p=>map.set(p.start,p));
-  return [...map.values()].sort((a,b)=>a.start.localeCompare(b.start));
-}
-function cycleModel(){
-  const ps=allPeriods();const intervals=ps.slice(0,-1).map((p,i)=>({...p,length:days(p.start,ps[i+1].start)}));
-  const valid=intervals.filter(x=>x.length>=15&&x.length<=60);
-  const recent=valid.slice(-12);const weighted=[];
-  recent.forEach((x,i)=>{const weight=i>=recent.length-3?3:i>=recent.length-6?2:1;for(let j=0;j<weight;j++)weighted.push(x.length)});
-  const center=Math.round(median(weighted)||29);const deviations=recent.map(x=>Math.abs(x.length-center));
-  let spread=Math.max(2,Math.ceil(median(deviations)*1.5));
-  if(settings.lifeStage==='menarche')spread=Math.max(5,spread+2);
-  if(settings.lifeStage==='perimenopause')spread=Math.max(7,spread+4);
-  const last=ps.at(-1);const next=addDays(last.start,center);
-  return {ps,intervals,center,spread,next,windowStart:addDays(next,-spread),windowEnd:addDays(next,spread),last,confidence:recent.length>=6&&spread<=4?'较高':recent.length>=3?'中等':'较低'};
-}
-function phaseInfo(){
-  const m=cycleModel();const today=iso(new Date());const cd=days(m.last.start,today)+1;const inPeriod=today>=m.last.start&&today<=m.last.end;
-  const ovulation=addDays(m.next,-14);const pmsStart=addDays(m.next,-7);
-  let key='follicular',name='卵泡期';
-  if(inPeriod){key='period';name='经期'}else if(today>=addDays(ovulation,-2)&&today<=addDays(ovulation,2)){key='ovulation';name='排卵估算期'}else if(today>=pmsStart){key='pms';name='经前阶段'}
-  return {...m,today,cycleDay:cd,key,name,ovulation,pmsStart};
-}
-function save(){localStorage.setItem(STORE_KEY,JSON.stringify(state));localStorage.setItem(SYNC_PENDING_KEY,'yes');render();showToast(SYNC_URL?'已保存在本设备，准备同步':'已离线保存在本设备');scheduleSync()}
-function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
-function normalizeLocalState(value={}){return {periods:Array.isArray(value.periods)?value.periods:[],logs:value.logs&&typeof value.logs==='object'?value.logs:{},tombstones:{periods:value.tombstones?.periods||{},logs:value.tombstones?.logs||{}}}}
-function periodKey(period){return period.id||`${period.start}|${period.type||'period'}`}
+function normalizeState(v={}){return {periods:Array.isArray(v.periods)?v.periods:[],logs:v.logs&&typeof v.logs==='object'?v.logs:{},tombstones:{periods:v.tombstones?.periods||{},logs:v.tombstones?.logs||{}}}}
+function normalizeJournals(v={}){return {entries:v.entries&&typeof v.entries==='object'?v.entries:{},tombstones:v.tombstones&&typeof v.tombstones==='object'?v.tombstones:{}}}
+async function loadBase(){const text=await fetch(DATA_URL).then(r=>{if(!r.ok)throw new Error('历史数据载入失败');return r.text()});const lines=text.trim().split(/\r?\n/),head=lines.shift().split(',');basePeriods=lines.map(line=>Object.fromEntries(head.map((h,i)=>[h,line.split(',')[i]||''])))}
+function allPeriods(){const map=new Map(basePeriods.map(p=>[p.period_start,{start:p.period_start,end:p.period_end,type:'period',source:'美柚截图',status:p.status}]));state.periods.filter(p=>p.type==='period').forEach(p=>map.set(p.start,p));return [...map.values()].sort((a,b)=>a.start.localeCompare(b.start))}
+function cycleModel(){const ps=allPeriods(),intervals=ps.slice(0,-1).map((p,i)=>({...p,length:days(p.start,ps[i+1].start)})),valid=intervals.filter(x=>x.length>=15&&x.length<=60),recent=valid.slice(-12),weighted=[];recent.forEach((x,i)=>{const w=i>=recent.length-3?3:i>=recent.length-6?2:1;for(let j=0;j<w;j++)weighted.push(x.length)});const center=Math.round(median(weighted)||29),deviations=recent.map(x=>Math.abs(x.length-center));let spread=Math.max(2,Math.ceil(median(deviations)*1.5));if(settings.lifeStage==='menarche')spread=Math.max(5,spread+2);if(settings.lifeStage==='perimenopause')spread=Math.max(7,spread+4);const last=ps.at(-1),next=addDays(last.start,center);return {ps,intervals,center,spread,next,windowStart:addDays(next,-spread),windowEnd:addDays(next,spread),last,confidence:recent.length>=6&&spread<=4?'较高':recent.length>=3?'中等':'较低'}}
+function phaseForDate(date,m=cycleModel()){if(m.ps.some(p=>inRange(date,p.start,p.end)))return'period';const starts=m.ps.map(p=>p.start).sort(),next=starts.find(s=>s>date)||m.next;if(inRange(date,addDays(next,-16),addDays(next,-12)))return'ovulation';if(inRange(date,addDays(next,-7),addDays(next,-1)))return'pms';return'follicular'}
+function phaseInfo(date=iso(new Date())){const m=cycleModel(),key=phaseForDate(date,m),names={period:'经期',follicular:'卵泡期',ovulation:'排卵估算期',pms:'经前阶段'};return {...m,date,key,name:names[key],cycleDay:days(m.last.start,date)+1,ovulation:addDays(m.next,-14),pmsStart:addDays(m.next,-7)}}
+
+function saveLocal({sync=true}={}){localStorage.setItem(STORE_KEY,JSON.stringify(state));if(sync){localStorage.setItem(SYNC_PENDING_KEY,'yes');scheduleSync()}renderAll()}
+function saveJournals({sync=true}={}){localStorage.setItem(JOURNAL_KEY,JSON.stringify(journals));if(sync){localStorage.setItem(JOURNAL_PENDING_KEY,'yes');scheduleJournalSync()}renderAll()}
+function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));localStorage.setItem(SYNC_PENDING_KEY,'yes');scheduleSync()}
+function periodKey(p){return p.id||`${p.start}|${p.type||'period'}`}
 function newer(a,b){return String(a||'')>=String(b||'')}
-function mergeTombstoneMap(a={},b={}){const out={...a};Object.entries(b).forEach(([key,at])=>{if(!out[key]||newer(at,out[key]))out[key]=at});return out}
-function mergeUserState(local,remote){
-  local=normalizeLocalState(local);remote=normalizeLocalState(remote);
-  const tombstones={periods:mergeTombstoneMap(local.tombstones.periods,remote.tombstones.periods),logs:mergeTombstoneMap(local.tombstones.logs,remote.tombstones.logs)};
-  const periods=new Map();
-  [...remote.periods,...local.periods].forEach(period=>{const key=periodKey(period),old=periods.get(key);if(!old||newer(period.updatedAt,old.updatedAt))periods.set(key,period)});
-  for(const [key,period] of periods)if(tombstones.periods[key]&&newer(tombstones.periods[key],period.updatedAt))periods.delete(key);
-  const logs={...(local.logs||{})};
-  Object.entries(remote.logs||{}).forEach(([date,log])=>{if(!logs[date]||String(log.updatedAt||'')>=String(logs[date].updatedAt||''))logs[date]=log});
-  Object.entries(logs).forEach(([date,log])=>{if(tombstones.logs[date]&&newer(tombstones.logs[date],log.updatedAt))delete logs[date]});
-  return {periods:[...periods.values()],logs,tombstones};
-}
-function setSyncStatus(text){const el=document.querySelector('#saveState');if(el)el.textContent=text}
-function setSystemAlert(message='',level='warning'){const el=document.querySelector('#systemAlert');if(!el)return;el.textContent=message;el.dataset.level=level;el.hidden=!message}
-function safeSyncLog(operation,status){const logs=JSON.parse(localStorage.getItem(SYNC_LOG_KEY)||'[]');logs.push({at:new Date().toISOString(),operation,status:String(status).slice(0,80)});localStorage.setItem(SYNC_LOG_KEY,JSON.stringify(logs.slice(-20)))}
-async function checkServiceStatus(){
-  if(!SYNC_URL||!navigator.onLine)return;
-  try{const response=await fetch(`${SYNC_URL}/status`,{cache:'no-store'}),result=await response.json();if(!response.ok||!result.githubOk)throw new Error('GitHub连接失败');
-    if(result.tokenDaysRemaining!==null&&result.tokenDaysRemaining<=30)setSystemAlert(`重要：GitHub Token 将在 ${result.tokenExpiresAt} 到期（剩余约 ${result.tokenDaysRemaining} 天），请及时更换。`,result.tokenDaysRemaining<=7?'danger':'warning');
-  }catch{setSystemAlert('同步服务状态异常；本地记录仍可使用，请检查设置页与 GitHub 通知。','danger');safeSyncLog('status','failed')}
-}
-async function pullRemote(){
-  if(!SYNC_URL||!navigator.onLine)return;
-  try{
-    setSyncStatus('正在读取云端记录…');
-    const response=await fetch(`${SYNC_URL}/state`,{cache:'no-store'});const result=await response.json();
-    if(!response.ok||!result.ok)throw new Error(result.error||'读取失败');
-    state=mergeUserState(state,result.state||{});localStorage.setItem(STORE_KEY,JSON.stringify(state));
-    if(result.state?.settings&&localStorage.getItem(SYNC_PENDING_KEY)!=='yes'){settings={...settings,...result.state.settings};saveSettings()}
-    setSyncStatus(localStorage.getItem(SYNC_PENDING_KEY)==='yes'?'本设备有记录等待同步':'已与 GitHub 同步');
-  }catch(error){safeSyncLog('pull',error.name||'failed');setSyncStatus('云端读取失败，本地记录仍可使用');setSystemAlert('云端读取失败；记录仍保存在本设备，恢复后会重试。','danger')}
-}
-function scheduleSync(){if(!SYNC_URL)return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(),500)}
-async function authorizeDevice(password){
-  const response=await fetch(`${SYNC_URL}/authorize`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password})});const result=await response.json();
-  if(!response.ok||!result.ok)throw new Error(result.error||'设备验证失败');
-  localStorage.setItem(DEVICE_TOKEN_KEY,result.deviceToken);localStorage.setItem(DEVICE_TOKEN_EXPIRY_KEY,result.expiresAt);localStorage.setItem('period-editor-device','yes');return result.deviceToken;
-}
-async function getDeviceToken(){
-  const token=localStorage.getItem(DEVICE_TOKEN_KEY),expiry=localStorage.getItem(DEVICE_TOKEN_EXPIRY_KEY);
-  if(token&&expiry&&Date.parse(expiry)>Date.now()+60_000)return token;
-  localStorage.removeItem(DEVICE_TOKEN_KEY);localStorage.removeItem(DEVICE_TOKEN_EXPIRY_KEY);
-  const password=prompt('此设备首次同步：请输入至少12位的共享编辑口令（验证成功后180天内无需重复输入）')||'';
-  if(!password)return '';
-  return authorizeDevice(password);
-}
-async function syncNow(){
-  if(!SYNC_URL)return;
-  if(!navigator.onLine){setSyncStatus('离线，联网后将自动同步');return}
-  try{
-    const token=await getDeviceToken();if(!token){setSyncStatus('尚未同步：需要验证本设备');return}
-    setSyncStatus('正在同步到 GitHub…');
-    const response=await fetch(`${SYNC_URL}/sync`,{method:'POST',headers:{'content-type':'application/json','authorization':`Bearer ${token}`},body:JSON.stringify({schemaVersion:1,mutationId:crypto.randomUUID(),state:{periods:state.periods,logs:state.logs,tombstones:state.tombstones,settings:{lifeStage:settings.lifeStage,ownerNotify:settings.ownerNotify,partnerNotify:settings.partnerNotify}}})});
-    const result=await response.json();
-    if(!response.ok||!result.ok){if(response.status===401){localStorage.removeItem(DEVICE_TOKEN_KEY);localStorage.removeItem(DEVICE_TOKEN_EXPIRY_KEY)}throw new Error(result.error||'同步失败')}
-    state=mergeUserState(state,result.state);localStorage.setItem(STORE_KEY,JSON.stringify(state));localStorage.removeItem(SYNC_PENDING_KEY);setSyncStatus('已同步到 GitHub');showToast('已同步到 GitHub');
-    safeSyncLog('sync','ok');setSystemAlert('');
-  }catch(error){safeSyncLog('sync',error.name||'failed');localStorage.setItem(SYNC_PENDING_KEY,'yes');setSyncStatus(`${error.message}，点击记录后重试`);setSystemAlert(`同步失败：${error.message}。记录仍在本设备。`,'danger')}
-}
+function mergeMap(a={},b={}){const out={...a};Object.entries(b).forEach(([k,v])=>{if(!out[k]||newer(v,out[k]))out[k]=v});return out}
+function mergeUserState(local,remote){local=normalizeState(local);remote=normalizeState(remote);const tombstones={periods:mergeMap(local.tombstones.periods,remote.tombstones.periods),logs:mergeMap(local.tombstones.logs,remote.tombstones.logs)},periods=new Map();[...remote.periods,...local.periods].forEach(p=>{const k=periodKey(p),old=periods.get(k);if(!old||newer(p.updatedAt,old.updatedAt))periods.set(k,p)});for(const[k,p]of periods)if(tombstones.periods[k]&&newer(tombstones.periods[k],p.updatedAt))periods.delete(k);const logs={...remote.logs};Object.entries(local.logs).forEach(([d,l])=>{if(!logs[d]||newer(l.updatedAt,logs[d].updatedAt))logs[d]=l});Object.entries(logs).forEach(([d,l])=>{if(tombstones.logs[d]&&newer(tombstones.logs[d],l.updatedAt))delete logs[d]});return {periods:[...periods.values()],logs,tombstones}}
+function mergeJournalState(local,remote){local=normalizeJournals(local);remote=normalizeJournals(remote);const tombstones=mergeMap(local.tombstones,remote.tombstones),entries={...remote.entries};Object.entries(local.entries).forEach(([d,e])=>{if(!entries[d]||newer(e.updatedAt,entries[d].updatedAt))entries[d]=e});Object.entries(entries).forEach(([d,e])=>{if(tombstones[d]&&newer(tombstones[d],e.updatedAt))delete entries[d]});return {entries,tombstones}}
 
-function render(){renderHero();renderAdvice();renderDailyForm();renderCalendar();renderHistory();renderInsights();renderFamily();renderSettings()}
-function renderHero(){
-  const p=phaseInfo();
-  document.querySelector('#cycleDay').textContent=p.cycleDay>0?p.cycleDay:'—';
-  document.querySelector('#phasePill').textContent=p.name;
-  document.querySelector('#nextPeriod').textContent=`预计 ${fmt.format(parseDate(p.next))} 左右进入下次经期`;
-  document.querySelector('#predictionDetail').textContent=`较可能在 ${fmt.format(parseDate(p.windowStart))}–${fmt.format(parseDate(p.windowEnd))}，预测可信度${p.confidence}；近期中心周期约 ${p.center} 天。`;
-}
-function currentLog(){return state.logs[iso(new Date())]||{}}
-function renderDailyForm(){
-  const form=document.querySelector('#dailyForm'),log=currentLog();
-  ['mood','energy','sleep','activity','pain','stress','temperature','discharge','notes'].forEach(name=>{
-    if(log[name]!==undefined&&form.elements[name])form.elements[name].value=log[name];
-  });
-  form.querySelectorAll('[name="symptom"]').forEach(input=>input.checked=(log.symptoms||[]).includes(input.value));
-  form.elements.sexualActivity.checked=Boolean(log.sexualActivity);
-  form.querySelectorAll('input[type=range]').forEach(input=>{input.nextElementSibling.textContent=input.name==='pain'?input.value:labels5[input.value-1]});
-  document.querySelector('#saveState').textContent=SYNC_URL?(localStorage.getItem(SYNC_PENDING_KEY)==='yes'?'等待同步到 GitHub':'已与 GitHub 同步'):(log.updatedAt?'今天的记录已保存在本设备':'保存在本设备');
-}
-function renderAdvice(){
-  const p=phaseInfo(),log=currentLog();
-  const phaseAdvice={
-    period:['根据身体感受降低运动强度，轻柔步行和伸展通常比强撑更合适。','规律进食并保证水分，工作安排尽量留出缓冲。','若不适明显，优先休息，不用把计划完成度当作身体状态的评价。'],
-    follicular:['精力可能逐步恢复，可把复杂工作分批安排，同时观察自己的实际状态。','逐渐恢复力量或有氧活动，强度以第二天不过度疲劳为准。','饮食保持蛋白质、蔬菜、全谷物和含铁食物的均衡搭配。'],
-    ovulation:['这是日历法估算窗口，不代表已经确认排卵，也不能用于避孕保证。','若记录基础体温，只有持续变化趋势才有回顾性参考意义。','维持正常作息和活动，不必为了“周期阶段”强行改变计划。'],
-    pms:['为睡眠和临时变化预留空间，减少连续高压或过晚的安排。','如果以往此时容易嗜睡或烦躁，可提前和伴侣沟通希望得到的支持。','规律进食、适量活动，并观察咖啡因、酒精或高盐饮食是否加重个人不适。']};
-  let list=[...phaseAdvice[p.key]];
-  if(Number(log.sleep)<=2)list.unshift('今天记录的睡眠偏低，优先补足休息，再决定运动和工作强度。');
-  if(Number(log.pain)>=6)list.unshift('今天疼痛记录较高，建议减少勉强活动并持续观察。');
-  document.querySelector('#dailyAdvice').innerHTML=`<div class="advice-list">${list.slice(0,4).map(x=>`<div class="advice-item">${x}</div>`).join('')}</div>`;
+function setSync(text,status='idle'){const badge=document.querySelector('#syncBadge');badge.textContent=text;badge.dataset.state=status}
+function alertSystem(message='',level='warning'){const el=document.querySelector('#systemAlert');el.textContent=message;el.dataset.level=level;el.hidden=!message}
+function safeLog(operation,status){let logs=[];try{logs=JSON.parse(localStorage.getItem(SYNC_LOG_KEY)||'[]')}catch{}logs.push({at:nowIso(),operation,status:String(status).slice(0,80)});localStorage.setItem(SYNC_LOG_KEY,JSON.stringify(logs.slice(-20)))}
+async function authorizeDevice(password){const r=await fetch(`${SYNC_URL}/authorize`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password})}),x=await r.json();if(!r.ok||!x.ok)throw new Error(x.error||'设备验证失败');localStorage.setItem(DEVICE_TOKEN_KEY,x.deviceToken);localStorage.setItem(DEVICE_TOKEN_EXPIRY_KEY,x.expiresAt);localStorage.setItem('period-editor-device','yes');return x.deviceToken}
+async function deviceToken(){const token=localStorage.getItem(DEVICE_TOKEN_KEY),exp=localStorage.getItem(DEVICE_TOKEN_EXPIRY_KEY);if(token&&exp&&Date.parse(exp)>Date.now()+60000)return token;localStorage.removeItem(DEVICE_TOKEN_KEY);localStorage.removeItem(DEVICE_TOKEN_EXPIRY_KEY);const password=prompt('此设备首次同步：请输入共享编辑口令（验证成功后180天内无需重复输入）')||'';return password?authorizeDevice(password):''}
+async function pullRemote(){if(!SYNC_URL||!navigator.onLine)return;try{setSync('正在同步…');const r=await fetch(`${SYNC_URL}/state`,{cache:'no-store'}),x=await r.json();if(!r.ok||!x.ok)throw new Error(x.error||'读取失败');state=mergeUserState(state,x.state);localStorage.setItem(STORE_KEY,JSON.stringify(state));if(x.state?.settings&&localStorage.getItem(SYNC_PENDING_KEY)!=='yes'){settings={...settings,...x.state.settings};localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}await pullJournals();setSync(localStorage.getItem(SYNC_PENDING_KEY)==='yes'?'等待写回':'已与 GitHub 同步',localStorage.getItem(SYNC_PENDING_KEY)==='yes'?'idle':'ok')}catch(e){safeLog('pull',e.name||'failed');setSync('同步读取失败','error');alertSystem('云端读取失败；本机记录仍可使用，联网后会重试。','danger')}}
+function scheduleSync(){clearTimeout(syncTimer);syncTimer=setTimeout(syncNow,650)}
+async function syncNow(){if(!SYNC_URL)return;if(!navigator.onLine)return setSync('离线保存');try{const token=await deviceToken();if(!token)return setSync('等待设备验证');setSync('正在同步…');const r=await fetch(`${SYNC_URL}/sync`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token}`},body:JSON.stringify({schemaVersion:1,mutationId:crypto.randomUUID(),state:{...state,settings:{lifeStage:settings.lifeStage,ownerNotify:settings.ownerNotify,partnerNotify:settings.partnerNotify}}})}),x=await r.json();if(!r.ok||!x.ok){if(r.status===401){localStorage.removeItem(DEVICE_TOKEN_KEY);localStorage.removeItem(DEVICE_TOKEN_EXPIRY_KEY)}throw new Error(x.error||'同步失败')}state=mergeUserState(state,x.state);localStorage.setItem(STORE_KEY,JSON.stringify(state));localStorage.removeItem(SYNC_PENDING_KEY);setSync('已与 GitHub 同步','ok');safeLog('sync','ok');alertSystem('')}catch(e){localStorage.setItem(SYNC_PENDING_KEY,'yes');safeLog('sync',e.name||'failed');setSync('同步失败','error');alertSystem(`同步失败：${e.message}。数据仍在本机。`,'danger')}}
+async function pullJournals(){try{const list=await fetch(`${SYNC_URL}/journals`,{cache:'no-store'}).then(r=>r.json());if(!list.ok)return;for(const month of list.months||[]){const x=await fetch(`${SYNC_URL}/journals?month=${month}`,{cache:'no-store'}).then(r=>r.json());if(x.ok)journals=mergeJournalState(journals,{entries:x.journal.entries,tombstones:x.journal.tombstones})}localStorage.setItem(JOURNAL_KEY,JSON.stringify(journals))}catch(e){safeLog('journal-pull',e.name||'failed')}}
+function scheduleJournalSync(){clearTimeout(journalTimer);journalTimer=setTimeout(syncJournals,800)}
+async function syncJournals(){if(!SYNC_URL||!navigator.onLine)return;try{const token=await deviceToken();if(!token)return;const months=new Set([...Object.keys(journals.entries).filter(d=>!journals.entries[d].draft),...Object.keys(journals.tombstones)].map(monthOf));for(const month of months){const entries=Object.fromEntries(Object.entries(journals.entries).filter(([d,e])=>monthOf(d)===month&&!e.draft)),tombstones=Object.fromEntries(Object.entries(journals.tombstones).filter(([d])=>monthOf(d)===month));const r=await fetch(`${SYNC_URL}/journals/sync`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token}`},body:JSON.stringify({schemaVersion:1,month,mutationId:crypto.randomUUID(),entries,tombstones})}),x=await r.json();if(!r.ok||!x.ok)throw new Error(x.error||'随笔同步失败');journals=mergeJournalState(journals,{entries:x.journal.entries,tombstones:x.journal.tombstones})}localStorage.setItem(JOURNAL_KEY,JSON.stringify(journals));localStorage.removeItem(JOURNAL_PENDING_KEY);safeLog('journal-sync','ok');setSync('已与 GitHub 同步','ok')}catch(e){localStorage.setItem(JOURNAL_PENDING_KEY,'yes');safeLog('journal-sync',e.name||'failed');alertSystem(`随笔同步失败：${e.message}。草稿仍在本机。`,'danger')}}
+async function checkStatus(){if(!SYNC_URL||!navigator.onLine)return;try{const r=await fetch(`${SYNC_URL}/status`,{cache:'no-store'}),x=await r.json();if(!r.ok||!x.githubOk)throw new Error();if(x.tokenDaysRemaining<=30)alertSystem(`GitHub Token 将在 ${x.tokenExpiresAt} 到期，剩余约 ${x.tokenDaysRemaining} 天。`,x.tokenDaysRemaining<=7?'danger':'warning')}catch{safeLog('status','failed')}}
 
-  const symptoms=log.symptoms||[];let tendency='当前记录不足，先观察睡眠、冷热感、食欲、疼痛性质、经量与情绪的组合变化。';let tips=['以温和、规律、可持续为原则，不因单一症状自行确定证型。'];
-  if(symptoms.includes('怕冷')&&Number(log.energy)<=2){tendency='传统辨证中，怕冷与疲乏同时出现可作为偏虚寒倾向的线索，但仍需结合经量、舌脉、食欲和持续时间。';tips=['选择温热熟食、规律三餐；可少量饮用普通姜枣饮，胃部灼热、过敏或不适时停止。','避免空腹大量饮用刺激性饮品，优先保证睡眠和轻柔活动。']}
-  else if(symptoms.includes('烦躁')||symptoms.includes('情绪敏感')){tendency='传统辨证中，经前烦躁、情绪敏感可作为气机不畅倾向的线索；单凭情绪不能确定证候。';tips=['安排舒缓步行、拉伸或呼吸练习，减少连续高压任务。','可选择普通玫瑰花饮作为食物级饮品；过敏、孕期可能性或服药情况下先咨询专业人员。']}
-  else if(symptoms.includes('腹胀')||symptoms.includes('食欲变化')){tendency='腹胀与食欲变化在传统辨证中常需结合排便、口渴、舌苔和饮食诱因继续观察。';tips=['以温热、清淡、规律饮食为主，暂时减少过量油腻、酒精和冰冷刺激。','记录进食与症状时间，优先寻找个人重复模式。']}
-  document.querySelector('#tcmAdvice').innerHTML=`<p>${tendency}</p><div class="advice-list">${tips.map(x=>`<div class="advice-item">${x}</div>`).join('')}</div>`;
-}
-function monthDates(y,m){const first=new Date(y,m,1,12),start=new Date(first);start.setDate(1-first.getDay());return Array.from({length:42},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d})}
-function inRange(x,a,b){return x>=a&&x<=b}
-function renderCalendar(){
-  const y=calendarCursor.getFullYear(),m=calendarCursor.getMonth(),model=cycleModel();
-  document.querySelector('#calendarTitle').textContent=`${y}年${m+1}月`;
-  const recorded=allPeriods();const today=iso(new Date());
-  document.querySelector('#calendarGrid').innerHTML=monthDates(y,m).map(d=>{const s=iso(d);const rec=recorded.some(p=>inRange(s,p.start,p.end));const pred=inRange(s,model.windowStart,model.windowEnd);const ovu=inRange(s,addDays(model.next,-16),addDays(model.next,-12));return `<button class="day ${d.getMonth()!==m?'outside':''} ${s===today?'today':''} ${rec?'recorded':''} ${pred?'predicted':''} ${ovu?'ovulation':''}" data-date="${s}">${d.getDate()}</button>`}).join('');
-}
-function renderHistory(){
-  const ps=allPeriods();document.querySelector('#historyCount').textContent=`${ps.length} 次`;
-  document.querySelector('#historyList').innerHTML=[...ps].reverse().map((p,idx)=>{const realIndex=ps.length-1-idx;const cycle=realIndex<ps.length-1?days(p.start,ps[realIndex+1].start):'—';const remove=p.id?`<button class="delete-period danger small" data-period-id="${escapeHtml(p.id)}">删除</button>`:'';return `<div class="history-row"><strong>${p.start} → ${p.end}</strong><span>经期 ${days(p.start,p.end)+1} 天</span><span>周期 ${cycle} 天</span>${remove}</div>`}).join('');
-}
-function renderInsights(){
-  const m=cycleModel(),cycles=m.intervals.map(x=>x.length),periodDays=m.ps.map(p=>days(p.start,p.end)+1),recent=cycles.slice(-12);
-  const stats=[[`${median(cycles)}天`,`全部中位周期`],[`${mean(recent).toFixed(1)}天`,'近12次平均'],[`${Math.min(...recent)}–${Math.max(...recent)}天`,'近12次范围'],[`${mean(periodDays.slice(-12)).toFixed(1)}天`,'近12次经期']];
-  document.querySelector('#summaryStats').innerHTML=stats.map(([v,l])=>`<div class="stat"><strong>${v}</strong><span>${l}</span></div>`).join('');
-  document.querySelector('#cycleChart').innerHTML=m.intervals.slice(-36).map(x=>`<div class="bar" style="height:${clamp((x.length-15)*8,20,210)}px" data-label="${x.start} · ${x.length}天"></div>`).join('');
-  const logs=Object.entries(state.logs);const byPhase={period:[],follicular:[],ovulation:[],pms:[]};
-  logs.forEach(([date,l])=>{const copyToday=phaseForDate(date,m);byPhase[copyToday].push(l)});
-  document.querySelector('#moodInsight').innerHTML=logs.length<6?'<p class="muted">至少记录6天后开始显示个人情绪模式；跨3个周期后可信度更高。</p>':phaseAverages(byPhase,'mood');
-  document.querySelector('#lifestyleInsight').innerHTML=logs.length<6?'<p class="muted">继续记录睡眠、精力和活动，系统将按周期阶段比较个人变化。</p>':['sleep','energy','activity'].map(k=>`<div class="insight-line">${({sleep:'睡眠',energy:'精力',activity:'活动'})[k]}：${bestPhase(byPhase,k)}</div>`).join('');
-  const unusual=m.intervals.filter(x=>x.length<21||x.length>35);
-  document.querySelector('#qualityInsight').innerHTML=`<p>历史中有 <strong>${unusual.length}</strong> 个周期开始间隔在21–35天之外。它们被保留，不会自动删除。</p><p class="muted">当前历史来自截图转录；已确认的2019年18天周期将保留，但在预测中使用稳健中位数降低单次极端值影响。</p>`;
-}
-function phaseForDate(date,m){
-  if(m.ps.some(p=>inRange(date,p.start,p.end)))return'period';
-  const starts=m.ps.map(p=>p.start).sort();
-  const nextStart=starts.find(start=>start>date)||m.next;
-  if(inRange(date,addDays(nextStart,-16),addDays(nextStart,-12)))return'ovulation';
-  if(inRange(date,addDays(nextStart,-7),addDays(nextStart,-1)))return'pms';
-  return'follicular';
-}
-function phaseAverages(groups,key){const names={period:'经期',follicular:'卵泡期',ovulation:'排卵估算期',pms:'经前阶段'};return Object.entries(groups).filter(([,a])=>a.length).map(([k,a])=>`<div class="insight-line">${names[k]}：${mean(a.map(x=>Number(x[key])||3)).toFixed(1)}/5（${a.length}条）</div>`).join('')}
-function bestPhase(groups,key){const entries=Object.entries(groups).filter(([,a])=>a.length).map(([k,a])=>[k,mean(a.map(x=>Number(x[key])||3))]).sort((a,b)=>b[1]-a[1]);return entries.length?`${({period:'经期',follicular:'卵泡期',ovulation:'排卵估算期',pms:'经前阶段'})[entries[0][0]]}记录相对较高`:'数据不足'}
-function renderFamily(){
-  const p=phaseInfo();document.querySelector('#familyPhase').textContent=`当前约为周期第 ${p.cycleDay} 天 · ${p.name}`;
-  document.querySelector('#familySummary').textContent=`下次经期中心预测为 ${fmt.format(parseDate(p.next))}，较可能在 ${fmt.format(parseDate(p.windowStart))}–${fmt.format(parseDate(p.windowEnd))}。预测会随新记录更新。`;
-  const support=p.key==='pms'?'近期可预留更多睡眠和安排缓冲；先询问需要陪伴、准备用品，还是减少打扰。':p.key==='period'?'当前处于已记录经期；可以关心休息、补充用品和当天实际感受。':'维持正常关心即可，不依据周期阶段替本人判断情绪或能力。';
-  document.querySelector('#familySupport').textContent=support;
-  document.querySelector('#emailPreview').innerHTML=`主题：明天可能进入经期提醒<br><br>预计明天接近经期中心日期。她在这个阶段可能更需要休息或安排缓冲，实际感受以她本人为准。建议先询问今天希望获得怎样的支持。`;
-  const periods=[...p.ps].reverse();
-  const logs=Object.entries(state.logs).filter(([,log])=>log.temperature||log.notes).sort(([a],[b])=>b.localeCompare(a));
-  document.querySelector('#familyHistoryCount').textContent=`${periods.length} 次经期 · ${logs.length} 条体温/备注`;
-  document.querySelector('#familyHistoryList').innerHTML=[
-    ...logs.map(([date,log])=>`<div class="history-row family-log"><strong>${escapeHtml(date)}</strong><span class="family-note">${log.temperature?`基础体温 ${escapeHtml(log.temperature)}℃`:''}${log.temperature&&log.notes?' · ':''}${log.notes?escapeHtml(log.notes):''}</span></div>`),
-    ...periods.map(period=>`<div class="history-row"><strong>${escapeHtml(period.start)} → ${escapeHtml(period.end)}</strong><span>经期 ${days(period.start,period.end)+1} 天</span><span>正式月经</span></div>`)
-  ].join('');
-}
-function isInstalled(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}
-function renderSettings(){document.querySelector('#lifeStage').value=settings.lifeStage;document.querySelector('#ownerNotify').checked=settings.ownerNotify;document.querySelector('#partnerNotify').checked=settings.partnerNotify;document.querySelector('#offlineStatus').textContent=navigator.onLine?'当前在线；新记录仍会先保存在本设备。':'当前离线；记录功能仍可使用，联网后可重新载入公开历史。';document.querySelector('#installStatus').textContent=isInstalled()?'已作为 App 安装并独立运行。':'尚未检测到安装。iPhone 请用 Safari 的“分享 → 添加到主屏幕”；Android 可点击页面顶部“安装到手机”。';document.querySelector('#deviceStatus').textContent=localStorage.getItem(DEVICE_TOKEN_KEY)?`本设备已验证，有效至 ${new Date(localStorage.getItem(DEVICE_TOKEN_EXPIRY_KEY)).toLocaleDateString('zh-CN')}`:'本设备尚未验证；首次在线保存时会要求输入一次口令。'}
-function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===id));window.scrollTo({top:0,behavior:'smooth'})}
+function renderAll(){renderHero();renderSnapshot();renderAdvice();renderCalendar();renderHistory();renderInsights();renderJournalPreview();renderTimeline();renderFamily();renderSettings()}
+function renderHero(){const p=phaseInfo(),today=iso(new Date());document.querySelector('#cycleDay').textContent=p.cycleDay>0?p.cycleDay:'—';document.querySelector('#phasePill').textContent=p.name;document.querySelector('#todayDate').textContent=fullFmt.format(parseDate(today));document.querySelector('#nextPeriod').textContent=`预计 ${fmt.format(parseDate(p.next))} 左右进入下次经期`;document.querySelector('#predictionDetail').textContent=`较可能在 ${fmt.format(parseDate(p.windowStart))}–${fmt.format(parseDate(p.windowEnd))}，可信度${p.confidence}；近期中心周期约 ${p.center} 天。`}
+function renderSnapshot(){const log=state.logs[iso(new Date())],items=log?[[`${labels5[Number(log.mood)-1]||'—'}`,'情绪'],[`${labels5[Number(log.energy)-1]||'—'}`,'精力'],[`${labels5[Number(log.sleep)-1]||'—'}`,'睡眠'],[`${log.pain??0}/10`,'疼痛']]:[['未记录','情绪'],['未记录','精力'],['未记录','睡眠'],['未记录','疼痛']];document.querySelector('#todaySnapshot').innerHTML=items.map(([v,l])=>`<button class="snapshot" data-open-log><small>${l}</small><strong>${v}</strong></button>`).join('')}
+function adviceFor(p,log={}){const base={period:['根据身体感受降低运动强度，轻柔步行和伸展通常比强撑更合适。','规律进食并补充水分，工作安排尽量留出缓冲。'],follicular:['精力可能逐步恢复，可把复杂工作分批安排。','逐渐恢复力量或有氧活动，以第二天不过度疲劳为准。'],ovulation:['这是日历法估算窗口，不代表已经确认排卵，也不能用于避孕保证。','维持正常作息和活动，不必为了周期阶段强行改变计划。'],pms:['为睡眠和临时变化预留空间，减少连续高压或过晚安排。','如果以往此时容易嗜睡或烦躁，可提前和伴侣沟通希望得到的支持。']}[p.key];if(Number(log.sleep)<=2)base.unshift('今天睡眠记录偏低，优先补足休息，再决定运动和工作强度。');if(Number(log.pain)>=6)base.unshift('今天疼痛记录较高，建议减少勉强活动并持续观察。');return base.slice(0,3)}
+function renderAdvice(){const p=phaseInfo(),log=state.logs[p.date]||{};document.querySelector('#dailyAdvice').innerHTML=`<div class="advice-list">${adviceFor(p,log).map(x=>`<div class="advice-item">${x}</div>`).join('')}</div>`;const s=log.symptoms||[];let tendency='当前记录不足，先观察睡眠、冷热感、食欲、疼痛性质、经量与情绪的组合变化。',tips=['以温和、规律、可持续为原则，不因单一症状自行确定证型。'];if(s.includes('怕冷')&&Number(log.energy)<=2){tendency='传统辨证中，怕冷与疲乏同时出现可作为偏虚寒倾向的线索，但仍需结合持续时间等信息。';tips=['选择温热熟食、规律三餐；可少量饮用普通姜枣饮，不适时停止。','优先保证睡眠和轻柔活动。']}else if(s.includes('烦躁')||s.includes('情绪敏感')){tendency='经前烦躁、情绪敏感可作为气机不畅倾向的线索；单凭情绪不能确定证候。';tips=['安排舒缓步行、拉伸或呼吸练习，减少连续高压任务。','可选择普通玫瑰花饮；过敏或服药时先咨询专业人员。']}document.querySelector('#tcmAdvice').innerHTML=`<p>${tendency}</p><div class="advice-list">${tips.map(x=>`<div class="advice-item">${x}</div>`).join('')}</div>`}
+function renderCalendar(){const y=calendarCursor.getFullYear(),mo=calendarCursor.getMonth(),first=new Date(y,mo,1),start=new Date(y,mo,1-first.getDay()),p=phaseInfo(),today=iso(new Date());document.querySelector('#calendarTitle').textContent=`${y}年${mo+1}月`;let html='';for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const key=iso(d),classes=['day'];if(d.getMonth()!==mo)classes.push('outside');if(key===today)classes.push('today');if(allPeriods().some(x=>inRange(key,x.start,x.end)))classes.push('recorded');else if(inRange(key,p.windowStart,p.windowEnd))classes.push('predicted');if(inRange(key,p.pmsStart,addDays(p.next,-1)))classes.push('pms');if(inRange(key,addDays(p.ovulation,-2),addDays(p.ovulation,2)))classes.push('ovulation');if(journals.entries[key])classes.push('has-journal');html+=`<button class="${classes.join(' ')}" data-date="${key}" aria-label="${key}"><span class="day-number">${d.getDate()}</span></button>`}document.querySelector('#calendarGrid').innerHTML=html}
+function renderHistory(){const ps=allPeriods();document.querySelector('#historyCount').textContent=`${ps.length} 次`;document.querySelector('#historyList').innerHTML=[...ps].reverse().map((p,idx)=>{const ri=ps.length-1-idx,cycle=ri<ps.length-1?days(p.start,ps[ri+1].start):'—',remove=p.id?`<button class="delete-period danger compact" data-id="${p.id}">删除</button>`:'';return `<div class="history-row"><strong>${p.start} → ${p.end}</strong><span>经期 ${days(p.start,p.end)+1} 天</span><span>周期 ${cycle} 天</span>${remove}</div>`}).join('')}
+function renderInsights(){const m=cycleModel(),cycles=m.intervals.map(x=>x.length),recent=cycles.slice(-12),periodDays=m.ps.map(p=>days(p.start,p.end)+1),stats=[[`${median(cycles)}天`,'全部中位周期'],[`${mean(recent).toFixed(1)}天`,'近12次平均'],[`${Math.min(...recent)}–${Math.max(...recent)}天`,'近12次范围'],[`${mean(periodDays.slice(-12)).toFixed(1)}天`,'近12次经期']];document.querySelector('#summaryStats').innerHTML=stats.map(([v,l])=>`<div class="stat"><strong>${v}</strong><span>${l}</span></div>`).join('');document.querySelector('#cycleChart').innerHTML=m.intervals.slice(-36).map(x=>`<div class="bar ${x.length<21||x.length>35?'unusual':''}" style="height:${clamp((x.length-15)*8,20,210)}px" data-label="${x.start} · ${x.length}天"></div>`).join('');const logs=Object.entries(state.logs),groups={period:[],follicular:[],ovulation:[],pms:[]};logs.forEach(([d,l])=>groups[phaseForDate(d,m)].push(l));document.querySelector('#moodInsight').innerHTML=logs.length<6?needMore(logs.length,6):phaseAverages(groups,'mood');document.querySelector('#lifestyleInsight').innerHTML=logs.length<6?needMore(logs.length,6):['sleep','energy','activity'].map(k=>`<div class="insight-line">${{sleep:'睡眠',energy:'精力',activity:'活动'}[k]}：${bestPhase(groups,k)}</div>`).join('');const unusual=m.intervals.filter(x=>x.length<21||x.length>35);document.querySelector('#qualityInsight').innerHTML=`<p>历史中有 <strong>${unusual.length}</strong> 个周期开始间隔在21–35天之外。橙色柱为需要留意的历史变化。</p><p class="muted">样本：${m.intervals.length}个周期；观察不构成医疗判断。预测使用稳健中位数，降低单次极端值影响。</p>`}
+function needMore(have,need){return`<p class="muted">目前有${have}天记录，再记录${need-have}天后开始显示初步个人模式；跨3个周期后更有参考意义。</p>`}
+function phaseAverages(g,key){const names={period:'经期',follicular:'卵泡期',ovulation:'排卵估算期',pms:'经前阶段'};return Object.entries(g).filter(([,a])=>a.length).map(([k,a])=>`<div class="insight-line">${names[k]}：${mean(a.map(x=>Number(x[key])||3)).toFixed(1)}/5（${a.length}条）</div>`).join('')}
+function bestPhase(g,key){const e=Object.entries(g).filter(([,a])=>a.length).map(([k,a])=>[k,mean(a.map(x=>Number(x[key])||3))]).sort((a,b)=>b[1]-a[1]),names={period:'经期',follicular:'卵泡期',ovulation:'排卵估算期',pms:'经前阶段'};return e.length?`${names[e[0][0]]}相对较高（${g[e[0][0]].length}条）`:'数据不足'}
+function renderJournalPreview(){const date=iso(new Date()),e=journals.entries[date],el=document.querySelector('#todayJournalPreview');el.innerHTML=e?`<strong>${escapeHtml(e.title||'今天的随笔')}</strong><span>${escapeHtml(e.body.slice(0,100))}${e.body.length>100?'…':''}</span>`:`<strong>今天还没有随笔</strong><span class="muted">可以只写一句，也可以慢慢写成一篇日记。</span>`}
+function renderTimeline(){const q=document.querySelector('#journalSearch')?.value.trim().toLowerCase()||'',filter=document.querySelector('#journalPhaseFilter')?.value||'';const entries=Object.entries(journals.entries).sort((a,b)=>b[0].localeCompare(a[0])).filter(([d,e])=>(!filter||e.phase===filter)&&(!q||`${e.title} ${e.body} ${(e.tags||[]).join(' ')}`.toLowerCase().includes(q)));document.querySelector('#journalTimeline').innerHTML=entries.length?entries.map(([d,e])=>`<button class="journal-card" data-journal-date="${d}"><div class="journal-card-head"><div><small>${d} · ${phaseName(e.phase)}</small><h3>${escapeHtml(e.title||'无标题随笔')}</h3></div><div class="tag-row">${e.draft?'<span class="mini-tag">本机草稿</span>':''}${e.familyVisible?'<span class="mini-tag">家人可见</span>':''}</div></div><p>${escapeHtml(e.body.slice(0,160))}${e.body.length>160?'…':''}</p><div class="tag-row">${(e.tags||[]).map(t=>`<span class="mini-tag">${escapeHtml(t)}</span>`).join('')}</div></button>`).join(''):'<div class="panel muted">还没有符合条件的随笔。点击“写今天”开始。</div>'}
+function phaseName(k){return({period:'经期',follicular:'卵泡期',ovulation:'排卵估算期',pms:'经前阶段'})[k]||'其他阶段'}
+function renderFamily(){const p=phaseInfo(),logs=Object.entries(state.logs).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,20),visibleJournals=Object.entries(journals.entries).filter(([,e])=>e.familyVisible).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,10);document.querySelector('#familyPhase').textContent=`当前为${p.name}，周期第 ${p.cycleDay} 天`;document.querySelector('#familySummary').textContent=`下次经期预计在 ${fmt.format(parseDate(p.windowStart))}–${fmt.format(parseDate(p.windowEnd))}。这是范围估算，不是确定日期。`;document.querySelector('#familySupport').innerHTML=p.key==='pms'?'近期可多预留休息和缓冲，减少过晚或连续高压安排；先询问需要什么支持。':p.key==='period'?'当前处于经期，支持休息、补充水分，并尊重当事人的实际感受。':'维持正常安排，出现疲劳或不适时再灵活调整。';document.querySelector('#familyLogs').innerHTML=logs.map(([d,l])=>`<div class="family-log"><strong>${d}</strong><span>体温 ${l.temperature||'未记录'}${l.temperature?'℃':''}${l.notes?` · 备注：${escapeHtml(l.notes)}`:''}</span></div>`).join('')+visibleJournals.map(([d,e])=>`<div class="family-log"><strong>${d} 随笔</strong><span>${escapeHtml(e.title||e.body.slice(0,60))}</span></div>`).join('');const symptoms=state.logs[p.date]?.symptoms||[];document.querySelector('#emailPreview').innerHTML=`主题：明天可能进入${p.key==='period'?'经期':'周期提醒阶段'}<br><br>预计范围：${p.windowStart}–${p.windowEnd}<br>可选症状摘要：${symptoms.length?symptoms.join('、'):'无'}<br><br>建议：先询问需要什么支持，不对情绪作确定判断。`}
+function renderSettings(){document.querySelector('#lifeStage').value=settings.lifeStage;document.querySelector('#ownerNotify').checked=settings.ownerNotify;document.querySelector('#partnerNotify').checked=settings.partnerNotify;document.querySelector('#offlineStatus').textContent=navigator.onLine?'当前在线；所有编辑仍会先保存到本机，再同步GitHub。':'当前离线；记录和随笔仍可使用，联网后自动重试。';const installed=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;document.querySelector('#installStatus').textContent=installed?'已作为App安装并独立运行。':'尚未检测到安装。iPhone：Safari分享→添加到主屏幕；Android：点击页面顶部安装。';const token=localStorage.getItem(DEVICE_TOKEN_KEY),exp=localStorage.getItem(DEVICE_TOKEN_EXPIRY_KEY);document.querySelector('#deviceStatus').textContent=token&&exp?`本设备已验证，有效至 ${new Date(exp).toLocaleDateString('zh-CN')}`:'本设备尚未验证；首次在线保存时输入一次口令。';let logs=[];try{logs=JSON.parse(localStorage.getItem(SYNC_LOG_KEY)||'[]')}catch{}document.querySelector('#safeLog').innerHTML=logs.length?[...logs].reverse().map(l=>`<div>${escapeHtml(l.at)} · ${escapeHtml(l.operation)} · ${escapeHtml(l.status)}</div>`).join(''):'暂无失败日志。日志不会记录症状、随笔、口令或Token。'}
+
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===id));scrollTo({top:0,behavior:'smooth'});history.replaceState(null,'',`#${id}`)}
 function showToast(msg){const t=document.querySelector('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
-async function hash(text){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function ensureEditor(){if(localStorage.getItem('period-editor-device')==='yes'||!settings.passcodeHash)return true;const entered=prompt('请输入共享编辑口令');if(entered&&await hash(entered)===settings.passcodeHash){localStorage.setItem('period-editor-device','yes');return true}showToast('口令不正确');return false}
+function openDialog(id){document.querySelector(id).showModal()}
+function closeDialog(el){el.closest('dialog').close()}
+function openLog(date=iso(new Date())){selectedDate=date;const f=document.querySelector('#dailyForm'),l=state.logs[date]||{};f.reset();f.elements.date.value=date;['mood','energy','sleep','pain','activity','stress','temperature','discharge'].forEach(k=>{if(l[k]!==undefined&&f.elements[k])f.elements[k].value=l[k]});f.querySelectorAll('[name=symptom]').forEach(i=>i.checked=(l.symptoms||[]).includes(i.value));f.elements.sexualActivity.checked=Boolean(l.sexualActivity);updateOutputs(f);document.querySelector('#logDialogTitle').textContent=`${fmt.format(parseDate(date))}感觉怎么样？`;document.querySelector('#deleteLogBtn').hidden=!state.logs[date];openDialog('#logDialog')}
+function openJournal(date=iso(new Date())){selectedDate=date;const f=document.querySelector('#journalForm'),e=journals.entries[date]||{};f.reset();f.elements.date.value=date;f.elements.title.value=e.title||'';f.elements.body.value=e.body||state.logs[date]?.notes||'';f.elements.familyVisible.checked=Boolean(e.familyVisible);f.querySelectorAll('[name=tag]').forEach(i=>i.checked=(e.tags||[]).includes(i.value));document.querySelector('#journalPhaseBadge').textContent=phaseName(phaseForDate(date));document.querySelector('#deleteJournalBtn').hidden=!journals.entries[date];updateJournalCount();openDialog('#journalDialog')}
+function updateOutputs(root=document){root.querySelectorAll('input[type=range]').forEach(i=>{const o=i.nextElementSibling;if(o)o.textContent=i.name==='pain'?i.value:labels5[i.value-1]})}
+function updateJournalCount(){const v=document.querySelector('#journalForm').elements.body.value;document.querySelector('#journalCount').textContent=`${v.length} / 10000`;document.querySelector('#journalSaveState').textContent='草稿已保存在本机'}
+function showDay(date){selectedDate=date;const p=phaseForDate(date),l=state.logs[date],j=journals.entries[date],period=allPeriods().find(x=>inRange(date,x.start,x.end));document.querySelector('#dayDialogTitle').textContent=fullFmt.format(parseDate(date));document.querySelector('#dayDialogBody').innerHTML=`<div class="status-box"><strong>${phaseName(p)}</strong>${period?` · 实际经期 ${period.start}–${period.end}`:''}</div>${l?`<p>情绪 ${labels5[l.mood-1]} · 睡眠 ${labels5[l.sleep-1]} · 疼痛 ${l.pain}/10</p><p>${(l.symptoms||[]).join('、')||'无症状标签'}</p>`:'<p class="muted">当天没有身体状态记录。</p>'}${j?`<div class="journal-preview"><strong>${escapeHtml(j.title||'当天随笔')}</strong><span>${escapeHtml(j.body.slice(0,180))}</span></div>`:'<p class="muted">当天没有随笔。</p>'}`;openDialog('#dayDialog')}
 
-document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
-document.querySelector('#openLogBtn').addEventListener('click',()=>{showView('today');document.querySelector('.quick-log').scrollIntoView({behavior:'smooth'})});
-document.querySelector('#startPeriodBtn').addEventListener('click',async()=>{if(!await ensureEditor())return;const d=document.querySelector('#periodDialog'),today=iso(new Date());d.querySelector('[name=start]').value=today;d.querySelector('[name=end]').value=today;d.showModal()});
-document.querySelector('#periodForm').addEventListener('submit',async e=>{if(e.submitter?.value==='cancel')return; e.preventDefault();const f=new FormData(e.currentTarget),start=f.get('start'),end=f.get('end')||start;if(end<start)return showToast('结束日期不能早于开始日期');state.periods.push({id:crypto.randomUUID(),start,end,type:f.get('type'),source:'本设备',status:'confirmed',updatedAt:new Date().toISOString()});save();document.querySelector('#periodDialog').close()});
-document.querySelector('#dailyForm').addEventListener('submit',async e=>{e.preventDefault();if(!await ensureEditor())return;const f=new FormData(e.currentTarget);state.logs[iso(new Date())]={mood:f.get('mood'),energy:f.get('energy'),sleep:f.get('sleep'),activity:f.get('activity'),pain:f.get('pain'),stress:f.get('stress'),symptoms:f.getAll('symptom'),temperature:f.get('temperature'),discharge:f.get('discharge'),sexualActivity:f.get('sexualActivity')==='on',notes:f.get('notes'),updatedAt:new Date().toISOString()};save()});
-document.querySelector('#deleteTodayBtn').addEventListener('click',async()=>{if(!await ensureEditor())return;const date=iso(new Date());if(!state.logs[date])return showToast('今天还没有记录');if(confirm('删除今天的记录？此删除会同步到其他设备。')){const at=new Date().toISOString();delete state.logs[date];state.tombstones.logs[date]=at;save()}});
-document.querySelector('#historyList').addEventListener('click',async e=>{const button=e.target.closest('.delete-period');if(!button||!await ensureEditor())return;const id=button.dataset.periodId,period=state.periods.find(p=>p.id===id);if(period&&confirm(`删除 ${period.start} 开始的记录？此删除会同步到其他设备。`)){const at=new Date().toISOString();state.periods=state.periods.filter(p=>p.id!==id);state.tombstones.periods[id]=at;save()}});
-document.querySelectorAll('input[type=range]').forEach(input=>input.addEventListener('input',()=>{input.nextElementSibling.textContent=input.name==='pain'?input.value:labels5[input.value-1]}));
-document.querySelector('#prevMonth').addEventListener('click',()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar()});
-document.querySelector('#nextMonth').addEventListener('click',()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar()});
-document.querySelector('#lifeStage').addEventListener('change',e=>{settings.lifeStage=e.target.value;saveSettings();render()});
-document.querySelector('#ownerNotify').addEventListener('change',e=>{settings.ownerNotify=e.target.checked;saveSettings()});
-document.querySelector('#partnerNotify').addEventListener('change',e=>{settings.partnerNotify=e.target.checked;saveSettings()});
-document.querySelector('#savePasscode').addEventListener('click',async()=>{const v=document.querySelector('#editPasscode').value;if(v.length<12)return showToast('编辑口令至少12位，建议16–24位随机口令');try{await authorizeDevice(v);settings.passcodeHash=await hash(v);saveSettings();document.querySelector('#editPasscode').value='';renderSettings();showToast('本设备已验证，180天内无需重复输入')}catch(error){showToast(error.message)}});
-document.querySelector('#forgetDeviceBtn').addEventListener('click',()=>{localStorage.removeItem(DEVICE_TOKEN_KEY);localStorage.removeItem(DEVICE_TOKEN_EXPIRY_KEY);localStorage.removeItem('period-editor-device');renderSettings();showToast('已忘记本设备验证')});
-document.querySelector('#exportBtn').addEventListener('click',()=>{const payload={schemaVersion:1,exportedAt:new Date().toISOString(),periods:allPeriods(),logs:state.logs,tombstones:state.tombstones,settings:{lifeStage:settings.lifeStage,ownerNotify:settings.ownerNotify,partnerNotify:settings.partnerNotify}};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));a.download=`period-backup-${iso(new Date())}.json`;a.click();URL.revokeObjectURL(a.href)});
-document.querySelector('#importInput').addEventListener('change',async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(data.schemaVersion!==1||!Array.isArray(data.periods))throw new Error();state=normalizeLocalState({periods:data.periods.filter(p=>p.source!=='美柚截图'),logs:data.logs||{},tombstones:data.tombstones});save()}catch{showToast('备份文件格式不正确')}});
-document.querySelector('#resetLocalBtn').addEventListener('click',async()=>{if(!await ensureEditor())return;if(confirm('删除全部本设备新增记录并同步删除？公开的美柚历史不会删除。')){const at=new Date().toISOString();state.periods.forEach(p=>{state.tombstones.periods[periodKey(p)]=at});Object.keys(state.logs).forEach(date=>{state.tombstones.logs[date]=at});state.periods=[];state.logs={};save()}});
-window.addEventListener('online',()=>{renderSettings();if(localStorage.getItem(SYNC_PENDING_KEY)==='yes')syncNow()});window.addEventListener('offline',()=>{renderSettings();setSyncStatus('离线，联网后将自动同步')});
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;if(!isInstalled())document.querySelector('#installBtn').hidden=false});
-window.addEventListener('appinstalled',()=>{deferredInstall=null;document.querySelector('#installBtn').hidden=true;renderSettings()});
-document.querySelector('#installBtn').addEventListener('click',async()=>{if(deferredInstall){deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;document.querySelector('#installBtn').hidden=true}});
+document.addEventListener('click',async e=>{const nav=e.target.closest('[data-view]');if(nav)return showView(nav.dataset.view);if(e.target.closest('[data-open-log]'))return openLog();if(e.target.closest('[data-open-journal]'))return openJournal();if(e.target.closest('.close-dialog'))return closeDialog(e.target);const action=e.target.closest('[data-action]')?.dataset.action;if(action){document.querySelector('#quickDialog').close();if(action==='log')openLog();if(action==='journal')openJournal();if(action==='period')document.querySelector('#startPeriodBtn').click()}const day=e.target.closest('.day[data-date]');if(day)showDay(day.dataset.date);const journal=e.target.closest('[data-journal-date]');if(journal)openJournal(journal.dataset.journalDate)});
+document.querySelector('#quickAddBtn').addEventListener('click',()=>openDialog('#quickDialog'));
+document.querySelector('#startPeriodBtn').addEventListener('click',()=>{const f=document.querySelector('#periodForm'),today=iso(new Date());f.elements.start.value=today;f.elements.end.value=today;openDialog('#periodDialog')});
+document.querySelector('#periodForm').addEventListener('submit',e=>{if(e.submitter?.value==='cancel')return;const f=new FormData(e.currentTarget),start=f.get('start'),end=f.get('end')||start;if(end<start){e.preventDefault();return showToast('结束日期不能早于开始日期')}state.periods.push({id:crypto.randomUUID(),start,end,type:f.get('type'),source:'本设备',status:'confirmed',updatedAt:nowIso()});saveLocal();showToast('经期记录已保存')});
+document.querySelector('#dailyForm').addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.currentTarget),date=f.get('date');state.logs[date]={mood:f.get('mood'),energy:f.get('energy'),sleep:f.get('sleep'),activity:f.get('activity'),pain:f.get('pain'),stress:f.get('stress'),symptoms:f.getAll('symptom'),temperature:f.get('temperature'),discharge:f.get('discharge'),sexualActivity:f.get('sexualActivity')==='on',notes:state.logs[date]?.notes||'',updatedAt:nowIso()};saveLocal();document.querySelector('#logDialog').close();showToast('当天记录已保存')});
+document.querySelector('#deleteLogBtn').addEventListener('click',()=>{const date=document.querySelector('#dailyForm').elements.date.value;if(state.logs[date]&&confirm(`删除 ${date} 的身体记录？可在短时间内撤销。`)){const old=state.logs[date],at=nowIso();delete state.logs[date];state.tombstones.logs[date]=at;saveLocal();document.querySelector('#logDialog').close();showUndo('身体记录已删除',()=>{state.logs[date]={...old,updatedAt:nowIso()};delete state.tombstones.logs[date];saveLocal()})}});
+document.querySelector('#journalForm').addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.currentTarget),date=f.get('date'),body=f.get('body').trim();if(!body)return showToast('随笔正文不能为空');journals.entries[date]={date,title:f.get('title').trim(),body,tags:f.getAll('tag'),phase:phaseForDate(date),familyVisible:f.get('familyVisible')==='on',updatedAt:nowIso()};delete journals.tombstones[date];saveJournals();document.querySelector('#journalDialog').close();showToast('随笔已保存并准备同步')});
+document.querySelector('#deleteJournalBtn').addEventListener('click',()=>{const date=document.querySelector('#journalForm').elements.date.value;if(journals.entries[date]&&confirm(`删除 ${date} 的随笔？`)){const old=journals.entries[date];delete journals.entries[date];journals.tombstones[date]=nowIso();saveJournals();document.querySelector('#journalDialog').close();showUndo('随笔已删除',()=>{journals.entries[date]={...old,updatedAt:nowIso()};delete journals.tombstones[date];saveJournals()})}});
+function showUndo(message,undo){const t=document.querySelector('#toast');t.innerHTML=`${message} <button id="undoBtn" class="text-button">撤销</button>`;t.classList.add('show');const timer=setTimeout(()=>{t.classList.remove('show');t.textContent=''},5000);document.querySelector('#undoBtn').onclick=()=>{clearTimeout(timer);undo();t.classList.remove('show');showToast('已撤销')}}
+document.querySelector('#journalForm').elements.body.addEventListener('input',()=>{clearTimeout(journalTimer);updateJournalCount();journalTimer=setTimeout(()=>{const f=document.querySelector('#journalForm'),date=f.elements.date.value,body=f.elements.body.value;if(body){journals.entries[date]={date,title:f.elements.title.value,body,tags:[...f.querySelectorAll('[name=tag]:checked')].map(x=>x.value),phase:phaseForDate(date),familyVisible:f.elements.familyVisible.checked,updatedAt:nowIso(),draft:true};localStorage.setItem(JOURNAL_KEY,JSON.stringify(journals))}},500)});
+document.querySelectorAll('input[type=range]').forEach(i=>i.addEventListener('input',()=>updateOutputs(i.closest('form'))));
+document.querySelector('#calendarGrid').addEventListener('click',()=>{});document.querySelector('#prevMonth').addEventListener('click',()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar()});document.querySelector('#nextMonth').addEventListener('click',()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar()});
+document.querySelector('#historyList').addEventListener('click',e=>{const b=e.target.closest('.delete-period');if(!b)return;const p=state.periods.find(x=>x.id===b.dataset.id);if(p&&confirm(`删除 ${p.start} 开始的经期记录？`)){state.periods=state.periods.filter(x=>x.id!==p.id);state.tombstones.periods[p.id]=nowIso();saveLocal()}});
+document.querySelector('#dayEditLog').addEventListener('click',()=>{document.querySelector('#dayDialog').close();openLog(selectedDate)});document.querySelector('#dayWriteJournal').addEventListener('click',()=>{document.querySelector('#dayDialog').close();openJournal(selectedDate)});
+document.querySelector('#journalSearch').addEventListener('input',renderTimeline);document.querySelector('#journalPhaseFilter').addEventListener('change',renderTimeline);
+document.querySelector('#lifeStage').addEventListener('change',e=>{settings.lifeStage=e.target.value;saveSettings();renderAll()});document.querySelector('#ownerNotify').addEventListener('change',e=>{settings.ownerNotify=e.target.checked;saveSettings()});document.querySelector('#partnerNotify').addEventListener('change',e=>{settings.partnerNotify=e.target.checked;saveSettings()});
+document.querySelector('#savePasscode').addEventListener('click',async()=>{const v=document.querySelector('#editPasscode').value;if(v.length<12)return showToast('编辑口令至少12位，建议16–24位');try{await authorizeDevice(v);document.querySelector('#editPasscode').value='';renderSettings();showToast('本设备已验证，180天内无需重复输入')}catch(e){showToast(e.message)}});document.querySelector('#forgetDeviceBtn').addEventListener('click',()=>{localStorage.removeItem(DEVICE_TOKEN_KEY);localStorage.removeItem(DEVICE_TOKEN_EXPIRY_KEY);localStorage.removeItem('period-editor-device');renderSettings();showToast('已忘记设备验证')});
+document.querySelector('#exportBtn').addEventListener('click',()=>{const payload={schemaVersion:2,exportedAt:nowIso(),periods:allPeriods(),logs:state.logs,tombstones:state.tombstones,journals,settings};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));a.download=`period-backup-${iso(new Date())}.json`;a.click();URL.revokeObjectURL(a.href)});
+document.querySelector('#importInput').addEventListener('change',async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(![1,2].includes(d.schemaVersion)||!Array.isArray(d.periods))throw Error();state=normalizeState({periods:d.periods.filter(p=>p.source!=='美柚截图'),logs:d.logs,tombstones:d.tombstones});journals=normalizeJournals(d.journals);saveLocal();saveJournals();showToast('备份已导入')}catch{showToast('备份文件格式不正确')}});
+document.querySelector('#resetLocalBtn').addEventListener('click',()=>{if(!confirm('删除全部本设备新增记录与随笔并同步删除？美柚历史不会删除。'))return;const at=nowIso();state.periods.forEach(p=>state.tombstones.periods[periodKey(p)]=at);Object.keys(state.logs).forEach(d=>state.tombstones.logs[d]=at);Object.keys(journals.entries).forEach(d=>journals.tombstones[d]=at);state.periods=[];state.logs={};journals.entries={};saveLocal();saveJournals()});
+window.addEventListener('online',()=>{renderSettings();pullRemote();if(localStorage.getItem(SYNC_PENDING_KEY)==='yes')syncNow();if(localStorage.getItem(JOURNAL_PENDING_KEY)==='yes')syncJournals()});window.addEventListener('offline',()=>{renderSettings();setSync('离线保存')});window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;document.querySelector('#installBtn').hidden=false});document.querySelector('#installBtn').addEventListener('click',async()=>{if(deferredInstall){deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;document.querySelector('#installBtn').hidden=true}});window.addEventListener('appinstalled',renderSettings);
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
-try{await loadBase();await pullRemote();render();checkServiceStatus();if(localStorage.getItem(SYNC_PENDING_KEY)==='yes')scheduleSync();const params=new URLSearchParams(location.search);if(params.get('view')==='family'){showView('family');document.querySelector('.tabs').hidden=true;document.querySelector('.hero-actions').hidden=true}}catch(err){document.querySelector('#nextPeriod').textContent='历史数据载入失败';document.querySelector('#predictionDetail').textContent='请联网刷新或检查数据文件。';safeSyncLog('startup',err.name||'failed')}
+try{await loadBase();await pullRemote();renderAll();checkStatus();const family=new URLSearchParams(location.search).get('view')==='family';if(family){document.querySelectorAll('body>main>.view').forEach(v=>v.classList.remove('active'));document.querySelector('#more').classList.add('active');document.querySelector('.bottom-nav').hidden=true;document.querySelector('.app-header .header-actions').hidden=true;document.querySelector('.settings-section').hidden=true;document.querySelector('.section-block.no-top').hidden=true;document.querySelector('#familySection').scrollIntoView()}else{const hash=location.hash.slice(1);if(['today','calendar','insights','more'].includes(hash))showView(hash)}if(localStorage.getItem(SYNC_PENDING_KEY)==='yes')scheduleSync();if(localStorage.getItem(JOURNAL_PENDING_KEY)==='yes')scheduleJournalSync()}catch(e){alertSystem('页面数据载入失败，请联网刷新或检查数据文件。','danger');safeLog('startup',e.name||'failed')}

@@ -23,6 +23,11 @@ export default {
         const remote=await readState(env);
         return reply({ok:true,state:remote.state},200,cors);
       }
+      if(url.pathname==='/journals'&&request.method==='GET'){
+        const month=url.searchParams.get('month');
+        if(month){validateMonth(month);const remote=await readJournal(env,month);return reply({ok:true,journal:remote.journal},200,cors)}
+        return reply({ok:true,months:await listJournalMonths(env)},200,cors);
+      }
       if(url.pathname==='/authorize'&&request.method==='POST'){
         requireOrigin(origin,env);
         await enforceLimit(env.AUTH_RATE_LIMITER,clientKey(request),5,60);
@@ -45,6 +50,17 @@ export default {
         const result=await mergeAndWrite(env,incoming);
         safeLog('sync_ok',{requestId,mutation:incoming.mutationId.slice(0,8),revision:result.revision});
         return reply({ok:true,state:result},200,cors);
+      }
+      if(url.pathname==='/journals/sync'&&request.method==='POST'){
+        requireOrigin(origin,env);
+        const device=await authenticateSync(request,env);
+        await enforceLimit(env.SYNC_RATE_LIMITER,device.sub,30,60);
+        requireSmallBody(request,500_000);
+        const incoming=await safeJson(request);
+        validateJournalPayload(incoming);
+        const result=await mergeAndWriteJournal(env,incoming);
+        safeLog('journal_sync_ok',{requestId,mutation:incoming.mutationId.slice(0,8),month:incoming.month,revision:result.revision});
+        return reply({ok:true,journal:result},200,cors);
       }
       return reply({ok:false,error:'Not found'},404,cors);
     }catch(error){
@@ -147,6 +163,19 @@ function validatePayload(payload){
   if(settings.lifeStage!==undefined&&!['menarche','regular','perimenopause'].includes(settings.lifeStage))throw clientError('使用阶段无效');
   for(const key of ['ownerNotify','partnerNotify'])if(settings[key]!==undefined&&typeof settings[key]!=='boolean')throw clientError('通知设置类型无效');
 }
+function validateMonth(month){if(typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))throw clientError('随笔月份无效')}
+function validateJournalEntry(date,entry,month){
+  assertDate(date,'随笔日期');if(!date.startsWith(`${month}-`))throw clientError('随笔日期与月份不一致');assertObject(entry,'随笔');
+  if(entry.date!==date)throw clientError('随笔日期字段不一致');assertString(entry.title??'','随笔标题',120);assertString(entry.body,'随笔正文',10000,{allowEmpty:false});
+  if(!Array.isArray(entry.tags)||entry.tags.length>10)throw clientError('随笔标签无效');for(const tag of entry.tags)assertString(tag,'随笔标签',30,{allowEmpty:false});
+  if(!['period','follicular','ovulation','pms'].includes(entry.phase))throw clientError('随笔阶段无效');if(typeof entry.familyVisible!=='boolean')throw clientError('随笔分享字段无效');
+  if(entry.draft!==undefined&&typeof entry.draft!=='boolean')throw clientError('随笔草稿字段无效');assertTimestamp(entry.updatedAt,'随笔更新时间');
+}
+function validateJournalPayload(payload){
+  assertObject(payload,'随笔同步数据');if(payload.schemaVersion!==1)throw clientError('随笔同步版本不支持');validateMonth(payload.month);assertString(payload.mutationId,'变更ID',100,{allowEmpty:false});
+  assertObject(payload.entries,'随笔记录');assertObject(payload.tombstones,'随笔删除记录');if(Object.keys(payload.entries).length>31||Object.keys(payload.tombstones).length>62)throw clientError('单月随笔数量超过限制');
+  for(const [date,entry] of Object.entries(payload.entries))validateJournalEntry(date,entry,payload.month);for(const [date,at] of Object.entries(payload.tombstones)){assertDate(date,'随笔删除日期');if(!date.startsWith(`${payload.month}-`))throw clientError('随笔删除日期与月份不一致');assertTimestamp(at,'随笔删除时间')}
+}
 function daysBetween(a,b){return Math.round((Date.parse(`${b}T12:00:00Z`)-Date.parse(`${a}T12:00:00Z`))/DAY)}
 function emptyState(){return {schemaVersion:1,revision:0,updatedAt:null,periods:[],logs:{},tombstones:{periods:{},logs:{}},settings:{lifeStage:'regular',ownerNotify:true,partnerNotify:true},appliedMutations:[]}}
 function normalizeState(value){const empty=emptyState();return {...empty,...value,periods:Array.isArray(value?.periods)?value.periods:[],logs:value?.logs&&typeof value.logs==='object'&&!Array.isArray(value.logs)?value.logs:{},tombstones:{periods:value?.tombstones?.periods||{},logs:value?.tombstones?.logs||{}},settings:{...empty.settings,...value?.settings},appliedMutations:Array.isArray(value?.appliedMutations)?value.appliedMutations:[]}}
@@ -172,6 +201,35 @@ async function mergeAndWrite(env,payload){
   }
   const error=new Error('同时发生了其他更新，请重试');error.status=409;error.code='conflict';throw error;
 }
+function emptyJournal(month){return {schemaVersion:1,month,revision:0,updatedAt:null,entries:{},tombstones:{},appliedMutations:[]}}
+function normalizeJournal(value,month){const empty=emptyJournal(month);return {...empty,...value,month,entries:value?.entries&&typeof value.entries==='object'?value.entries:{},tombstones:value?.tombstones&&typeof value.tombstones==='object'?value.tombstones:{},appliedMutations:Array.isArray(value?.appliedMutations)?value.appliedMutations:[]}}
+function mergeJournal(remote,incoming){
+  const base=normalizeJournal(remote,incoming.month);if(base.appliedMutations.includes(incoming.mutationId))return base;
+  const tombstones=mergeTombstones(base.tombstones,incoming.tombstones),entries={...base.entries};
+  for(const [date,entry] of Object.entries(incoming.entries)){const old=entries[date];if(!old||newer(entry.updatedAt,old.updatedAt))entries[date]=entry}
+  for(const [date,entry] of Object.entries(entries))if(tombstones[date]&&newer(tombstones[date],entry.updatedAt))delete entries[date];
+  return {...base,revision:Number(base.revision||0)+1,updatedAt:new Date().toISOString(),entries,tombstones,appliedMutations:[...base.appliedMutations.slice(-99),incoming.mutationId]};
+}
+async function mergeAndWriteJournal(env,payload){
+  for(let attempt=0;attempt<3;attempt++){
+    const remote=await readJournal(env,payload.month),merged=mergeJournal(remote.journal,payload);
+    if(merged.revision===remote.journal.revision)return merged;
+    const path=`data/journals/${payload.month.slice(0,4)}/${payload.month}.json`;
+    const response=await github(env,`/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${path}`,{method:'PUT',body:JSON.stringify({message:`Sync journal ${payload.month} (${payload.mutationId.slice(0,8)})`,content:toBase64(JSON.stringify(merged,null,2)+'\n'),sha:remote.sha,branch:env.GITHUB_BRANCH})});
+    if(response.ok)return merged;if(response.status!==409)throw await githubError(response);
+  }
+  const error=new Error('随笔同时发生其他更新，请重试');error.status=409;error.code='journal_conflict';throw error;
+}
+async function readJournal(env,month){
+  const path=`data/journals/${month.slice(0,4)}/${month}.json`,response=await github(env,`/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${path}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
+  if(response.status===404)return {journal:emptyJournal(month),sha:undefined};if(!response.ok)throw await githubError(response);const file=await response.json();return {journal:normalizeJournal(JSON.parse(fromBase64(file.content)),month),sha:file.sha};
+}
+async function listJournalMonths(env){
+  const root=await github(env,`/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/data/journals?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);if(root.status===404)return[];if(!root.ok)throw await githubError(root);
+  const years=(await root.json()).filter(item=>item.type==='dir'&&/^\d{4}$/.test(item.name)).slice(-20),months=[];
+  for(const year of years){const response=await github(env,`/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${year.path}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);if(!response.ok)continue;for(const item of await response.json()){const match=/^(\d{4}-(?:0[1-9]|1[0-2]))\.json$/.exec(item.name);if(item.type==='file'&&match)months.push(match[1])}}
+  return months.sort();
+}
 async function readState(env){
   const response=await github(env,`/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${env.DATA_PATH}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
   if(response.status===404)return {state:emptyState(),sha:undefined};if(!response.ok)throw await githubError(response);
@@ -182,4 +240,4 @@ async function githubError(response){const detail=await response.json().catch(()
 function fromBase64(value){const binary=atob(value.replace(/\s/g,''));const bytes=Uint8Array.from(binary,char=>char.charCodeAt(0));return new TextDecoder().decode(bytes)}
 function toBase64(value){const bytes=new TextEncoder().encode(value);let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return btoa(binary)}
 
-export {mergeState,normalizeState,validatePayload};
+export {mergeJournal,mergeState,normalizeState,validateJournalPayload,validatePayload};
