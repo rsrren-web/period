@@ -6,6 +6,8 @@ const period={id:'period-1',start:'2026-07-10',end:'2026-07-15',type:'period',so
 const log={mood:'3',energy:'3',sleep:'3',activity:'3',pain:'0',stress:'3',symptoms:['嗜睡'],temperature:'36.50',updatedAt:at};
 const state={periods:[period],logs:{'2026-07-19':log},tombstones:{periods:{},logs:{}},settings:{lifeStage:'regular',ownerNotify:true,partnerNotify:true}};
 assert.doesNotThrow(()=>validatePayload({schemaVersion:1,mutationId:'mutation-1',state}));
+assert.doesNotThrow(()=>validatePayload({schemaVersion:1,mutationId:'period-edit',state:{...state,periods:[{...period,status:'ongoing',originalStart:'2026-07-09'}]}}));
+assert.doesNotThrow(()=>validatePayload({schemaVersion:1,mutationId:'period-delete',state:{...state,periods:[{...period,status:'deleted',originalStart:'2026-07-09'}]}}));
 assert.throws(()=>validatePayload({schemaVersion:1,mutationId:'bad',state:{...state,logs:{'2026-99-99':log}}}));
 assert.throws(()=>validatePayload({schemaVersion:1,mutationId:'bad',state:{...state,logs:{'2026-07-19':{...log,notes:'x'.repeat(2001)}}}}));
 

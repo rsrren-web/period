@@ -119,7 +119,7 @@ function validatePeriod(period){
   assertObject(period,'经期记录');assertString(period.id,'经期ID',100,{allowEmpty:false});assertDate(period.start,'开始');assertDate(period.end,'结束');
   if(period.end<period.start||daysBetween(period.start,period.end)>30)throw clientError('经期日期范围无效');
   if(!['period','spotting','uncertain'].includes(period.type))throw clientError('经期类型无效');
-  assertString(period.source??'','经期来源',50);assertString(period.status??'','经期状态',30);assertTimestamp(period.updatedAt,'经期更新时间');
+  assertString(period.source??'','经期来源',50);if(!['confirmed','ongoing','deleted'].includes(period.status))throw clientError('经期状态无效');if(period.originalStart!==undefined)assertDate(period.originalStart,'原始开始');assertTimestamp(period.updatedAt,'经期更新时间');
 }
 function validateLog(date,log){
   assertDate(date,'记录');assertObject(log,'每日记录');
