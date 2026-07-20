@@ -59,12 +59,13 @@
     <section id="calendar" class="view">
       <div class="page-heading"><p class="eyebrow">日历</p><h1>周期与生活记录</h1><p>实测日期和预测范围分别显示，点击日期查看详情。</p></div>
       <article class="panel calendar-panel">
-        <div class="calendar-head"><button id="prevMonth" class="round-button" aria-label="上个月">‹</button><h2 id="calendarTitle"></h2><button id="nextMonth" class="round-button" aria-label="下个月">›</button></div>
+        <div class="calendar-toolbar"><div class="calendar-view-switch"><button id="monthViewBtn" class="active" type="button">月历</button><button id="yearViewBtn" type="button">年历</button></div><label class="year-jump">快速跳转<select id="calendarYearSelect" aria-label="选择年份"></select></label></div>
+        <div class="calendar-head"><button id="prevMonth" class="round-button" aria-label="上一时段">‹</button><h2 id="calendarTitle"></h2><button id="nextMonth" class="round-button" aria-label="下一时段">›</button></div>
         <div class="weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
         <div id="calendarGrid" class="calendar-grid"></div>
         <div class="legend"><span><i class="legend-dot follicular"></i>卵泡期</span><span><i class="legend-dot ovulation"></i>排卵期</span><span><i class="legend-dot luteal"></i>黄体期</span><span><i class="legend-dot actual"></i>月经期</span><span><i class="legend-dot predicted"></i>预测经期</span><span><i class="legend-dot journal"></i>有随笔</span></div>
       </article>
-      <article class="panel history-card"><div class="section-title"><div><p class="eyebrow">历史</p><h2>周期长度变化</h2></div><span id="historyCount" class="muted"></span></div><div class="cycle-chart-wrap"><div id="cycleHistoryChart" class="cycle-line-chart" role="img" aria-label="周期长度折线图"></div></div><div id="historyAnalysis" class="history-analysis"></div><details class="raw-history"><summary><span><small>原始记录</small><strong>查看最近12次经期</strong></span><span>＋</span></summary><div id="historyList" class="history-list"></div></details></article>
+      <article class="panel history-card"><div class="section-title"><div><p class="eyebrow">历史</p><h2>周期长度变化</h2></div><span id="historyCount" class="muted"></span></div><p class="chart-help">点击折线上的圆点，查看该周期的日期、长度与解释。橙色点表示落在21–35天参考范围外。</p><div class="cycle-chart-wrap"><div id="cycleHistoryChart" class="cycle-line-chart" role="img" aria-label="可点击的周期长度折线图"></div></div><div id="cyclePointDetail" class="cycle-point-detail">请选择一个圆点查看详细说明。</div><div id="historyAnalysis" class="history-analysis"></div><details class="raw-history"><summary><span><small>原始记录</small><strong>查看最近12次经期</strong></span><span>＋</span></summary><div id="historyList" class="history-list"></div></details></article>
     </section>
 
     <section id="insights" class="view">
