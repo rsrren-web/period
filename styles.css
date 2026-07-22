@@ -101,3 +101,201 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent-primary);
   .choice-pills span { text-align: center; padding: 10px 12px; }
   .daily-chart-arch { padding: 25px 8px 0; border-radius: 130px 130px 24px 24px / 82px 82px 24px 24px; }
 }
+
+/* Theme B mobile polish: calm focus states and a readable two-row metric switch. */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid rgba(191, 165, 244, 0.6);
+  outline-offset: 2px;
+}
+
+.round-button {
+  border: 0;
+  background: var(--lavender-soft);
+  color: var(--ink);
+}
+
+/* Theme B — Lavender Candy × Mint, clean edition */
+:root {
+  --canvas: #fcfbff;
+  --surface: #ffffff;
+  --ink: #29252d;
+  --muted-ink: #756e78;
+  --soft-line: #ebe6f0;
+  --lavender: #bfa5f4;
+  --lavender-deep: #7555b4;
+  --lavender-soft: #f1ebff;
+  --candy-pink: #f5b6d1;
+  --mint: #b8e6de;
+  --mint-soft: #e9f8f5;
+  --apricot: #ffd9be;
+  --lemon: #f6e48a;
+  --period-rose: #de5d85;
+  --nav-ink: #28242b;
+  --bg: var(--canvas);
+  --bg-cream: var(--canvas);
+  --bg-blush: var(--lavender-soft);
+  --text: var(--ink);
+  --text-primary: var(--ink);
+  --muted: var(--muted-ink);
+  --line: var(--soft-line);
+  --border-tan: var(--soft-line);
+  --accent-primary: var(--lavender-deep);
+  --accent-coral: var(--candy-pink);
+  --accent-yellow: var(--lemon);
+  --data-pink: var(--candy-pink);
+  --data-blue: #6677aa;
+  --data-green: #57998c;
+  --data-red: var(--period-rose);
+  --berry: var(--lavender-deep);
+  --berry-dark: #56388e;
+  --berry-soft: var(--lavender-soft);
+  --surface-soft: #f7f4fb;
+  --surface-teal: var(--mint-soft);
+  --teal: #4c9387;
+  --teal-soft: var(--mint-soft);
+  --amber: #a77c19;
+  --amber-soft: #fff9d9;
+  --danger: #ba3f64;
+  --phase-period: var(--period-rose);
+  --phase-follicular: #e7ce52;
+  --phase-ovulation: #f0a779;
+  --phase-luteal: #a98ae8;
+  --shadow: 0 10px 30px rgba(77, 60, 102, .07);
+  font-family: "Avenir Next", "Nunito Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+html, body { background: var(--canvas) !important; color: var(--ink); }
+body::before { display: none; }
+.app-header { background: rgba(252, 251, 255, .9); border-bottom: 1px solid rgba(235, 230, 240, .86); box-shadow: none; }
+.brand { color: var(--ink); }
+.sync-badge { background: #f3f0f7; color: var(--muted-ink); }
+.sync-badge[data-state="ok"] { background: var(--mint-soft); color: #35796e; }
+
+.cycle-hero {
+  background: linear-gradient(135deg, #f5f0ff 0%, #eef9f7 100%);
+  border: 0;
+  border-radius: 30px;
+  box-shadow: none;
+}
+.cycle-ring { background: #fff; box-shadow: 0 8px 22px rgba(107, 83, 154, .1); }
+.cycle-ring.phase-period { background: #fff4f7; }
+.cycle-ring.phase-follicular { background: #fffceb; }
+.cycle-ring.phase-ovulation { background: #fff6ef; }
+.cycle-ring.phase-pms { background: #f7f1ff; }
+.phase-pill { border: 0; }
+.phase-pill.phase-period { background: #ffe7ef; color: #a53b5d; }
+.phase-pill.phase-follicular { background: #fff7c9; color: #66570d; }
+.phase-pill.phase-ovulation { background: #ffeadc; color: #885033; }
+.phase-pill.phase-pms { background: #eee4ff; color: #644795; }
+.prediction-grid > div { background: rgba(255,255,255,.78); border-color: rgba(255,255,255,.9); }
+
+.panel, .snapshot, .history-card, .calendar-card, .period-editor, .modal-card, .notice-card {
+  background: var(--surface);
+  border: 1px solid var(--soft-line);
+  border-radius: 24px;
+  box-shadow: 0 7px 24px rgba(72, 55, 92, .045);
+}
+.snapshot { border: 0; box-shadow: none; }
+.snapshot:nth-child(4n+1) { background: var(--lavender-soft); }
+.snapshot:nth-child(4n+2) { background: var(--mint-soft); }
+.snapshot:nth-child(4n+3) { background: #fff5eb; }
+.snapshot:nth-child(4n+4) { background: #fff0f6; }
+.snapshot strong, .stat strong, .health-score { color: var(--ink); }
+.section-title h2, .panel h2, .panel h3, .page-heading h1, .hero-content h1 { color: var(--ink); letter-spacing: -.025em; }
+.eyebrow, .eyebrow-row { color: var(--lavender-deep); letter-spacing: .08em; }
+
+.primary { background: var(--lavender-deep); color: #fff; box-shadow: none; }
+.primary:hover { background: #6645a5; }
+.soft, .text-button, .file-button { background: var(--lavender-soft); border-color: transparent; color: #5d4290; }
+.danger { background: #fff0f4; color: #aa365a; }
+.period-action.primary, .quick-add { background: var(--period-rose); color: #fff; }
+.quick-add { border-color: var(--canvas); box-shadow: 0 8px 22px rgba(222,93,133,.26); }
+
+input, textarea, select { background: #fff; border-color: var(--soft-line); border-radius: 15px; color: var(--ink); }
+input:focus, textarea:focus, select:focus { border-color: var(--lavender); outline: 3px solid rgba(191,165,244,.25); }
+.score-field, .metric-grid label, .optional-fields label, .choice-field, .temperature-field { background: #fbfaff; border-color: var(--soft-line); border-radius: 20px; }
+.score-picker span, .chips span, .choice-pills span { background: #fff; border-color: var(--soft-line); color: var(--ink); }
+.score-picker input:checked + span, .chips input:checked + span, .choice-pills input:checked + span { background: var(--lavender); border-color: var(--lavender); color: #2e2340; box-shadow: none; }
+
+.advice-item { border-radius: 17px; background: var(--lavender-soft); }
+.advice-item:nth-child(even) { background: var(--mint-soft); }
+.traditional-list .advice-item { background: #fff5eb; }
+.traditional-list .advice-item:nth-child(even) { background: var(--mint-soft); }
+.classic-basis, .quarter-guidance { background: #fffbe5; border-color: #f1e8aa; }
+.symptom-guidance { background: #f6f1ff; border-color: #e6dafd; }
+.traditional-card { border-color: var(--soft-line); box-shadow: none; }
+.traditional-card-head > span { background: var(--mint-soft); color: #3f7f75; }
+.quarter-metrics > div:nth-child(4n+1), .daily-trend-summary > div:nth-child(4n+1) { background: var(--lavender-soft); }
+.quarter-metrics > div:nth-child(4n+2), .daily-trend-summary > div:nth-child(4n+2) { background: var(--mint-soft); }
+.quarter-metrics > div:nth-child(4n+3), .daily-trend-summary > div:nth-child(4n+3) { background: #fff5eb; }
+.quarter-metrics > div:nth-child(4n+4), .daily-trend-summary > div:nth-child(4n+4) { background: #fff0f6; }
+
+.calendar-view-switch, .trend-switch { background: #f3f0f7; }
+.calendar-view-switch button.active, .trend-switch button.active { color: #56388e; box-shadow: none; }
+.day { background: #fff; }
+.day.phase-follicular:not(.recorded):not(.predicted) { background: #fffdf0; }
+.day.phase-ovulation:not(.recorded):not(.predicted) { background: #fff5ed; }
+.day.phase-pms:not(.recorded):not(.predicted) { background: #f8f2ff; }
+.day.recorded, .mini-day.recorded { background: var(--period-rose); }
+.day.today { border-color: var(--ink); }
+.status-star { color: #557cc3; }
+
+.daily-chart-arch, .cycle-chart-wrap, .trend-chart-wrap {
+  border: 0;
+  background: linear-gradient(145deg, #eee6ff 0%, #e5f7f3 100%);
+  box-shadow: none;
+}
+.daily-trend-chart .trend-line { stroke: #5f5792; }
+.daily-trend-chart circle { fill: #fff; stroke: #5f5792; }
+.cycle-line-chart polyline, .trend-chart-wrap polyline { stroke: #5f5792; }
+
+.bottom-nav {
+  left: 50%;
+  right: auto;
+  bottom: 10px;
+  width: min(460px, calc(100% - 20px));
+  height: 70px;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  border: 0;
+  border-radius: 25px;
+  background: rgba(40,36,43,.96);
+  box-shadow: 0 14px 32px rgba(40,36,43,.2);
+}
+.nav-item { color: #bdb7c2; }
+.nav-item.active { color: #fff; }
+.quick-add { border-color: var(--nav-ink); }
+.toast { background: var(--nav-ink); }
+dialog { border-color: var(--soft-line); border-radius: 25px; }
+
+@media (max-width: 430px) {
+  main { padding-bottom: 112px; }
+  .cycle-hero { border-radius: 25px; }
+  .panel, .history-card, .calendar-card, .period-editor { border-radius: 22px; }
+  .bottom-nav { bottom: max(8px, env(safe-area-inset-bottom)); }
+  .sheet-dialog .dialog-actions { background: #fff; }
+
+  .trend-switch.metric-switch {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+  }
+
+  .trend-switch.metric-switch button {
+    min-width: 0;
+    padding: 8px 4px;
+    border-radius: 10px;
+    background: #f3f0f7;
+  }
+
+  .trend-switch.metric-switch button.active {
+    background: #fff;
+    box-shadow: 0 0 0 1px var(--lavender);
+  }
+}
