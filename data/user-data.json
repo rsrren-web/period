@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 10,
-  "updatedAt": "2026-07-22T04:05:35.383Z",
+  "revision": 11,
+  "updatedAt": "2026-07-22T04:26:31.465Z",
   "periods": [
     {
       "id": "f06d1273-01ac-4014-aacd-53b945328697",
@@ -29,15 +29,6 @@
       "source": "本设备",
       "status": "confirmed",
       "updatedAt": "2026-07-20T03:28:30.373Z"
-    },
-    {
-      "id": "bcda2bd1-4cb3-4061-b90e-bdf2c9092b6b",
-      "start": "2026-07-19",
-      "end": "2026-07-21",
-      "type": "period",
-      "source": "本设备",
-      "status": "confirmed",
-      "updatedAt": "2026-07-22T04:05:34.378Z"
     }
   ],
   "logs": {
@@ -57,7 +48,9 @@
     }
   },
   "tombstones": {
-    "periods": {},
+    "periods": {
+      "bcda2bd1-4cb3-4061-b90e-bdf2c9092b6b": "2026-07-22T04:26:30.483Z"
+    },
     "logs": {}
   },
   "settings": {
@@ -75,6 +68,7 @@
     "19ed87ba-ea7e-4e64-823b-19af8f85106d",
     "f56ab336-bcf1-41f1-a62b-779b79b985fb",
     "088b1db8-bbae-47dd-a2a6-06f9e60efa98",
-    "1d725a58-c14c-4a22-9b87-1f6324bd933e"
+    "1d725a58-c14c-4a22-9b87-1f6324bd933e",
+    "01d1c9b4-0f5d-41a7-80a3-dde38d1d16c7"
   ]
 }
