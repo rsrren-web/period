@@ -36,7 +36,7 @@
           <div class="eyebrow-row"><span id="phasePill" class="phase-pill">载入中</span><span id="todayDate" class="muted"></span></div>
           <h1 id="todayHeadline">正在准备今天的生活建议</h1>
           <div class="prediction-grid"><div><small>距离下次月经</small><strong id="daysToPeriod">—</strong></div><div><small>预计日期</small><strong id="expectedDate">—</strong></div><div><small>可能范围</small><strong id="predictionRange">—</strong></div></div>
-          <div class="period-controls"><button id="startPeriodBtn" class="primary period-action">月经开始了</button><button id="editCurrentPeriodBtn" class="text-button period-edit" hidden>日期不对？更改</button><button id="cancelCurrentPeriodBtn" class="text-button period-cancel" hidden>撤销刚才的操作</button></div>
+          <div class="period-controls"><button id="startPeriodBtn" class="primary period-action">月经开始了</button><button id="editCurrentPeriodBtn" class="text-button period-edit" hidden>日期不对？更改</button></div>
         </div>
       </article>
 
@@ -67,6 +67,7 @@
     <section id="insights" class="view">
       <div class="page-heading"><p class="eyebrow">趋势</p><h1>认识自己的重复模式</h1><p>只描述个人记录中的相关变化，不代表因果或诊断。</p></div>
       <div id="summaryStats" class="stat-grid"></div>
+      <article class="panel quarter-card"><div class="section-title"><div><p class="eyebrow">本季度观察</p><h2>准时情况与经期观察分</h2></div><strong id="quarterScore" class="health-score">—</strong></div><div id="quarterMetrics" class="quarter-metrics"></div><div id="quarterGuidance" class="quarter-guidance"></div><p class="fineprint">观察分用于整理个人记录，不是医学量表或诊断；记录不足时可信度会降低。</p></article>
       <article class="panel"><div class="section-title"><div><p class="eyebrow">周期变化</p><h2>最近36次开始间隔</h2></div></div><div id="cycleChart" class="bar-chart" role="img" aria-label="周期长度趋势图"></div></article>
       <div class="content-grid insight-grid"><article class="panel"><h2>哪个阶段情绪相对较好？</h2><div id="moodInsight"></div></article><article class="panel"><h2>睡眠、精力和活动有什么变化？</h2><div id="lifestyleInsight"></div></article></div>
       <article class="panel"><h2>最近的周期稳定吗？</h2><div id="qualityInsight"></div></article>
