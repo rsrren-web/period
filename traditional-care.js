@@ -1,9 +1,11 @@
 function carePlan(phase, log = {}) {
   const symptoms = log.symptoms || [];
+  const painLocations = (log.symptoms || []).filter((item) => item.startsWith('疼痛部位：')).map((item) => item.slice(5));
   const pain = Number(log.pain) || 0;
   const stress = Number(log.stress) || 3;
   const sleep = Number(log.sleep) || 3;
   const has = (name) => symptoms.includes(name);
+  const hurts = (name) => painLocations.includes(name);
   const plans = {
     period: {
       title: '经期 · 因感受而调护',
@@ -98,11 +100,11 @@ function carePlan(phase, log = {}) {
   const notes = [];
   if (has('怕冷')) notes.push('你记录了怕冷：今天可优先保暖、温水；只有没有胃灼热、腹泻或明显热感时才考虑淡姜水。');
   if (has('腹胀')) notes.push('你记录了腹胀：正餐减慢速度，餐后轻走5–10分钟，不用力揉腹，也不靠浓茶“消胀”。');
-  if (has('头痛')) notes.push('你记录了头痛：先补水、减少屏幕刺激并安静休息；不热敷头部。突然出现或异常剧烈的头痛应及时求助。');
-  if (has('烦躁') || has('情绪敏感') || stress >= 4) notes.push('今天偏烦或压力较高：下午后减少咖啡因，把轻按配合缓慢呼气使用，不加辛辣、浓姜等刺激。');
+  if (has('头痛') || hurts('头部')) notes.push('你记录了头部疼痛：先补水、减少屏幕刺激并安静休息；不热敷头部。突然出现或异常剧烈的头痛应及时求助。');
+  if (has('烦躁') || has('情绪敏感') || has('焦虑') || has('生气') || has('害怕/紧张') || stress >= 4) notes.push('今天情绪紧张或压力较高：下午后减少咖啡因，把轻按配合缓慢呼气使用，不加辛辣、浓姜等刺激。');
   if (has('嗜睡') || sleep <= 2) notes.push('今天嗜睡或睡眠不足：不靠浓茶硬撑；午后若小睡，尽量控制在20–30分钟，并优先提早入睡。');
   if (has('食欲变化')) notes.push('你记录了食欲变化：少量、规律进食比“补品”更重要；持续吃不下、反复呕吐或明显体重变化时应评估。');
-  if (has('腰腹不适') && !has('头痛')) notes.push('你记录了腰腹不适：可先试舒适热敷；若热后更痛就停止，不把“喜热”当作诊断。');
+  if ((has('腰腹不适') || hurts('腰背') || hurts('小腹/盆腔')) && !has('头痛') && !hurts('头部')) notes.push('你记录了腰腹部疼痛：可先试舒适热敷；若热后更痛就停止，不把“喜热”当作诊断。');
   const urgent = pain >= 7
     ? '疼痛已达7分或以上，若影响日常活动、越来越重或止痛与热敷仍无效，请尽快进行专业评估。'
     : '若出现晕厥、发热、突发单侧剧痛、异常大量出血，或疼痛持续加重，请停止自我调养并及时求助。';
