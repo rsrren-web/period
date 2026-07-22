@@ -115,140 +115,178 @@ button:focus-visible,
   color: var(--ink);
 }
 
-/* Theme B — Lavender Candy × Mint, clean edition */
+/* Controlled color system: multi-color, fixed meaning, two tones per hue. */
 :root {
-  --canvas: #fcfbff;
+  --canvas: #faf9f7;
   --surface: #ffffff;
-  --ink: #29252d;
-  --muted-ink: #756e78;
-  --soft-line: #ebe6f0;
-  --lavender: #bfa5f4;
-  --lavender-deep: #7555b4;
-  --lavender-soft: #f1ebff;
-  --candy-pink: #f5b6d1;
-  --mint: #b8e6de;
-  --mint-soft: #e9f8f5;
-  --apricot: #ffd9be;
-  --lemon: #f6e48a;
-  --period-rose: #de5d85;
-  --nav-ink: #28242b;
+  --surface-muted: #f4f2f5;
+  --ink: #302c34;
+  --muted-ink: #77717d;
+  --soft-line: #e7e3e8;
+  --primary: #7654b5;
+  --primary-soft: #e6dcf5;
+  --lavender: var(--primary);
+  --lavender-deep: var(--primary);
+  --lavender-soft: var(--primary-soft);
+  --candy-pink: var(--phase-period-soft);
+  --apricot: var(--phase-luteal-soft);
+  --lemon: var(--phase-luteal-base);
+  --period-rose: var(--phase-period-base);
+  --mint: #70ad9f;
+  --mint-soft: #e3f1ed;
+  --phase-follicular-base: #b68f89;
+  --phase-follicular-soft: #eaddda;
+  --phase-ovulation-base: #7654b5;
+  --phase-ovulation-soft: #e6dcf5;
+  --phase-luteal-base: #d58718;
+  --phase-luteal-soft: #f4dfb5;
+  --phase-period-base: #a7211d;
+  --phase-period-soft: #efc7c4;
+  --status-blue: #527fa7;
+  --status-blue-soft: #e6f0f7;
+  --nav-ink: #2f2b32;
+  --radius-control: 12px;
+  --radius-inner: 16px;
+  --radius-card: 24px;
+  --radius-feature: 28px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
   --bg: var(--canvas);
   --bg-cream: var(--canvas);
-  --bg-blush: var(--lavender-soft);
+  --bg-blush: var(--primary-soft);
   --text: var(--ink);
   --text-primary: var(--ink);
   --muted: var(--muted-ink);
   --line: var(--soft-line);
   --border-tan: var(--soft-line);
-  --accent-primary: var(--lavender-deep);
-  --accent-coral: var(--candy-pink);
-  --accent-yellow: var(--lemon);
-  --data-pink: var(--candy-pink);
-  --data-blue: #6677aa;
-  --data-green: #57998c;
-  --data-red: var(--period-rose);
-  --berry: var(--lavender-deep);
-  --berry-dark: #56388e;
-  --berry-soft: var(--lavender-soft);
-  --surface-soft: #f7f4fb;
+  --accent-primary: var(--primary);
+  --accent-coral: var(--phase-period-base);
+  --accent-yellow: var(--phase-luteal-base);
+  --data-pink: var(--phase-period-base);
+  --data-blue: var(--primary);
+  --data-green: var(--mint);
+  --data-red: var(--phase-period-base);
+  --berry: var(--primary);
+  --berry-dark: var(--primary);
+  --berry-soft: var(--primary-soft);
+  --surface-soft: var(--surface-muted);
   --surface-teal: var(--mint-soft);
-  --teal: #4c9387;
+  --teal: var(--mint);
   --teal-soft: var(--mint-soft);
-  --amber: #a77c19;
-  --amber-soft: #fff9d9;
-  --danger: #ba3f64;
-  --phase-period: var(--period-rose);
-  --phase-follicular: #e7ce52;
-  --phase-ovulation: #f0a779;
-  --phase-luteal: #a98ae8;
-  --shadow: 0 10px 30px rgba(77, 60, 102, .07);
+  --amber: var(--phase-luteal-base);
+  --amber-soft: var(--phase-luteal-soft);
+  --danger: var(--phase-period-base);
+  --phase-period: var(--phase-period-base);
+  --phase-follicular: var(--phase-follicular-base);
+  --phase-ovulation: var(--phase-ovulation-base);
+  --phase-luteal: var(--phase-luteal-base);
+  --shadow: 0 8px 24px rgba(48, 44, 52, .055);
   font-family: "Avenir Next", "Nunito Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
 }
 
+html { font-size: 16px; }
 html, body { background: var(--canvas) !important; color: var(--ink); }
+body { font-size: 15px; line-height: 1.6; }
 body::before { display: none; }
-.app-header { background: rgba(252, 251, 255, .9); border-bottom: 1px solid rgba(235, 230, 240, .86); box-shadow: none; }
+.app-header { background: rgba(250, 249, 247, .94); border-bottom: 1px solid var(--soft-line); box-shadow: none; }
 .brand { color: var(--ink); }
-.sync-badge { background: #f3f0f7; color: var(--muted-ink); }
-.sync-badge[data-state="ok"] { background: var(--mint-soft); color: #35796e; }
+.sync-badge { background: var(--surface-muted); color: var(--muted-ink); border-radius: 999px; }
+.sync-badge[data-state="ok"] { background: var(--mint-soft); color: var(--ink); }
+.system-alert, .traditional-warning { background: var(--phase-period-soft); border-color: var(--phase-period-base); color: var(--ink); border-radius: var(--radius-inner); }
+
+.page-heading h1, .hero-content h1 { font-size: clamp(1.75rem, 7vw, 2.15rem); line-height: 1.18; }
+.section-title h2, .panel > h2 { font-size: 1.22rem; line-height: 1.3; }
+.panel h3, .traditional-card h3 { font-size: 1rem; line-height: 1.4; }
+.eyebrow, .eyebrow-row, .kicker { font-size: .72rem; line-height: 1.4; letter-spacing: .08em; }
+small, .field-hint { font-size: .78rem; line-height: 1.5; }
+button, input, textarea, select { font: inherit; }
 
 .cycle-hero {
-  background: linear-gradient(135deg, #f5f0ff 0%, #eef9f7 100%);
-  border: 0;
-  border-radius: 30px;
-  box-shadow: none;
+  background: var(--surface);
+  border: 1px solid var(--soft-line);
+  border-radius: var(--radius-feature);
+  box-shadow: var(--shadow);
 }
-.cycle-ring { background: #fff; box-shadow: 0 8px 22px rgba(107, 83, 154, .1); }
-.cycle-ring.phase-period { background: #fff4f7; }
-.cycle-ring.phase-follicular { background: #fffceb; }
-.cycle-ring.phase-ovulation { background: #fff6ef; }
-.cycle-ring.phase-pms { background: #f7f1ff; }
-.phase-pill { border: 0; }
-.phase-pill.phase-period { background: #ffe7ef; color: #a53b5d; }
-.phase-pill.phase-follicular { background: #fff7c9; color: #66570d; }
-.phase-pill.phase-ovulation { background: #ffeadc; color: #885033; }
-.phase-pill.phase-pms { background: #eee4ff; color: #644795; }
-.prediction-grid > div { background: rgba(255,255,255,.78); border-color: rgba(255,255,255,.9); }
+.cycle-ring { background: var(--surface); box-shadow: 0 6px 18px rgba(48, 44, 52, .08); }
+.cycle-ring.phase-period { background: var(--phase-period-soft); }
+.cycle-ring.phase-follicular { background: var(--phase-follicular-soft); }
+.cycle-ring.phase-ovulation { background: var(--phase-ovulation-soft); }
+.cycle-ring.phase-pms { background: var(--phase-luteal-soft); }
+.phase-pill { border: 1px solid; color: var(--ink); }
+.phase-pill.phase-period { background: var(--phase-period-soft); border-color: var(--phase-period-base); color: var(--ink); }
+.phase-pill.phase-follicular { background: var(--phase-follicular-soft); border-color: var(--phase-follicular-base); color: var(--ink); }
+.phase-pill.phase-ovulation { background: var(--phase-ovulation-soft); border-color: var(--phase-ovulation-base); color: var(--ink); }
+.phase-pill.phase-pms { background: var(--phase-luteal-soft); border-color: var(--phase-luteal-base); color: var(--ink); }
+.prediction-grid { gap: var(--space-3); }
+.prediction-grid > div { background: var(--surface-muted); border-color: var(--soft-line); border-radius: var(--radius-inner); }
 
 .panel, .snapshot, .history-card, .calendar-card, .period-editor, .modal-card, .notice-card {
   background: var(--surface);
   border: 1px solid var(--soft-line);
-  border-radius: 24px;
-  box-shadow: 0 7px 24px rgba(72, 55, 92, .045);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
 }
-.snapshot { border: 0; box-shadow: none; }
-.snapshot:nth-child(4n+1) { background: var(--lavender-soft); }
-.snapshot:nth-child(4n+2) { background: var(--mint-soft); }
-.snapshot:nth-child(4n+3) { background: #fff5eb; }
-.snapshot:nth-child(4n+4) { background: #fff0f6; }
+.panel, .history-card, .calendar-card, .period-editor { padding: var(--space-5); }
+.snapshot { background: var(--surface); border: 1px solid var(--soft-line); box-shadow: none; border-radius: var(--radius-inner); }
+.snapshot:nth-child(n) { background: var(--surface); }
 .snapshot strong, .stat strong, .health-score { color: var(--ink); }
 .section-title h2, .panel h2, .panel h3, .page-heading h1, .hero-content h1 { color: var(--ink); letter-spacing: -.025em; }
-.eyebrow, .eyebrow-row { color: var(--lavender-deep); letter-spacing: .08em; }
+.section-title { gap: var(--space-3); margin-bottom: var(--space-4); }
+.eyebrow, .eyebrow-row { color: var(--primary); letter-spacing: .08em; }
 
-.primary { background: var(--lavender-deep); color: #fff; box-shadow: none; }
-.primary:hover { background: #6645a5; }
-.soft, .text-button, .file-button { background: var(--lavender-soft); border-color: transparent; color: #5d4290; }
-.danger { background: #fff0f4; color: #aa365a; }
-.period-action.primary, .quick-add { background: var(--period-rose); color: #fff; }
-.quick-add { border-color: var(--canvas); box-shadow: 0 8px 22px rgba(222,93,133,.26); }
+.primary { background: var(--primary); color: #fff; box-shadow: none; }
+.primary:hover { filter: brightness(.94); }
+.soft, .text-button, .file-button { background: var(--primary-soft); border-color: transparent; color: var(--ink); }
+.danger { background: var(--phase-period-soft); color: var(--phase-period-base); }
+.period-action.primary, .quick-add { background: var(--phase-period-base); color: #fff; }
+.quick-add { border-color: var(--canvas); box-shadow: 0 8px 20px rgba(167, 33, 29, .22); }
+.primary, .soft, .danger, .text-button, .file-button, .tab-button { min-height: 44px; border-radius: var(--radius-control); padding: 10px 16px; font-size: .9rem; font-weight: 760; }
 
-input, textarea, select { background: #fff; border-color: var(--soft-line); border-radius: 15px; color: var(--ink); }
-input:focus, textarea:focus, select:focus { border-color: var(--lavender); outline: 3px solid rgba(191,165,244,.25); }
-.score-field, .metric-grid label, .optional-fields label, .choice-field, .temperature-field { background: #fbfaff; border-color: var(--soft-line); border-radius: 20px; }
+input, textarea, select { background: var(--surface); border-color: var(--soft-line); border-radius: var(--radius-control); color: var(--ink); min-height: 44px; }
+textarea { min-height: 96px; }
+input:focus, textarea:focus, select:focus { border-color: var(--primary); outline: 3px solid rgba(118, 84, 181, .18); }
+.score-field, .metric-grid label, .optional-fields label, .choice-field, .temperature-field { background: var(--surface-muted); border-color: var(--soft-line); border-radius: var(--radius-inner); padding: var(--space-4); }
 .score-picker span, .chips span, .choice-pills span { background: #fff; border-color: var(--soft-line); color: var(--ink); }
-.score-picker input:checked + span, .chips input:checked + span, .choice-pills input:checked + span { background: var(--lavender); border-color: var(--lavender); color: #2e2340; box-shadow: none; }
+.score-picker input:checked + span, .chips input:checked + span, .choice-pills input:checked + span { background: var(--primary-soft); border-color: var(--primary); color: var(--ink); box-shadow: none; }
+.score-picker span { border-radius: 50%; }
+.chips span, .choice-pills span { border-radius: 999px; }
+.metric-grid, .optional-fields, .snapshot-grid, .quarter-metrics, .daily-trend-summary { gap: var(--space-3); }
 
-.advice-item { border-radius: 17px; background: var(--lavender-soft); }
-.advice-item:nth-child(even) { background: var(--mint-soft); }
-.traditional-list .advice-item { background: #fff5eb; }
-.traditional-list .advice-item:nth-child(even) { background: var(--mint-soft); }
-.classic-basis, .quarter-guidance { background: #fffbe5; border-color: #f1e8aa; }
-.symptom-guidance { background: #f6f1ff; border-color: #e6dafd; }
+.advice-item { border-radius: var(--radius-inner); background: var(--surface); border: 1px solid var(--soft-line); border-left: 4px solid var(--primary); padding: var(--space-4); }
+.advice-item:nth-child(n) { background: var(--surface); }
+.traditional-list .advice-item, .traditional-list .advice-item:nth-child(n) { background: var(--surface); border-left-color: var(--mint); }
+.classic-basis, .quarter-guidance { background: var(--surface-muted); border-color: var(--soft-line); border-radius: var(--radius-inner); }
+.symptom-guidance { background: var(--primary-soft); border-color: var(--primary); border-radius: var(--radius-inner); }
 .traditional-card { border-color: var(--soft-line); box-shadow: none; }
-.traditional-card-head > span { background: var(--mint-soft); color: #3f7f75; }
-.quarter-metrics > div:nth-child(4n+1), .daily-trend-summary > div:nth-child(4n+1) { background: var(--lavender-soft); }
-.quarter-metrics > div:nth-child(4n+2), .daily-trend-summary > div:nth-child(4n+2) { background: var(--mint-soft); }
-.quarter-metrics > div:nth-child(4n+3), .daily-trend-summary > div:nth-child(4n+3) { background: #fff5eb; }
-.quarter-metrics > div:nth-child(4n+4), .daily-trend-summary > div:nth-child(4n+4) { background: #fff0f6; }
+.traditional-card, .day-status-card, .observation-empty, .relief-list, .observation-note { border-radius: var(--radius-inner); }
+.traditional-card-head > span { background: var(--mint-soft); color: var(--ink); border-radius: var(--radius-control); }
+.quarter-metrics > div:nth-child(n), .daily-trend-summary > div:nth-child(n) { background: var(--surface-muted); border: 1px solid var(--soft-line); border-radius: var(--radius-inner); }
+.quarter-metrics > div:first-child, .daily-trend-summary > div:first-child { background: var(--primary-soft); border-color: var(--primary); }
 
-.calendar-view-switch, .trend-switch { background: #f3f0f7; }
-.calendar-view-switch button.active, .trend-switch button.active { color: #56388e; box-shadow: none; }
+.calendar-view-switch, .trend-switch { background: var(--surface-muted); border-radius: var(--radius-control); }
+.calendar-view-switch button, .trend-switch button { border-radius: calc(var(--radius-control) - 3px); }
+.calendar-view-switch button.active, .trend-switch button.active { background: var(--surface); color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
 .day { background: #fff; }
-.day.phase-follicular:not(.recorded):not(.predicted) { background: #fffdf0; }
-.day.phase-ovulation:not(.recorded):not(.predicted) { background: #fff5ed; }
-.day.phase-pms:not(.recorded):not(.predicted) { background: #f8f2ff; }
-.day.recorded, .mini-day.recorded { background: var(--period-rose); }
+.day.phase-follicular:not(.recorded):not(.predicted) { background: var(--phase-follicular-soft); border-color: var(--phase-follicular-base); }
+.day.phase-ovulation:not(.recorded):not(.predicted) { background: var(--phase-ovulation-soft); border-color: var(--phase-ovulation-base); }
+.day.phase-pms:not(.recorded):not(.predicted) { background: var(--phase-luteal-soft); border-color: var(--phase-luteal-base); }
+.day.recorded, .mini-day.recorded { background: var(--phase-period-base); color: #fff; }
+.day.predicted:not(.recorded) { background: var(--phase-period-soft); border-color: var(--phase-period-base); border-style: dashed; }
 .day.today { border-color: var(--ink); }
-.status-star { color: #557cc3; }
+.status-star { color: var(--status-blue); }
 
 .daily-chart-arch, .cycle-chart-wrap, .trend-chart-wrap {
-  border: 0;
-  background: linear-gradient(145deg, #eee6ff 0%, #e5f7f3 100%);
+  border: 1px solid var(--soft-line);
+  background: var(--surface-muted);
   box-shadow: none;
 }
-.daily-trend-chart .trend-line { stroke: #5f5792; }
-.daily-trend-chart circle { fill: #fff; stroke: #5f5792; }
-.cycle-line-chart polyline, .trend-chart-wrap polyline { stroke: #5f5792; }
+.daily-trend-chart .trend-line { stroke: var(--primary); }
+.daily-trend-chart circle { fill: #fff; stroke: var(--primary); }
+.cycle-line-chart polyline, .trend-chart-wrap polyline { stroke: var(--primary); }
 
 .bottom-nav {
   left: 50%;
@@ -259,7 +297,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--lavender); outli
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   border: 0;
-  border-radius: 25px;
+  border-radius: var(--radius-card);
   background: rgba(40,36,43,.96);
   box-shadow: 0 14px 32px rgba(40,36,43,.2);
 }
@@ -267,12 +305,27 @@ input:focus, textarea:focus, select:focus { border-color: var(--lavender); outli
 .nav-item.active { color: #fff; }
 .quick-add { border-color: var(--nav-ink); }
 .toast { background: var(--nav-ink); }
-dialog { border-color: var(--soft-line); border-radius: 25px; }
+dialog { border-color: var(--soft-line); border-radius: var(--radius-card); }
+
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid rgba(118, 84, 181, .24);
+  outline-offset: 2px;
+}
+
+.app-main, main { row-gap: var(--space-5); }
+.today-view > *, .calendar-view > *, .trends-view > *, .more-view > * { margin-bottom: var(--space-5); }
+.today-view > *:last-child, .calendar-view > *:last-child, .trends-view > *:last-child, .more-view > *:last-child { margin-bottom: 0; }
+.modal-card, .sheet-dialog .modal-card { padding: var(--space-5); }
+.dialog-actions { gap: var(--space-3); padding-top: var(--space-4); }
 
 @media (max-width: 430px) {
   main { padding-bottom: 112px; }
-  .cycle-hero { border-radius: 25px; }
-  .panel, .history-card, .calendar-card, .period-editor { border-radius: 22px; }
+  .cycle-hero { border-radius: var(--radius-card); }
+  .panel, .history-card, .calendar-card, .period-editor { border-radius: var(--radius-card); padding: var(--space-4); }
+  .hero-content h1 { font-size: 1.55rem; line-height: 1.24; }
+  .period-controls { grid-template-columns: 1fr; gap: var(--space-2); width: 100%; }
+  .period-controls .period-edit { width: 100%; white-space: nowrap; }
   .bottom-nav { bottom: max(8px, env(safe-area-inset-bottom)); }
   .sheet-dialog .dialog-actions { background: #fff; }
 
@@ -290,12 +343,12 @@ dialog { border-color: var(--soft-line); border-radius: 25px; }
   .trend-switch.metric-switch button {
     min-width: 0;
     padding: 8px 4px;
-    border-radius: 10px;
-    background: #f3f0f7;
+    border-radius: calc(var(--radius-control) - 3px);
+    background: var(--surface-muted);
   }
 
   .trend-switch.metric-switch button.active {
     background: #fff;
-    box-shadow: 0 0 0 1px var(--lavender);
+    box-shadow: 0 0 0 1px var(--primary);
   }
 }
