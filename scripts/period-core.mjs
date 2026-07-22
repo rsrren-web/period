@@ -9,12 +9,13 @@ export function loadPeriods(path='outputs/meiyou_periods_draft.csv',userPath='da
   const text=fs.readFileSync(path,'utf8').trim();
   const lines=text.split(/\r?\n/);const headers=lines.shift().split(',');
   const imported=lines.map(line=>{const parts=line.split(',');return Object.fromEntries(headers.map((h,i)=>[h,parts[i]||'']))});
-  let added=[];
+  let added=[],replacements=new Set();
   if(fs.existsSync(userPath)){
     const user=loadUserData(userPath);
-    added=(user.periods||[]).filter(period=>period.type==='period').map(period=>({period_start:period.start,period_end:period.end,source:'synced_web_app',status:period.status||'confirmed'}));
+    replacements=new Set((user.periods||[]).map(period=>period.originalStart).filter(Boolean));
+    added=(user.periods||[]).filter(period=>period.type==='period'&&period.status!=='deleted').map(period=>({period_start:period.start,period_end:period.end,source:'synced_web_app',status:period.status||'confirmed'}));
   }
-  const byStart=new Map(imported.map(period=>[period.period_start,period]));
+  const byStart=new Map(imported.filter(period=>!replacements.has(period.period_start)).map(period=>[period.period_start,period]));
   added.forEach(period=>byStart.set(period.period_start,period));
   return [...byStart.values()].sort((a,b)=>a.period_start.localeCompare(b.period_start));
 }

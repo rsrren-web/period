@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "check": "node scripts/validate-data.mjs && node scripts/test-sync.mjs && node scripts/check-dom.mjs",
+    "check": "node scripts/validate-data.mjs && node scripts/test-sync.mjs && node scripts/check-dom.mjs && node scripts/test-reminders.mjs",
     "remind": "node scripts/send-reminders.mjs"
   },
   "dependencies": {

@@ -68,6 +68,10 @@
       <div class="page-heading"><p class="eyebrow">趋势</p><h1>认识自己的重复模式</h1><p>只描述个人记录中的相关变化，不代表因果或诊断。</p></div>
       <div id="summaryStats" class="stat-grid"></div>
       <article id="dailyTrendPanel" class="panel daily-trend-panel"><div class="section-title"><div><p class="eyebrow">每日状态趋势</p><h2>睡眠、情绪与精力变化</h2></div></div><div id="dailyTrendControls"></div><div id="dailyTrendChart" class="daily-trend-chart"></div><div id="dailyTrendSummary" class="daily-trend-summary"></div></article>
+      <div class="content-grid personal-observation-grid">
+        <article class="panel personal-factor-panel"><div class="section-title"><div><p class="eyebrow">个人相关因素观察</p><h2>哪些状态与周期变化同时出现？</h2></div><span class="observation-badge">非因果</span></div><div id="personalFactorInsight"></div></article>
+        <article class="panel pms-observation-panel"><div class="section-title"><div><p class="eyebrow">经前不适观察</p><h2>经前一周的负担与缓解方向</h2></div><strong id="pmsBurden" class="burden-badge">待记录</strong></div><div id="pmsInsight"></div></article>
+      </div>
       <article class="panel quarter-card"><div class="section-title"><div><p class="eyebrow">本季度观察</p><h2>准时情况与经期观察分</h2></div><strong id="quarterScore" class="health-score">—</strong></div><div id="quarterMetrics" class="quarter-metrics"></div><div id="quarterGuidance" class="quarter-guidance"></div><p class="fineprint">观察分用于整理个人记录，不是医学量表或诊断；记录不足时可信度会降低。</p></article>
       <article class="panel"><div class="section-title"><div><p class="eyebrow">周期变化</p><h2>最近36次开始间隔</h2></div></div><div id="cycleChart" class="bar-chart" role="img" aria-label="周期长度趋势图"></div></article>
       <div class="content-grid insight-grid"><article class="panel"><h2>哪个阶段情绪相对较好？</h2><div id="moodInsight"></div></article><article class="panel"><h2>睡眠、精力和活动有什么变化？</h2><div id="lifestyleInsight"></div></article></div>
@@ -77,13 +81,13 @@
     <section id="more" class="view">
       <div class="page-heading"><p class="eyebrow">更多</p><h1>伴侣邮件与设置</h1></div>
 
-      <section class="section-block"><div class="section-title"><div><p class="eyebrow">伴侣邮件</p><h2>下一封提醒预览</h2></div></div><article class="panel"><div id="emailPreview" class="email-preview"></div><p class="fineprint">邮件只发送周期提醒和当次明确选择的症状类别。</p></article></section>
+      <section class="section-block"><div class="section-title"><div><p class="eyebrow">周期陪伴邮件</p><h2>阶段、经期与结束祝福预览</h2></div></div><article class="panel"><div id="emailPreview" class="email-preview"></div><p class="fineprint">伴侣邮件只发送周期阶段和支持建议，不默认披露每日状态；所有日期均为估算或本人确认的记录。</p></article></section>
 
       <section class="section-block settings-section">
         <div class="section-title"><div><p class="eyebrow">设置</p><h2>设备、通知与数据</h2></div></div>
         <div class="content-grid">
           <article class="panel form-stack"><label>当前阶段<select id="lifeStage"><option value="menarche">初潮阶段</option><option value="regular">常规周期</option><option value="perimenopause">围绝经期</option></select></label><label>共享编辑口令<input id="editPasscode" type="password" minlength="12" maxlength="128" autocomplete="current-password" placeholder="至少12位，建议16–24位"></label><div class="button-row"><button id="savePasscode" class="soft">验证此设备</button><button id="forgetDeviceBtn" class="text-button">忘记设备</button></div><p id="deviceStatus" class="status-box"></p></article>
-          <article class="panel form-stack"><h3>邮件通知</h3><label class="toggle"><input id="ownerNotify" type="checkbox"><span>本人邮件</span></label><label class="toggle"><input id="partnerNotify" type="checkbox"><span>伴侣邮件</span></label><p>提前1天，在温哥华时间上午约9–10点发送。</p><p class="fineprint">伴侣可选择接收症状类别，但不会默认发送所有内容。</p></article>
+          <article class="panel form-stack"><h3>邮件通知</h3><label class="toggle"><input id="ownerNotify" type="checkbox"><span>本人邮件</span></label><label class="toggle"><input id="partnerNotify" type="checkbox"><span>伴侣邮件</span></label><p>每天约在温哥华时间上午10点检查：阶段提前1天提醒，经期每天关怀，结束当天或次日补发祝福。</p><p class="fineprint">伴侣邮件不会默认发送每日症状；结束祝福会按结束记录时间选择当天或次日，只发送一次。</p></article>
         </div>
         <article class="panel data-panel"><p id="offlineStatus"></p><p id="installStatus" class="status-box"></p><div class="button-row"><button id="exportBtn" class="soft">导出完整备份</button><label class="file-button">导入备份<input id="importInput" type="file" accept="application/json,.json"></label><button id="resetLocalBtn" class="danger">删除本设备新增数据</button></div><details><summary><span><small>同步诊断</small><strong>查看最近的安全状态日志</strong></span><span>＋</span></summary><div id="safeLog" class="safe-log"></div></details></article>
       </section>
@@ -118,6 +122,6 @@
   <dialog id="dayDialog" class="day-dialog"><div class="dialog-head"><div><p class="eyebrow">当天详情</p><h2 id="dayDialogTitle"></h2></div><button class="close-dialog round-button" aria-label="关闭">×</button></div><div id="dayDialogBody"></div><div class="day-primary-actions"><button id="daySetPeriodBtn" class="primary">标记为月经日</button><button id="dayCancelPeriodBtn" class="danger" hidden>取消当天经期</button><button id="dayEditPeriodBtn" class="soft" hidden>修改本次开始/结束日期</button></div><button id="dayEditLog" class="text-button day-log-action">记录身体状态</button></dialog>
 
   <div id="toast" class="toast" role="status"></div>
-  <script src="sync-config.js"></script><script type="module" src="traditional-care.js"></script><script type="module" src="daily-insights.js"></script><script type="module" src="app.js"></script>
+  <script src="sync-config.js"></script><script type="module" src="traditional-care.js"></script><script type="module" src="daily-insights.js"></script><script type="module" src="personal-insights.js"></script><script type="module" src="app.js"></script>
 </body>
 </html>
