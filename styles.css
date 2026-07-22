@@ -20,5 +20,84 @@
 @media(max-width:430px){.classic-basis,.symptom-guidance,.traditional-warning,.traditional-card{padding:13px 14px}.traditional-card dl>div{grid-template-columns:38px 1fr}.traditional-steps{font-size:.9rem}.tcm-panel .section-title{align-items:flex-start}.tcm-panel .section-title h2{font-size:1.1rem;line-height:1.3}}
 .temperature-field{margin:14px 0;padding:14px;border:1px solid var(--line);border-radius:16px;background:#fffafc}.temperature-field small,.field-hint{color:var(--muted);font-size:.78rem}.field-hint{margin:-4px 0 11px;line-height:1.45}.pain-location-chips span{background:#fff8ef}.day.has-status,.mini-day.has-status{position:relative}.status-star{position:absolute;color:#1787d4;text-shadow:0 1px 2px #fff;line-height:1;pointer-events:none}.day .status-star{right:5px;top:4px;font-size:.72rem}.mini-day .status-star{right:-1px;top:-2px;font-size:.43rem}.day.recorded .status-star,.mini-day.recorded .status-star{color:#d8efff;text-shadow:0 1px 2px #8f1831}.today-status-detail{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.today-status-detail>span{display:grid;gap:3px;padding:9px 11px;border-radius:12px;background:#eef7ff;color:#36566b;font-size:.78rem}.today-status-detail strong{font-size:.68rem;color:#1677ba}.day-status-card{margin-top:14px;padding:15px;border-radius:16px;background:#eef7ff;border:1px solid #c8e3f6}.day-status-card.empty{background:#f8f5f6;border-color:var(--line)}.day-status-card p{margin:7px 0 0;color:var(--muted)}.day-status-heading{display:flex;justify-content:space-between;gap:10px;align-items:center}.day-status-heading span{color:var(--muted);font-size:.75rem}.day-status-ratings{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.day-status-ratings>div{background:#fff;border-radius:11px;padding:9px}.day-status-ratings small,.day-status-ratings strong{display:block}.day-status-ratings small{color:var(--muted);font-size:.68rem;margin-bottom:3px}.day-status-ratings strong{font-size:.85rem}.day-status-row{display:grid;grid-template-columns:72px 1fr;gap:8px;padding:8px 0;border-top:1px solid #d7e8f3;font-size:.8rem;line-height:1.45}.day-status-row span{color:#536773}.daily-trend-panel{margin-bottom:18px}.daily-trend-panel #dailyTrendControls{display:grid;gap:9px}.trend-switch{display:flex;gap:5px;padding:4px;border-radius:13px;background:#f6eff2;width:max-content;max-width:100%;overflow-x:auto}.trend-switch button{border:0;border-radius:9px;padding:8px 12px;background:transparent;color:var(--muted);white-space:nowrap}.trend-switch button.active{background:#fff;color:var(--berry-dark);font-weight:800;box-shadow:0 2px 8px #49213512}.metric-switch{width:100%}.metric-switch button{flex:1}.daily-chart-scroll{overflow-x:auto;margin-top:14px}.daily-trend-chart svg{display:block;width:100%;min-width:620px}.daily-trend-chart line{stroke:#eadfe4;stroke-dasharray:4 5}.daily-trend-chart polyline{fill:none;stroke:#1787d4;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.daily-trend-chart circle{fill:#1787d4;stroke:#fff;stroke-width:2}.daily-trend-chart text{fill:var(--muted);font-size:11px}.trend-empty{margin-top:14px;padding:30px;border-radius:15px;background:#f8f5f6;color:var(--muted);text-align:center}.daily-trend-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}.daily-trend-summary>div{padding:12px;border-radius:13px;background:#eef7ff}.daily-trend-summary strong,.daily-trend-summary span{display:block}.daily-trend-summary span{margin-top:4px;color:var(--muted);font-size:.72rem}.daily-trend-summary p{grid-column:1/-1;color:var(--muted);font-size:.78rem;line-height:1.55;margin:2px 0}
 @media(max-width:430px){#dailyForm .metric-grid{grid-template-columns:1fr}#dailyForm .score-field{padding:12px}#dailyForm .score-picker{gap:6px}#dailyForm .score-picker span{width:40px;height:40px;font-size:.85rem}.status-star{z-index:2}.day-status-ratings{grid-template-columns:repeat(2,1fr)}.daily-trend-summary{grid-template-columns:repeat(2,1fr)}.metric-switch button{padding:8px 10px}.daily-trend-chart svg{min-width:0}}
+
+/* Final warm-theme overrides: deliberately last so earlier compatibility styles remain harmless. */
+body{background:var(--bg-cream)!important;color:var(--text-primary)}body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.045;background-image:radial-gradient(rgba(132,59,53,.72) .55px,transparent .7px);background-size:6px 6px}.app-header{background:rgba(250,242,229,.9);border-bottom-color:rgba(206,167,151,.55)}.cycle-hero{background:linear-gradient(135deg,#fddbd1,#fbcbbc 56%,#f6e3b6);border-radius:38px;border-color:var(--border-tan);box-shadow:var(--shadow)}.panel,.snapshot,.history-card,.calendar-card,.period-editor,.modal-card,.notice-card{background:rgba(255,250,242,.94);border-color:var(--border-tan);border-radius:32px;box-shadow:var(--shadow)}.snapshot{border-radius:24px}.primary,.soft,.danger,.text-button,.file-button,.tab-button,.chip,.metric-option{border-radius:999px}.primary{background:var(--accent-primary);box-shadow:0 6px 16px rgba(208,111,100,.2)}.primary:hover{background:#bc5c54}.soft,.text-button,.file-button{border-color:var(--border-tan);background:#fffaf2;color:var(--text-primary)}input,textarea,select{border-radius:18px;border-color:var(--border-tan);background:#fffdf8;color:var(--text-primary)}input:focus,textarea:focus,select:focus{border-color:var(--accent-primary);outline-color:rgba(208,111,100,.22)}.choice-field{margin:14px 0;padding:17px;border:1px solid var(--border-tan);border-radius:27px;background:rgba(255,250,242,.9)}.choice-field legend{padding:0 6px;color:var(--text-primary);font-weight:800}.choice-pills{display:flex;flex-wrap:wrap;gap:8px}.choice-pills label{position:relative;display:block;cursor:pointer}.choice-pills input{position:absolute;opacity:0;pointer-events:none}.choice-pills span{display:block;padding:9px 13px;border:1px solid var(--border-tan);border-radius:999px;color:var(--text-primary);background:#fffdf8;font-size:.9rem;font-weight:700;transition:transform .16s ease,background .16s ease,border-color .16s ease}.choice-pills input:checked+span{background:#f9d8cc;border-color:var(--accent-primary);box-shadow:0 3px 10px rgba(208,111,100,.15)}.choice-pills input:focus-visible+span{outline:3px solid rgba(208,111,100,.28);outline-offset:2px}.choice-pills label:active span{transform:scale(.97)}.daily-trend-panel .section-title{justify-content:center;text-align:center}.daily-chart-arch{margin-top:16px;padding:30px 14px 0;overflow:hidden;border:1px solid rgba(206,167,151,.68);border-radius:180px 180px 28px 28px / 112px 112px 28px 28px;background:linear-gradient(145deg,rgba(242,166,200,.63),rgba(243,217,138,.48))}.daily-trend-chart{display:block;width:100%;min-height:190px;overflow:visible}.daily-trend-chart .trend-area{fill:url(#trendFill)}.daily-trend-chart .trend-line{fill:none;stroke:var(--data-blue);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.daily-trend-chart circle{fill:#fffaf2;stroke:var(--data-blue);stroke-width:2.5}.daily-trend-chart text{fill:#765b52;font-family:inherit;font-size:11px}.cycle-chart-wrap,.trend-chart-wrap{border:1px solid rgba(206,167,151,.68);border-radius:160px 160px 28px 28px / 104px 104px 28px 28px;background:linear-gradient(145deg,rgba(242,166,200,.55),rgba(243,217,138,.4));padding:28px 13px 8px;overflow:hidden}.cycle-line-chart polyline,.trend-chart-wrap polyline{stroke:var(--data-blue)}.chart-legend,.daily-trend-legend{display:flex;justify-content:center;gap:14px;padding:12px 4px 0;color:var(--muted);font-size:.82rem}.chart-legend span:before,.daily-trend-legend span:before{border-radius:999px}@media(max-width:430px){.cycle-hero{border-radius:30px}.panel,.history-card,.calendar-card,.period-editor{border-radius:26px}.choice-field{padding:15px;border-radius:23px}.choice-pills{display:grid;grid-template-columns:1fr}.choice-pills span{text-align:center;padding:10px 12px}.daily-chart-arch{padding:25px 8px 0;border-radius:130px 130px 24px 24px / 82px 82px 24px 24px}}
 .personal-observation-grid{margin-bottom:18px}.personal-observation-grid>.panel{min-width:0}.observation-badge,.burden-badge{padding:6px 10px;border-radius:999px;background:#eef7ff;color:#1677ba;font-size:.72rem;white-space:nowrap}.burden-badge[data-level=low]{background:#e6f7ef;color:#167354}.burden-badge[data-level=medium]{background:#fff1d8;color:#8b5810}.burden-badge[data-level=high]{background:#fee8ec;color:#9e2539}.observation-empty{padding:16px;border-radius:15px;background:#f8f5f6;line-height:1.55}.observation-empty p{margin:7px 0 0;color:var(--muted)}.factor-list{display:grid;gap:8px}.factor-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}.factor-row>div{display:grid;gap:3px}.factor-row span{font-size:.74rem;color:var(--muted)}.factor-strength{padding:5px 8px;border-radius:9px;background:#f6f1f3}.factor-strength.medium{background:#fff1d8!important;color:#8b5810!important}.factor-strength.strong{background:#fee8ec!important;color:#9e2539!important}.observation-note,.relief-list{margin-top:13px;padding:14px;border-radius:14px;background:#fff9e9;line-height:1.6}.observation-method{color:var(--muted);font-size:.76rem;line-height:1.55;margin:12px 0 0}.pms-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pms-summary>div{padding:12px;border-radius:13px;background:#fff3f7}.pms-summary strong,.pms-summary span{display:block}.pms-summary span{color:var(--muted);font-size:.72rem;margin-top:3px}.symptom-frequency{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.symptom-frequency>strong{width:100%;font-size:.82rem}.symptom-frequency>span{padding:6px 9px;border-radius:99px;background:#eef7ff;color:#36566b;font-size:.74rem}.relief-list>strong{display:block;margin-bottom:6px}.relief-list p{margin:6px 0;padding-left:14px;position:relative}.relief-list p:before{content:"";position:absolute;left:0;top:.7em;width:5px;height:5px;border-radius:50%;background:var(--amber)}
 @media(max-width:430px){.personal-observation-grid{grid-template-columns:1fr}.personal-observation-grid .section-title{align-items:flex-start}.personal-observation-grid .section-title h2{font-size:1.08rem}.factor-row{align-items:flex-start}.pms-summary{grid-template-columns:1fr 1fr}}
+/* 暖柔视觉系统：保留原有无构建架构，统一移动端阅读与操作反馈。 */
+:root {
+  color-scheme: light;
+  --bg-cream: #faf2e5;
+  --bg-blush: #fbcbbc;
+  --text-primary: #843b35;
+  --accent-primary: #d06f64;
+  --accent-coral: #e2725e;
+  --accent-yellow: #f3d98a;
+  --data-pink: #f2a6c8;
+  --data-blue: #4b6d89;
+  --data-green: #5b8266;
+  --data-red: #d9534f;
+  --border-tan: #cea797;
+  --bg: var(--bg-cream);
+  --surface: #fffaf2;
+  --surface-soft: #fff0e9;
+  --surface-teal: #eef5ef;
+  --text: var(--text-primary);
+  --muted: #8b6b63;
+  --line: var(--border-tan);
+  --berry: var(--accent-primary);
+  --berry-dark: #843b35;
+  --berry-soft: #f8d8cf;
+  --coral: var(--accent-coral);
+  --amber: #d9a945;
+  --amber-soft: #fff0c9;
+  --teal: var(--data-green);
+  --teal-soft: #e6f0e8;
+  --danger: var(--data-red);
+  --shadow: 0 8px 30px rgba(132, 59, 53, .08);
+  font-family: ui-rounded, "Nunito Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+body { background: var(--bg-cream); color: var(--text-primary); }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; opacity: .045; background-image: radial-gradient(rgba(132,59,53,.72) .55px, transparent .7px); background-size: 6px 6px; }
+.app-header { background: rgba(250,242,229,.9); border-bottom-color: rgba(206,167,151,.55); }
+.cycle-hero { background: linear-gradient(135deg, #fddbd1, #fbcbbc 56%, #f6e3b6); border-radius: 38px; box-shadow: var(--shadow); border: 1px solid rgba(206,167,151,.74); }
+.panel, .snapshot, .history-card, .calendar-card, .period-editor, .modal-card, .notice-card { background: rgba(255,250,242,.94); border-color: var(--border-tan); border-radius: 32px; box-shadow: var(--shadow); }
+.snapshot { border-radius: 24px; }
+.primary, .soft, .danger, .text-button, .file-button, .tab-button, .chip, .metric-option { border-radius: 999px; }
+.primary { background: var(--accent-primary); box-shadow: 0 6px 16px rgba(208,111,100,.2); }
+.primary:hover { background: #bc5c54; }
+.soft, .text-button, .file-button { border-color: var(--border-tan); background: #fffaf2; color: var(--text-primary); }
+input, textarea, select { border-radius: 18px; border-color: var(--border-tan); background: #fffdf8; color: var(--text-primary); }
+input:focus, textarea:focus, select:focus { border-color: var(--accent-primary); outline-color: rgba(208,111,100,.22); }
+.choice-field { margin: 14px 0; padding: 17px; border: 1px solid var(--border-tan); border-radius: 27px; background: rgba(255,250,242,.9); }
+.choice-field legend { padding: 0 6px; color: var(--text-primary); font-weight: 800; }
+.field-hint { margin: 0 0 10px; color: var(--muted); font-size: .86rem; }
+.choice-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.choice-pills label { position: relative; display: block; cursor: pointer; }
+.choice-pills input { position: absolute; opacity: 0; pointer-events: none; }
+.choice-pills span { display: block; padding: 9px 13px; border: 1px solid var(--border-tan); border-radius: 999px; color: var(--text-primary); background: #fffdf8; font-size: .9rem; font-weight: 700; transition: transform .16s ease, background .16s ease, border-color .16s ease; }
+.choice-pills input:checked + span { background: #f9d8cc; border-color: var(--accent-primary); box-shadow: 0 3px 10px rgba(208,111,100,.15); }
+.choice-pills input:focus-visible + span { outline: 3px solid rgba(208,111,100,.28); outline-offset: 2px; }
+.choice-pills label:active span { transform: scale(.97); }
+.daily-trend-panel .section-title { justify-content: center; text-align: center; }
+.daily-chart-arch { margin-top: 16px; padding: 30px 14px 0; overflow: hidden; border: 1px solid rgba(206,167,151,.68); border-radius: 180px 180px 28px 28px / 112px 112px 28px 28px; background: linear-gradient(145deg, rgba(242,166,200,.63), rgba(243,217,138,.48)); }
+.daily-trend-chart { display: block; width: 100%; min-height: 190px; overflow: visible; }
+.daily-trend-chart .trend-area { fill: url(#trendFill); }
+.daily-trend-chart .trend-line { fill: none; stroke: var(--data-blue); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.daily-trend-chart circle { fill: #fffaf2; stroke: var(--data-blue); stroke-width: 2.5; }
+.daily-trend-chart text { fill: #765b52; font-family: inherit; font-size: 11px; }
+.cycle-chart-wrap, .trend-chart-wrap { border: 1px solid rgba(206,167,151,.68); border-radius: 160px 160px 28px 28px / 104px 104px 28px 28px; background: linear-gradient(145deg, rgba(242,166,200,.55), rgba(243,217,138,.4)); padding: 28px 13px 8px; overflow: hidden; }
+.cycle-line-chart polyline, .trend-chart-wrap polyline { stroke: var(--data-blue); }
+.chart-legend, .daily-trend-legend { display: flex; justify-content: center; gap: 14px; padding: 12px 4px 0; color: var(--muted); font-size: .82rem; }
+.chart-legend span::before, .daily-trend-legend span::before { border-radius: 999px; }
+
+@media (max-width: 430px) {
+  .cycle-hero { border-radius: 30px; }
+  .panel, .history-card, .calendar-card, .period-editor { border-radius: 26px; }
+  .choice-field { padding: 15px; border-radius: 23px; }
+  .choice-pills { display: grid; grid-template-columns: 1fr; }
+  .choice-pills span { text-align: center; padding: 10px 12px; }
+  .daily-chart-arch { padding: 25px 8px 0; border-radius: 130px 130px 24px 24px / 82px 82px 24px 24px; }
+}

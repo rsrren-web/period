@@ -21,6 +21,11 @@ function cycleSamples(context) {
     const entries = Object.entries(context.logs).filter(([date]) => date >= cycle.start && date <= end).map(([, log]) => log);
     if (entries.length < 3) return null;
     const average = (key) => mean(entries.map((log) => Number(log[key])).filter(Number.isFinite));
+    const bedtime = mean(entries.map((log) => {
+      const value = (log.symptoms || []).find((item) => item.startsWith('入睡：'));
+      if (!value) return NaN;
+      return value === '入睡：23:00前' ? 1 : value === '入睡：23:00后' ? 0 : NaN;
+    }).filter(Number.isFinite));
     return {
       length: cycle.length,
       days: entries.length,
@@ -28,7 +33,8 @@ function cycleSamples(context) {
       mood: average('mood'),
       energy: average('energy'),
       activity: average('activity'),
-      stress: average('stress')
+      stress: average('stress'),
+      bedtime
     };
   }).filter(Boolean);
 }
@@ -47,7 +53,8 @@ function renderFactors(context) {
     { key: 'sleep', label: '睡眠偏低', direction: -1 },
     { key: 'energy', label: '精力偏低', direction: -1 },
     { key: 'activity', label: '活动偏少', direction: -1 },
-    { key: 'mood', label: '情绪评分偏低', direction: -1 }
+    { key: 'mood', label: '情绪评分偏低', direction: -1 },
+    { key: 'bedtime', label: '23:00后入睡', direction: -1 }
   ].map((factor) => {
     const usable = samples.filter((sample) => Number.isFinite(sample[factor.key]));
     const raw = correlation(usable.map((sample) => sample[factor.key]), usable.map((sample) => sample.length));
@@ -65,6 +72,10 @@ function symptomName(value) {
   return value.startsWith('疼痛部位：') ? value.slice(5) + '不适' : value;
 }
 
+function isMetadataTag(value) {
+  return value.startsWith('入睡：') || value.startsWith('排便：');
+}
+
 function pmsSamples(context) {
   return context.periods.slice(-7).map((period) => {
     const start = add(period.start, -7), end = add(period.start, -1);
@@ -76,7 +87,7 @@ function pmsSamples(context) {
       const sleep = (5 - clamp(Number(log.sleep) || 3, 1, 5)) / 4;
       const energy = (5 - clamp(Number(log.energy) || 3, 1, 5)) / 4;
       const stress = (clamp(Number(log.stress) || 3, 1, 5) - 1) / 4;
-      const symptoms = Math.min((log.symptoms || []).length / 5, 1);
+      const symptoms = Math.min((log.symptoms || []).filter((item) => !isMetadataTag(item)).length / 5, 1);
       return (pain * .25 + mood * .2 + sleep * .15 + energy * .15 + stress * .15 + symptoms * .1) * 100;
     });
     return { period: period.start, entries, burden: mean(burdens) };
@@ -111,7 +122,7 @@ function renderPms(context) {
   badge.textContent = `${level} · ${burden}/100`;
   badge.dataset.level = burden >= 65 ? 'high' : burden >= 40 ? 'medium' : 'low';
   const counts = new Map();
-  samples.flatMap((sample) => sample.entries).forEach(({ log }) => (log.symptoms || []).forEach((symptom) => counts.set(symptomName(symptom), (counts.get(symptomName(symptom)) || 0) + 1)));
+  samples.flatMap((sample) => sample.entries).forEach(({ log }) => (log.symptoms || []).filter((symptom) => !isMetadataTag(symptom)).forEach((symptom) => counts.set(symptomName(symptom), (counts.get(symptomName(symptom)) || 0) + 1)));
   const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   const suggestions = reliefSuggestions(top.map(([name]) => name), burden);
   root.innerHTML = `<div class="pms-summary"><div><strong>${samples.length}个</strong><span>有记录的经前窗口</span></div><div><strong>${loggedDays}天</strong><span>经前记录日</span></div></div>${top.length ? `<div class="symptom-frequency"><strong>较常记录的感受</strong>${top.map(([name, count]) => `<span>${escape(name)} · ${count}天</span>`).join('')}</div>` : '<p class="muted">这些经前记录没有症状标签。</p>'}<div class="relief-list"><strong>下次可尝试</strong>${suggestions.map((suggestion) => `<p>${escape(suggestion)}</p>`).join('')}</div><p class="observation-method">这是个人记录负担分，不是医学量表。若情绪或疼痛严重影响生活，请寻求专业帮助；若出现伤害自己的想法，请立即联系当地急救或危机支持。</p>`;
