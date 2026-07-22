@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 24,
-  "updatedAt": "2026-07-22T06:40:49.011Z",
+  "revision": 25,
+  "updatedAt": "2026-07-22T07:38:23.619Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -12,6 +12,15 @@
       "status": "confirmed",
       "updatedAt": "2026-07-22T05:15:17.935Z",
       "originalStart": "2026-07-11"
+    },
+    {
+      "id": "d77ec8e5-fc81-4d01-8e71-4f1c1e160398",
+      "start": "2026-07-21",
+      "end": "2026-07-21",
+      "type": "period",
+      "source": "本设备",
+      "status": "confirmed",
+      "updatedAt": "2026-07-22T07:38:22.540Z"
     }
   ],
   "logs": {
@@ -34,8 +43,8 @@
       "energy": "2",
       "sleep": "2",
       "activity": "4",
-      "pain": "0",
       "stress": "2",
+      "pain": "0",
       "symptoms": [
         "腹胀",
         "恶心",
@@ -84,6 +93,7 @@
     "a3f0d047-4d51-4331-81bf-9c5caf95add3",
     "332fc23d-5857-42fe-8b3b-b3c34a9f21eb",
     "d829a820-41c4-4348-8099-33ba00b3c229",
-    "b1581b0b-3506-46c3-a74d-416ba94b6c01"
+    "b1581b0b-3506-46c3-a74d-416ba94b6c01",
+    "e2d3dcde-d9f2-441a-8e54-cd23affef723"
   ]
 }
