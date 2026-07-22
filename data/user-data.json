@@ -1,8 +1,18 @@
 {
   "schemaVersion": 1,
-  "revision": 13,
-  "updatedAt": "2026-07-22T04:26:52.173Z",
+  "revision": 14,
+  "updatedAt": "2026-07-22T04:27:11.887Z",
   "periods": [
+    {
+      "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
+      "start": "2026-07-11",
+      "end": "2026-07-17",
+      "type": "period",
+      "source": "本设备",
+      "status": "confirmed",
+      "updatedAt": "2026-07-22T04:27:10.899Z",
+      "originalStart": "2026-07-11"
+    },
     {
       "id": "f06d1273-01ac-4014-aacd-53b945328697",
       "start": "2026-07-19",
@@ -55,6 +65,7 @@
     "1d725a58-c14c-4a22-9b87-1f6324bd933e",
     "01d1c9b4-0f5d-41a7-80a3-dde38d1d16c7",
     "8d93f9f3-edfa-4636-ba96-fe671f40354a",
-    "481f3b69-e258-40fb-811a-bea7fcbe1c7e"
+    "481f3b69-e258-40fb-811a-bea7fcbe1c7e",
+    "99619bfc-329c-410e-af57-d6904f79b85d"
   ]
 }
