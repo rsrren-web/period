@@ -902,3 +902,89 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .snapshot { min-height: 78px; padding: 12px; grid-template-columns: 32px minmax(0, 1fr); }
   .snapshot-icon { width: 32px; height: 32px; font-size: 16px; }
 }
+
+/* v32 — daily log: four fast core checks, with optional detail kept out of the way. */
+#dailyForm { padding-bottom: 4px; }
+.daily-log-hint {
+  margin: 0 0 12px;
+  color: var(--ink-muted);
+  font-size: var(--font-caption);
+  line-height: 1.55;
+}
+.log-date-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  color: var(--ink-muted);
+  font-size: var(--font-caption);
+}
+.log-date-field input {
+  width: 146px;
+  padding: 8px 10px;
+  border-radius: var(--radius-control);
+  font-size: var(--font-caption);
+}
+.core-metrics, .supplemental-scores { display: grid; gap: 8px; }
+.core-score {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 7px 10px;
+  border: 1px solid var(--soft-line);
+  border-radius: var(--radius-inner);
+  background: var(--surface-muted);
+}
+.core-score-label { color: var(--ink); font-size: var(--font-body); font-weight: 700; }
+.core-score .score-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; margin: 0; }
+.core-score .score-picker span {
+  width: 32px;
+  height: 32px;
+  margin: auto;
+  border-radius: 50%;
+  font-size: var(--font-caption);
+}
+.core-score output {
+  color: var(--primary);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  text-align: right;
+}
+.supplemental-records {
+  margin: 16px 0 4px;
+  border: 1px solid var(--soft-line);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+}
+.supplemental-records summary {
+  min-height: 58px;
+  padding: 12px 14px;
+}
+.supplemental-records summary > span:first-child { display: grid; gap: 2px; }
+.supplemental-records summary strong { font-size: var(--font-body); }
+.supplemental-records summary small { color: var(--ink-muted); font-size: var(--font-caption); }
+.supplemental-records[open] summary { border-bottom: 1px solid var(--soft-line); }
+.supplemental-records[open] summary > span:last-child { transform: rotate(180deg); }
+.supplemental-body { padding: 4px 14px 16px; }
+.supplemental-body .choice-field { margin: 14px 0; padding: 12px; }
+.supplemental-body .temperature-field { margin: 14px 0; padding: 12px; }
+.supplemental-body fieldset { margin: 18px 0; }
+.sheet-dialog .dialog-actions { justify-content: stretch; }
+.sheet-dialog .dialog-actions .primary { width: 100%; }
+
+@media (max-width: 430px) {
+  .daily-log-hint { margin-bottom: 10px; }
+  .log-date-field { margin-bottom: 12px; }
+  .log-date-field input { width: 138px; }
+  .core-score { grid-template-columns: 42px minmax(0, 1fr) 46px; gap: 6px; padding: 7px 8px; }
+  .core-score-label { font-size: .82rem; }
+  .core-score .score-picker { gap: 2px; }
+  .core-score .score-picker span { width: 30px; height: 30px; font-size: .72rem; }
+  .core-score output { font-size: .72rem; }
+  .supplemental-records { margin-top: 14px; }
+  .supplemental-records summary { min-height: 54px; padding: 10px 12px; }
+  .supplemental-body { padding: 2px 12px 12px; }
+}
