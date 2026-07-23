@@ -26,7 +26,7 @@ function visibleSymptoms(log = {}) { return (log.symptoms || []).filter((item) =
 
 function rangeDates() { const now = new Date(), end = localIso(now); if (dailyTrendRange === 'week') { const mondayOffset = (now.getDay() + 6) % 7; return { start: addDate(end, -mondayOffset), end, title: '本周' }; } if (dailyTrendRange === 'month') return { start: `${end.slice(0, 8)}01`, end, title: '本月' }; const firstMonth = Math.floor(now.getMonth() / 3) * 3; return { start: localIso(new Date(now.getFullYear(), firstMonth, 1)), end, title: '本季度' }; }
 
-function markStatusDates(logs) { document.querySelectorAll('[data-date]').forEach((button) => { const hasStatus = Boolean(logs[button.dataset.date]); button.classList.toggle('has-status', hasStatus); button.querySelector('.status-star')?.remove(); if (hasStatus) button.insertAdjacentHTML('beforeend', '<span class="status-star" aria-hidden="true">★</span>'); }); }
+function markStatusDates(logs) { document.querySelectorAll('[data-date]').forEach((button) => { const hasStatus = Boolean(logs[button.dataset.date]); button.classList.toggle('has-status', hasStatus); button.querySelector('.status-star')?.remove(); if (hasStatus) button.insertAdjacentHTML('beforeend', '<span class="status-star" aria-hidden="true">♥</span>'); }); }
 function metricValue(log, key) { if (key === 'bedtime') { const value = tagged(log, '入睡：'); return value === '23:00前' ? 1 : value === '23:00后' ? 0 : null; } if (key === 'bowel') { const value = tagged(log, '排便：'); return value === '已排便' ? 1 : value === '未排便' ? 0 : null; } const value = Number(log?.[key]); return Number.isFinite(value) ? value : null; }
 function metricLabel(value, config) { return config.binary ? config.binary[value] : `${value}${config.unit}`; }
 
