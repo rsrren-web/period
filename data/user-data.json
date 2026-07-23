@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 29,
-  "updatedAt": "2026-07-23T02:55:09.276Z",
+  "revision": 30,
+  "updatedAt": "2026-07-23T02:55:23.884Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -59,7 +59,7 @@
         "排便：未排便"
       ],
       "temperature": "",
-      "updatedAt": "2026-07-23T02:55:08.214Z"
+      "updatedAt": "2026-07-23T02:55:23.016Z"
     }
   },
   "tombstones": {
@@ -107,6 +107,7 @@
     "c6ea83a3-85ee-4050-a104-bf9a52b593ac",
     "a7ec64f5-1bad-4ead-b898-0cd4c5e81e24",
     "09a3822a-b297-4e81-9856-46d3917b7f69",
-    "1594a9c7-e1c2-4410-a648-ffd66bf8ab83"
+    "1594a9c7-e1c2-4410-a648-ffd66bf8ab83",
+    "04f99fb0-8932-4c3c-9c37-de09c5deb9ff"
   ]
 }
