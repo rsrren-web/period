@@ -988,3 +988,45 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .supplemental-records summary { min-height: 54px; padding: 10px 12px; }
   .supplemental-body { padding: 2px 12px 12px; }
 }
+
+/* v33 — make supplemental fields visible as a calm continuation, never a hidden task. */
+.supplemental-records {
+  margin: 16px 0 0;
+  overflow: hidden;
+}
+.supplemental-heading {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--soft-line);
+  background: var(--surface);
+}
+.supplemental-heading > span { display: grid; gap: 2px; }
+.supplemental-heading strong { color: var(--ink); font-size: var(--font-body); }
+.supplemental-heading small { color: var(--ink-muted); font-size: var(--font-caption); }
+.supplemental-body { padding: 14px; background: var(--surface-muted); }
+.supplemental-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.supplemental-choice-grid .choice-field {
+  margin: 14px 0 0;
+  min-width: 0;
+}
+.supplemental-choice-grid .choice-pills { gap: 6px; }
+.supplemental-choice-grid .choice-pills span { padding: 8px 9px; font-size: var(--font-caption); }
+.daily-feelings {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--soft-line);
+}
+.daily-feelings > .eyebrow { margin-bottom: 10px; }
+
+@media (max-width: 430px) {
+  .supplemental-heading { padding: 11px 12px; }
+  .supplemental-body { padding: 12px; }
+  .supplemental-choice-grid { gap: 8px; }
+  .supplemental-choice-grid .choice-field { margin-top: 12px; padding: 10px; }
+  .supplemental-choice-grid .choice-pills { display: grid; grid-template-columns: 1fr; }
+  .supplemental-choice-grid .choice-pills span { padding: 8px; text-align: center; }
+  .daily-feelings { margin-top: 18px; padding-top: 14px; }
+}
