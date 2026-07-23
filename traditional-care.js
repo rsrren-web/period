@@ -111,9 +111,16 @@ function carePlan(phase, log = {}) {
   return { ...plan, notes: notes.slice(0, 3), urgent };
 }
 
-function card(kind, item) {
+function card(kind, item, phaseKey) {
   const icons = { tea: '茶', care: '暖', point: '按' };
-  return `<section class="traditional-card traditional-${kind}"><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><h3>${item.title}</h3></div><p class="traditional-steps">${item.steps}</p><dl><div><dt>适合</dt><dd>${item.fit}</dd></div><div><dt>跳过</dt><dd>${item.skip}</dd></div></dl></section>`;
+  const teaReasons = {
+    period: '以温热、低浓度饮品补水和获得舒适感为目的；不是治疗痛经或“驱寒”的配方。',
+    follicular: '经后恢复期更适合用淡茶或温水维持饮水与进食节奏，不把甜饮或药材当作“猛补”。',
+    ovulation: '没有明显不适时，温水或淡茶足以维持日常水分；不需要因日历估算阶段额外进补。',
+    pms: '经前更看重不扰睡眠；低浓度、低咖啡因饮品能保留热饮习惯，同时减少对休息的干扰。'
+  };
+  const reason = kind === 'tea' ? `<div><dt>为什么推荐</dt><dd>${teaReasons[phaseKey]}</dd></div>` : '';
+  return `<section class="traditional-card traditional-${kind}"><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><h3>${item.title}</h3></div><p class="traditional-steps">${item.steps}</p><dl>${reason}<div><dt>适合</dt><dd>${item.fit}</dd></div><div><dt>先跳过</dt><dd>${item.skip}</dd></div></dl></section>`;
 }
 
 globalThis.renderTraditionalAdvice = (phase, log) => {
@@ -123,7 +130,6 @@ globalThis.renderTraditionalAdvice = (phase, log) => {
   document.querySelector('#tcmAdvice').innerHTML = `
     <div class="classic-basis"><strong>今天的调护思路</strong><p>${plan.observation}</p></div>
     ${plan.notes.length ? `<div class="symptom-guidance"><strong>结合今天的记录</strong>${plan.notes.map((note) => `<p>${note}</p>`).join('')}</div>` : ''}
-    <div class="traditional-plan">${card('tea', plan.tea)}${card('care', plan.care)}${card('point', plan.point)}</div>
-    <div class="traditional-warning"><strong>何时不要继续自己调养</strong><p>${plan.urgent}</p></div>
+    <div class="traditional-plan">${card('tea', plan.tea, phase.key)}${card('care', plan.care, phase.key)}${card('point', plan.point, phase.key)}</div>
     <details class="traditional-basis-details"><summary>经典依据与使用边界 <span>展开</span></summary><div class="details-body"><p>《黄帝内经》强调“食饮有节、起居有常”，并指出同样是痛，寒热、按压后的反应并不相同；中医基础理论的整体观与辨证思路，以及《伤寒论》《金匮要略》《温病条辨》所体现的辨寒热、顾护津液、同症不一法，决定了这里不会按阶段一律温补；《景岳全书》把经水与饮食起居、气血变化联系起来。</p><p>《神农本草经》和《汤头歌诀》涉及药性与方剂配伍，因此本产品不把古方拆成茶饮，也不推荐经方、中药剂量或自行辨证。这里只把传统原则转成低风险、可停止的日常动作，并用现代安全资料校正禁忌。</p></div></details>`;
 };
