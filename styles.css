@@ -1030,3 +1030,282 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .supplemental-choice-grid .choice-pills span { padding: 8px; text-align: center; }
   .daily-feelings { margin-top: 18px; padding-top: 14px; }
 }
+
+/* v34 — tighter information hierarchy across Today, Calendar and Trends. */
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.snapshot-group {
+  min-width: 0;
+  padding: 12px;
+  border-radius: var(--radius-inner);
+  background: #eef5f9;
+}
+.snapshot-group:nth-child(2) { background: var(--surface-muted); }
+.snapshot-group > p {
+  margin: 0 0 8px;
+  color: var(--ink-muted);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.snapshot-group > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.snapshot-group .snapshot {
+  width: 100%;
+  min-height: 74px;
+  padding: 11px;
+  background: rgba(255, 255, 255, .76) !important;
+  border: 0;
+}
+
+.calendar-panel { padding-top: 18px; }
+.calendar-toolbar {
+  align-items: center;
+  margin-bottom: 8px;
+}
+.calendar-view-switch { padding: 3px; }
+.calendar-view-switch button {
+  min-height: 34px;
+  padding: 6px 11px;
+  font-size: var(--font-caption);
+}
+.calendar-quick-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.calendar-today {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--primary);
+  font-size: var(--font-caption);
+  font-weight: 700;
+}
+.calendar-today:hover { background: var(--primary-soft); }
+.year-jump {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-muted);
+  font-size: var(--font-caption);
+}
+.year-jump span { display: none; }
+.year-jump select {
+  width: 86px;
+  min-height: 34px;
+  padding: 5px 24px 5px 9px;
+  border: 0;
+  background-color: var(--surface-muted);
+  font-size: var(--font-caption);
+}
+.calendar-head {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  margin: 4px 0 10px;
+}
+.calendar-head h2 {
+  margin: 0;
+  text-align: center;
+  font-size: var(--font-heading);
+}
+.calendar-head .round-button {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  font-size: 20px;
+}
+.calendar-panel .legend {
+  display: grid;
+  grid-template-columns: repeat(5, max-content);
+  justify-content: center;
+  gap: 5px 10px;
+  margin-top: 11px;
+  font-size: .67rem;
+  white-space: nowrap;
+}
+.calendar-panel .legend-dot {
+  width: 7px;
+  height: 7px;
+  margin-right: 3px;
+}
+
+.stat-grid {
+  grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.stat {
+  min-width: 0;
+  padding: 16px;
+  border: 0;
+  background: var(--surface-muted);
+  box-shadow: none;
+}
+.stat-primary {
+  grid-row: span 2;
+  display: grid;
+  align-content: center;
+  min-height: 128px;
+  background: var(--primary-soft);
+}
+.stat-primary strong { font-size: 2.15rem; color: var(--ink); }
+.stat-secondary strong { font-size: 1.3rem; }
+.stat-supporting {
+  grid-column: 2 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-block: 10px;
+  background: transparent;
+}
+.stat-supporting strong { font-size: 1rem; }
+.stat-supporting span { font-size: var(--font-caption); }
+
+.daily-trend-panel { padding: 20px; }
+.daily-trend-panel .section-title { margin-bottom: 10px; }
+.daily-trend-panel #dailyTrendControls { gap: 6px; }
+.daily-trend-panel .trend-switch { gap: 4px; padding: 3px; }
+.daily-trend-panel .trend-switch button {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: var(--font-caption);
+}
+.daily-trend-panel .trend-switch.metric-switch button { padding: 6px 4px; }
+.daily-trend-panel .daily-chart-arch {
+  margin-top: 7px;
+  padding: 10px 8px 0;
+  border-radius: var(--radius-inner);
+}
+.daily-trend-chart { min-height: 224px; }
+.daily-chart-scroll { margin-top: 0; }
+.daily-trend-summary { margin-top: 8px; }
+
+.personal-observation-grid > .panel.is-empty-state {
+  padding: 14px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.personal-observation-grid > .panel.is-empty-state .section-title {
+  margin-bottom: 8px;
+}
+.personal-observation-grid > .panel.is-empty-state .section-title h2 {
+  font-size: 1rem;
+}
+.observation-empty,
+.light-empty,
+.trend-empty {
+  position: relative;
+  padding: 12px 12px 12px 42px;
+  border: 0;
+  background: var(--surface-muted);
+  color: var(--ink-muted);
+  text-align: left;
+}
+.observation-empty::before,
+.trend-empty::before {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  content: "i";
+  font-size: .72rem;
+  font-weight: 800;
+}
+.light-empty {
+  position: relative;
+  border-radius: var(--radius-inner);
+}
+.light-empty > span {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: .72rem;
+  font-weight: 800;
+}
+.light-empty p,
+.observation-empty p { margin: 0; }
+.observation-empty strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-size: .9rem;
+}
+.observation-method {
+  margin-top: 7px;
+  padding-inline: 4px;
+}
+
+/* One white structural card plus one borderless muted content layer. */
+.prediction-grid > div,
+.snapshot,
+.score-field,
+.choice-field,
+.temperature-field,
+.quarter-metrics > div:nth-child(n),
+.daily-trend-summary > div:nth-child(n),
+.classic-basis,
+.quarter-guidance,
+.symptom-guidance,
+.observation-empty,
+.relief-list,
+.observation-note,
+.support-box,
+.email-preview,
+.status-box,
+.trend-empty,
+.traditional-card,
+.day-status-card {
+  border-width: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 430px) {
+  .snapshot-grid { grid-template-columns: 1fr; gap: 10px; }
+  .snapshot-group { padding: 10px; }
+  .snapshot-group .snapshot { min-height: 68px; }
+  .calendar-panel { padding: 12px; }
+  .calendar-toolbar { align-items: center; }
+  .calendar-panel .legend {
+    grid-template-columns: repeat(5, minmax(0, auto));
+    gap: 4px 6px;
+    justify-content: stretch;
+    font-size: .61rem;
+  }
+  .calendar-panel .legend span { text-align: center; }
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat-primary {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    min-height: 104px;
+  }
+  .stat-supporting { grid-column: 1 / -1; }
+  .daily-trend-panel { padding: 16px; }
+  .daily-trend-panel .trend-switch.metric-switch button {
+    min-height: 32px;
+    padding: 5px 2px;
+    font-size: .72rem;
+  }
+  .daily-trend-chart { min-height: 232px; }
+}

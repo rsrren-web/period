@@ -43,6 +43,7 @@ function renderFactors(context) {
   const root = document.querySelector('#personalFactorInsight');
   if (!root) return;
   const samples = cycleSamples(context);
+  root.closest('.panel')?.classList.toggle('is-empty-state', samples.length < 3);
   if (samples.length < 3) {
     const loggedCycles = samples.length;
     root.innerHTML = `<div class="observation-empty"><strong>还需要至少 ${3 - loggedCycles} 个有记录的完整周期</strong><p>每个周期记录至少3天后，才会比较睡眠、压力、活动、情绪和精力与周期长度是否反复同时变化。现在不会根据少量记录猜测原因。</p></div><p class="observation-method">当前可分析完整周期：${loggedCycles}个；建议在经前一周和周期中段各记录几天。</p>`;
@@ -111,6 +112,7 @@ function renderPms(context) {
   if (!root || !badge) return;
   const samples = pmsSamples(context);
   const loggedDays = samples.reduce((sum, sample) => sum + sample.entries.length, 0);
+  root.closest('.panel')?.classList.toggle('is-empty-state', samples.length < 2 || loggedDays < 4);
   if (samples.length < 2 || loggedDays < 4) {
     badge.textContent = '记录不足';
     badge.dataset.level = 'unknown';
