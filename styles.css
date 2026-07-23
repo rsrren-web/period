@@ -352,3 +352,314 @@ button:focus-visible,
     box-shadow: 0 0 0 1px var(--primary);
   }
 }
+
+/* v28 — attention-led design system: neutral structure, four controlled color families. */
+:root {
+  --canvas: #faf9f7;
+  --surface: #ffffff;
+  --surface-muted: #f4f2f5;
+  --ink: #302c34;
+  --ink-muted: rgba(48, 44, 52, .65);
+  --ink-disabled: rgba(48, 44, 52, .38);
+  --soft-line: #e7e3e8;
+
+  --primary: #527fa7;
+  --primary-soft: #dceaf3;
+  --mint: #70ad9f;
+  --mint-soft: #dcefea;
+  --period: #f2a6c8;
+  --period-soft: #fbe3ed;
+  --emphasis: #d9578f;
+  --sun: #f3d98a;
+  --sun-soft: #fbf0d0;
+
+  --phase-follicular-base: var(--mint);
+  --phase-follicular-soft: var(--mint-soft);
+  --phase-ovulation-base: var(--primary);
+  --phase-ovulation-soft: var(--primary-soft);
+  --phase-luteal-base: var(--sun);
+  --phase-luteal-soft: var(--sun-soft);
+  --phase-period-base: var(--period);
+  --phase-period-soft: var(--period-soft);
+  --status-mark: var(--ink);
+
+  --bg: var(--canvas);
+  --bg-cream: var(--canvas);
+  --bg-blush: var(--period-soft);
+  --text: var(--ink);
+  --text-primary: var(--ink);
+  --muted: var(--ink-muted);
+  --muted-ink: var(--ink-muted);
+  --line: var(--soft-line);
+  --border-tan: var(--soft-line);
+  --accent-primary: var(--primary);
+  --accent-coral: var(--emphasis);
+  --accent-yellow: var(--sun);
+  --data-pink: var(--period);
+  --data-blue: var(--primary);
+  --data-green: var(--mint);
+  --data-red: var(--emphasis);
+  --berry: var(--primary);
+  --berry-dark: var(--primary);
+  --berry-soft: var(--primary-soft);
+  --lavender: var(--primary);
+  --lavender-deep: var(--primary);
+  --lavender-soft: var(--primary-soft);
+  --surface-soft: var(--surface-muted);
+  --surface-teal: var(--mint-soft);
+  --teal: var(--mint);
+  --teal-soft: var(--mint-soft);
+  --amber: var(--sun);
+  --amber-soft: var(--sun-soft);
+  --danger: var(--emphasis);
+  --phase-period: var(--period);
+  --phase-follicular: var(--mint);
+  --phase-ovulation: var(--primary);
+  --phase-luteal: var(--sun);
+  --status-blue: var(--ink);
+  --status-blue-soft: var(--surface-muted);
+  --nav-ink: var(--ink);
+
+  --font-heading-lg: 1.75rem;
+  --font-heading: 1.25rem;
+  --font-body: .9375rem;
+  --font-caption: .78125rem;
+}
+
+html, body { background: var(--canvas) !important; color: var(--ink); }
+body { font-size: var(--font-body); line-height: 1.6; }
+.app-header { background: rgba(250, 249, 247, .94); border-bottom-color: var(--soft-line); }
+.brand, label, input, textarea, select, output { color: var(--ink); }
+.muted, .fineprint, .hero-detail, .page-heading p, .snapshot small, .stat span,
+.traditional-card dd, .details-body, .observation-method, .daily-trend-summary span,
+.day-status-heading span, .day-status-card p { color: var(--ink-muted); }
+
+.page-heading h1, .hero-content h1 {
+  color: var(--ink);
+  font-size: var(--font-heading-lg);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+.section-title h2, .panel > h2 {
+  color: var(--ink);
+  font-size: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.3;
+}
+.panel h3, .traditional-card h3, summary strong {
+  color: var(--ink);
+  font-size: var(--font-body);
+  font-weight: 700;
+  line-height: 1.45;
+}
+.snapshot strong, .stat strong, .quarter-metrics strong, .daily-trend-summary strong,
+.health-score, .day-status-ratings strong {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.eyebrow, .eyebrow-row, .kicker {
+  color: var(--primary);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: .08em;
+}
+small, .field-hint, .fineprint, .chart-legend, .daily-trend-legend,
+.legend, .writing-meta, .safe-log, .observation-method {
+  font-size: var(--font-caption);
+  line-height: 1.5;
+}
+
+.cycle-hero, .panel, .snapshot, .history-card, .calendar-card, .period-editor,
+.modal-card, .notice-card, dialog, .traditional-card, .day-status-card,
+.observation-empty, .relief-list, .observation-note {
+  background: var(--surface);
+  border-color: var(--soft-line);
+}
+.prediction-grid > div, .score-field, .metric-grid label, .optional-fields label,
+.choice-field, .temperature-field, .quarter-metrics > div:nth-child(n),
+.daily-trend-summary > div:nth-child(n), .support-box, .email-preview, .status-box,
+.trend-empty, .observation-empty {
+  background: var(--surface-muted);
+  border-color: var(--soft-line);
+  color: var(--ink);
+}
+.snapshot:nth-child(n) { background: var(--surface); }
+
+.cycle-ring.phase-period { background: var(--period-soft); }
+.cycle-ring.phase-follicular { background: var(--mint-soft); }
+.cycle-ring.phase-ovulation { background: var(--primary-soft); }
+.cycle-ring.phase-pms { background: var(--sun-soft); }
+.phase-pill { color: var(--ink); }
+.phase-pill.phase-period { background: var(--period-soft); border-color: var(--period); color: var(--ink); }
+.phase-pill.phase-follicular { background: var(--mint-soft); border-color: var(--mint); color: var(--ink); }
+.phase-pill.phase-ovulation { background: var(--primary-soft); border-color: var(--primary); color: var(--ink); }
+.phase-pill.phase-pms { background: var(--sun-soft); border-color: var(--sun); color: var(--ink); }
+
+.day.phase-follicular:not(.recorded):not(.predicted) { background: var(--mint-soft); border-color: var(--mint); }
+.day.phase-ovulation:not(.recorded):not(.predicted) { background: var(--primary-soft); border-color: var(--primary); }
+.day.phase-pms:not(.recorded):not(.predicted) { background: var(--sun-soft); border-color: var(--sun); }
+.day.recorded, .mini-day.recorded { background: var(--emphasis); color: #fff; }
+.day.predicted:not(.recorded) { background: var(--period-soft); border-color: var(--emphasis); border-style: dashed; color: var(--ink); }
+.day.today { border-color: var(--ink); }
+.legend-dot.actual { background: var(--emphasis); }
+.legend-dot.predicted { background: var(--period-soft); border-color: var(--emphasis); }
+.legend-dot.follicular { background: var(--mint); }
+.legend-dot.ovulation { background: var(--primary); }
+.legend-dot.pms { background: var(--sun); }
+
+.status-star, .day.recorded .status-star, .mini-day.recorded .status-star {
+  color: var(--status-mark);
+  font-size: 7px;
+  line-height: 1;
+  text-shadow: none;
+}
+.day .status-star { right: 5px; top: 4px; font-size: 7px; }
+.mini-day .status-star { right: 0; top: 0; font-size: 7px; }
+
+.primary {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+  background: var(--primary);
+  color: #fff;
+  font-size: var(--font-body);
+  font-weight: 700;
+  box-shadow: none;
+}
+.primary:hover { background: var(--primary); filter: brightness(.96); }
+.soft, .text-button, .file-button, .danger, .tab-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--primary-soft);
+  color: var(--ink);
+  font-size: var(--font-body);
+  font-weight: 700;
+}
+.danger { background: var(--surface); border-color: var(--soft-line); color: var(--ink); }
+.period-action.primary, .quick-add { background: var(--emphasis); color: #fff; }
+.quick-add {
+  width: 56px;
+  height: 56px;
+  border: 4px solid var(--nav-ink);
+  font-size: 28px;
+  line-height: 1;
+  box-shadow: 0 8px 20px rgba(217, 87, 143, .24);
+}
+.round-button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: 1px solid var(--soft-line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 24px;
+}
+.calendar-view-switch, .trend-switch { background: var(--surface-muted); }
+.calendar-view-switch button, .trend-switch button {
+  min-height: 40px;
+  color: var(--ink-muted);
+  font-size: var(--font-body);
+}
+.calendar-view-switch button.active, .trend-switch button.active {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+button:focus-visible, [role="button"]:focus-visible,
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid rgba(82, 127, 167, .24);
+  outline-offset: 2px;
+}
+
+.bottom-nav { background: rgba(48, 44, 52, .97); }
+.nav-item { color: rgba(255, 255, 255, .65); }
+.nav-item.active { color: #fff; }
+.nav-item > span { font-size: 24px; line-height: 1; }
+.nav-item small { font-size: var(--font-caption); }
+
+.icon-badge, .action-list button > span, .traditional-card-head > span {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-control);
+  display: grid;
+  place-content: center;
+  font-size: 24px;
+}
+.icon-badge, .icon-badge.coral { background: var(--sun-soft); color: var(--ink); }
+.action-list button > span { background: var(--primary-soft); color: var(--ink); }
+.traditional-card-head > span { background: var(--mint-soft); color: var(--ink); }
+
+.advice-item, .advice-item:nth-child(n) {
+  background: var(--surface);
+  border-color: var(--soft-line);
+  border-left-color: var(--sun);
+  color: var(--ink);
+}
+.traditional-list .advice-item, .traditional-list .advice-item:nth-child(n) {
+  background: var(--surface);
+  border-left-color: var(--mint);
+}
+.classic-basis, .quarter-guidance, .symptom-guidance,
+.observation-note, .relief-list {
+  background: var(--surface-muted);
+  border-color: var(--soft-line);
+  color: var(--ink);
+}
+.traditional-warning, .system-alert, .system-alert[data-level="danger"] {
+  background: var(--period-soft);
+  border-color: var(--emphasis);
+  color: var(--ink);
+}
+
+.today-status-detail > span, .day-status-card, .daily-trend-summary > div:nth-child(n),
+.observation-badge, .symptom-frequency > span {
+  background: var(--surface-muted);
+  border-color: var(--soft-line);
+  color: var(--ink);
+}
+.today-status-detail strong, .day-status-row span, .observation-badge { color: var(--ink); }
+.day-status-row { border-color: var(--soft-line); }
+.day-status-ratings > div { background: var(--surface); }
+.burden-badge, .burden-badge[data-level="low"], .factor-strength {
+  background: var(--surface-muted) !important;
+  color: var(--ink) !important;
+}
+.burden-badge[data-level="medium"], .factor-strength.medium {
+  background: var(--sun-soft) !important;
+  color: var(--ink) !important;
+}
+.burden-badge[data-level="high"], .factor-strength.strong {
+  background: var(--period-soft) !important;
+  color: var(--ink) !important;
+  box-shadow: inset 0 0 0 1px var(--emphasis);
+}
+.pms-summary > div { background: var(--sun-soft); color: var(--ink); }
+
+.daily-chart-arch, .cycle-chart-wrap, .trend-chart-wrap {
+  background: var(--surface-muted);
+  border-color: var(--soft-line);
+}
+.daily-trend-chart line { stroke: var(--soft-line); }
+.daily-trend-chart .trend-line, .cycle-line-chart polyline, .trend-chart-wrap polyline { stroke: var(--primary); }
+.daily-trend-chart circle { fill: var(--surface); stroke: var(--primary); }
+.daily-trend-chart text { fill: var(--ink-muted); }
+.bar { background: var(--primary); }
+.bar.unusual { background: var(--sun); }
+.chart-legend, .daily-trend-legend { color: var(--ink-muted); }
+
+@media (max-width: 430px) {
+  .page-heading h1, .hero-content h1 { font-size: 1.5rem; }
+  .section-title h2, .panel > h2 { font-size: var(--font-heading); }
+  .quick-add { width: 56px; height: 56px; font-size: 28px; }
+  .trend-switch.metric-switch button { background: var(--surface-muted); color: var(--ink-muted); }
+  .trend-switch.metric-switch button.active { background: var(--primary-soft); color: var(--ink); box-shadow: 0 0 0 1px var(--primary); }
+}
