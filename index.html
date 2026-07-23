@@ -17,7 +17,7 @@
   <link rel="icon" href="public/icons/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="public/icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=29">
+  <link rel="stylesheet" href="styles.css?v=30">
   <title>周期生活助手</title>
 </head>
 <body>
@@ -35,13 +35,14 @@
         <div class="hero-content">
           <div class="eyebrow-row"><span id="phasePill" class="phase-pill">载入中</span><span id="todayDate" class="muted"></span></div>
           <h1 id="todayHeadline">正在准备今天的生活建议</h1>
-          <div class="prediction-grid"><div><small>距离下次月经</small><strong id="daysToPeriod">—</strong></div><div><small>预计日期</small><strong id="expectedDate">—</strong></div><div><small>可能范围</small><strong id="predictionRange">—</strong></div></div>
+          <p id="todayActionTip" class="hero-action-tip">正在整理一个容易做到的小行动。</p>
+          <div class="prediction-grid"><div class="prediction-primary"><small>距离下次月经</small><div class="prediction-values"><strong id="daysToPeriod">—</strong><span><small>预计</small><strong id="expectedDate">—</strong></span></div></div><div class="prediction-window"><small>可能范围</small><strong id="predictionRange">—</strong></div></div>
           <div class="period-controls"><button id="startPeriodBtn" class="primary period-action">月经开始了</button><button id="editCurrentPeriodBtn" class="text-button period-edit" hidden>日期不对？更改</button></div>
         </div>
       </article>
 
       <section class="section-block">
-        <div class="section-title"><div><p class="eyebrow">今日状态</p><h2>轻点几下就记好了</h2></div><button class="text-button" data-open-log>编辑</button></div>
+        <div class="section-title"><div><p class="eyebrow">今日状态</p><h2>今天感觉怎么样？</h2></div><button class="text-button" data-open-log>记录</button></div>
         <div id="todaySnapshot" class="snapshot-grid"></div>
       </section>
 
