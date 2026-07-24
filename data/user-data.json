@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 33,
-  "updatedAt": "2026-07-24T15:22:37.582Z",
+  "revision": 34,
+  "updatedAt": "2026-07-24T15:22:55.582Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -70,11 +70,12 @@
       "pain": "0",
       "stress": "2",
       "symptoms": [
+        "生气",
         "入睡：23:00后",
         "排便：已排便"
       ],
       "temperature": "",
-      "updatedAt": "2026-07-24T15:22:36.252Z"
+      "updatedAt": "2026-07-24T15:22:54.696Z"
     }
   },
   "tombstones": {
@@ -126,6 +127,7 @@
     "04f99fb0-8932-4c3c-9c37-de09c5deb9ff",
     "21c9a31e-1921-4ff8-9590-ac214df59aa0",
     "0c8de842-dee6-4d87-a5a5-602575762b52",
-    "4bd37f08-d2f9-4e68-a7e4-e115be456ddf"
+    "4bd37f08-d2f9-4e68-a7e4-e115be456ddf",
+    "bbabec77-cd3f-444e-a8a2-917fbfd89e7e"
   ]
 }
