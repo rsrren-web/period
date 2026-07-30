@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 36,
-  "updatedAt": "2026-07-26T05:48:06.483Z",
+  "revision": 37,
+  "updatedAt": "2026-07-30T04:37:41.808Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -101,8 +101,8 @@
       "energy": "4",
       "sleep": "4",
       "activity": "2",
-      "pain": "0",
       "stress": "1",
+      "pain": "0",
       "symptoms": [
         "疲倦",
         "入睡：23:00后",
@@ -110,6 +110,75 @@
       ],
       "temperature": "",
       "updatedAt": "2026-07-26T05:48:05.540Z"
+    },
+    "2026-07-27": {
+      "mood": "3",
+      "energy": "4",
+      "sleep": "2",
+      "activity": "3",
+      "stress": "1",
+      "pain": "0",
+      "symptoms": [
+        "入睡：23:00前",
+        "排便：未排便"
+      ],
+      "temperature": "",
+      "updatedAt": "2026-07-29T19:50:10.450Z"
+    },
+    "2026-07-28": {
+      "mood": "1",
+      "energy": "2",
+      "sleep": "1",
+      "activity": "3",
+      "stress": "3",
+      "pain": "2",
+      "symptoms": [
+        "疲倦",
+        "焦虑",
+        "生气",
+        "情绪低落",
+        "腹胀",
+        "恶心",
+        "疼痛部位：上腹/胃部",
+        "入睡：23:00后",
+        "排便：已排便"
+      ],
+      "temperature": "",
+      "updatedAt": "2026-07-29T19:51:03.818Z"
+    },
+    "2026-07-29": {
+      "mood": "2",
+      "energy": "3",
+      "sleep": "3",
+      "activity": "3",
+      "stress": "2",
+      "pain": "2",
+      "symptoms": [
+        "疲倦",
+        "情绪低落",
+        "腹胀",
+        "恶心",
+        "食欲变化",
+        "疼痛部位：上腹/胃部",
+        "排便：已排便"
+      ],
+      "temperature": "",
+      "updatedAt": "2026-07-29T19:51:31.641Z"
+    },
+    "2026-07-26": {
+      "mood": "4",
+      "energy": "4",
+      "sleep": "3",
+      "activity": "4",
+      "stress": "1",
+      "pain": "0",
+      "symptoms": [
+        "怕冷",
+        "入睡：23:00前",
+        "排便：未排便"
+      ],
+      "temperature": "",
+      "updatedAt": "2026-07-29T19:52:10.045Z"
     }
   },
   "tombstones": {
@@ -164,6 +233,7 @@
     "4bd37f08-d2f9-4e68-a7e4-e115be456ddf",
     "bbabec77-cd3f-444e-a8a2-917fbfd89e7e",
     "ac0107e6-309e-46bc-b3af-1e560ad923f0",
-    "f871f5ec-a457-4da2-85a4-e3646d15bac4"
+    "f871f5ec-a457-4da2-85a4-e3646d15bac4",
+    "09bc27c7-f910-45c1-a637-2a009bc190b1"
   ]
 }
