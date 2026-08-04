@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 43,
-  "updatedAt": "2026-08-03T06:08:35.735Z",
+  "revision": 44,
+  "updatedAt": "2026-08-04T06:31:04.997Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -233,8 +233,8 @@
       "energy": "1",
       "sleep": "1",
       "activity": "2",
-      "pain": "2",
       "stress": "2",
+      "pain": "2",
       "symptoms": [
         "嗜睡",
         "疲倦",
@@ -249,6 +249,25 @@
       ],
       "temperature": "",
       "updatedAt": "2026-08-03T06:08:34.717Z"
+    },
+    "2026-08-03": {
+      "mood": "4",
+      "energy": "4",
+      "sleep": "4",
+      "activity": "3",
+      "pain": "2",
+      "stress": "3",
+      "symptoms": [
+        "疲倦",
+        "焦虑",
+        "疼痛部位：小腹/盆腔",
+        "疼痛部位：腰背",
+        "疼痛部位：肌肉/关节",
+        "入睡：23:00后",
+        "排便：已排便"
+      ],
+      "temperature": "",
+      "updatedAt": "2026-08-04T06:31:03.872Z"
     }
   },
   "tombstones": {
@@ -311,6 +330,7 @@
     "c48a5aeb-00b9-4ffe-ae09-53910c6e91d6",
     "72aaefea-5755-408d-8b4e-1a994782dfeb",
     "9c1e70f3-28c7-44af-b0f7-9e21d2a75935",
-    "4ee70f30-4bc5-4d66-90f7-f2e95135b5e1"
+    "4ee70f30-4bc5-4d66-90f7-f2e95135b5e1",
+    "a4632c36-b4de-42c6-af7f-4b7a2e099173"
   ]
 }
