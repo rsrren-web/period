@@ -1371,6 +1371,86 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   font-size: var(--font-caption);
   line-height: 1.55;
 }
+.overview-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 12px 0 8px;
+}
+.overview-legend button {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface-muted);
+  color: var(--ink-muted);
+  font-size: var(--font-caption);
+}
+.overview-legend button span {
+  width: 13px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--series-color);
+  opacity: .35;
+}
+.overview-legend button.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--series-color);
+}
+.overview-legend button.active span { opacity: 1; }
+.daily-trend-chart .overview-line {
+  fill: none;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.daily-trend-chart .overview-line.adverse { stroke-dasharray: 7 5; }
+.daily-trend-chart .overview-dot { stroke: var(--surface); stroke-width: 1.8; }
+.overview-chart {
+  padding-top: 14px;
+  background: var(--surface-muted);
+}
+.symptom-timeline {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: var(--radius-inner);
+  background: var(--surface-muted);
+}
+.symptom-timeline-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+.symptom-timeline-head h3 { margin: 0; }
+.symptom-timeline-head span { color: var(--ink-muted); font-size: var(--font-caption); }
+.symptom-event-list { display: grid; gap: 8px; }
+.symptom-event {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+.symptom-event time {
+  padding-top: 5px;
+  color: var(--ink-muted);
+  font-size: var(--font-caption);
+  font-variant-numeric: tabular-nums;
+}
+.symptom-event > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.symptom-event span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--font-caption);
+}
+.daily-trend-summary .overview-summary-wide { grid-column: span 2; }
 @media (max-width: 430px) {
   .supplemental-choice-grid .choice-field { padding: 11px; }
   .supplemental-choice-grid .choice-pills { display: grid; }
@@ -1380,4 +1460,8 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
     grid-template-columns: 68px minmax(0, 1fr);
     gap: 7px;
   }
+  .overview-legend { gap: 6px; }
+  .overview-legend button { flex: 1 1 calc(33.333% - 6px); justify-content: center; }
+  .symptom-timeline-head { display: grid; gap: 3px; }
+  .daily-trend-summary .overview-summary-wide { grid-column: 1 / -1; }
 }
