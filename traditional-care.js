@@ -1,3 +1,67 @@
+function selectFoodDrink(phase, log = {}) {
+  const symptoms = Array.isArray(log.symptoms) ? log.symptoms : [];
+  const has = (name) => symptoms.includes(name);
+  const energy = Number(log.energy) || 3;
+  const stress = Number(log.stress) || 3;
+  const recipes = {
+    roseChenpi: {
+      title: '玫瑰陈皮饮',
+      ingredients: '食用玫瑰花 2 朵、陈皮 1 小块（约 1 g）、热水 300 mL。',
+      steps: '玫瑰与陈皮快速冲洗后放入杯中，加入热水焖 8–10 分钟；温热时一次饮用，当天不反复续泡，也不隔夜。',
+      reason: '今天处于经前阶段，且记录到压力、焦虑、生气或腹胀时，选低浓度、无咖啡因的温热饮品。传统思路取“调畅情志、理气和中”，这里仅作日常舒适支持，不用于治疗 PMS。',
+      skip: '胃酸或反流明显、对花粉或柑橘过敏、正在服药且不清楚相互作用时，改喝温水；不要连续长期饮用。'
+    },
+    gingerJujube: {
+      title: '淡姜枣饮',
+      ingredients: '鲜姜 2 薄片（约 3 g）、红枣 2 枚、清水 350 mL。',
+      steps: '红枣去核并掰开，与姜片一起小火煮 10 分钟，放温后饮用；一天 1 次，不额外加糖。',
+      reason: '今天处于经期，并记录到怕冷或温热后更舒服时，少量姜枣与温水用于增加温暖和舒适感；这是食养饮品，不等同于“驱寒治痛”的处方。',
+      skip: '胃灼热、口干咽痛、腹泻、热敷或热饮后更不舒服，或出血量异常增加时，改喝温水。'
+    },
+    milletYam: {
+      title: '小米山药粥',
+      ingredients: '小米 30 g、鲜山药 50 g、清水 500 mL。',
+      steps: '小米洗净，山药去皮切小块，一起煮沸后转小火煮 25–30 分钟至软烂；温热吃一碗，不额外加糖。',
+      reason: '今天处于经期，但没有记录到明显怕冷；与其固定喝姜茶，更适合用一份温热、清淡的主食维持规律进食。传统思路是“顾护脾胃”，不是用食物治疗月经问题。',
+      skip: '山药过敏、吞咽困难，或医生要求限制淀粉、液体或钾时，按原有饮食要求调整。'
+    },
+    blackSoyMilk: {
+      title: '无糖黑豆浆',
+      ingredients: '黑大豆 20 g、清水 350–400 mL；不加糖。',
+      steps: '黑豆洗净后浸泡 6–8 小时，加水打浆；煮沸后继续小火充分煮熟 8–10 分钟。早餐时饮用 250–300 mL，并配一份主食。',
+      reason: '今天处于经后恢复阶段，且精力记录偏低，优先用一份真正含蛋白质的早餐饮品支持正常进食；黑豆属于大豆，这不是“补血方”。',
+      skip: '大豆过敏、饮用后明显腹胀，或因肾脏疾病被要求限制蛋白质或钾时不选；豆浆必须彻底煮熟。'
+    },
+    blackSoyWater: {
+      title: '黑豆煮水（连豆食用）',
+      ingredients: '黑大豆 20 g、清水 500 mL。',
+      steps: '黑豆洗净浸泡 4–6 小时，加水煮沸后小火煮 25–30 分钟至豆粒熟软。饮 250–300 mL 煮豆水；能耐受时把熟豆随餐吃掉，只喝水获得的营养有限。',
+      reason: '今天处于经后恢复阶段，适合把大豆作为正常饮食的一部分；用固定份量替代泛泛的“多喝茶”，也避免把它说成具有治疗作用的补品。',
+      skip: '大豆过敏、容易胀气，或因肾脏疾病被要求限制蛋白质或钾时不选；不要用生豆或未煮熟的豆水。'
+    },
+    pearLily: {
+      title: '雪梨百合饮',
+      ingredients: '雪梨 1/2 个（约 100 g）、干百合 8 g、清水 400 mL。',
+      steps: '雪梨去核切块，干百合洗净，一起小火煮 15 分钟；放温后饮汤并吃梨和百合，不额外加糖。',
+      reason: '今天处于排卵估算阶段，若同时感觉口干或偏热，用清淡、含水分的食物饮品维持补水；不因“排卵期”额外进补或清热。',
+      skip: '腹泻、胃肠敏感或食用梨后不舒服时，改喝温水；这不是确认排卵或治疗症状的方法。'
+    }
+  };
+
+  if (phase.key === 'pms' || stress >= 4 || has('焦虑') || has('生气') || has('腹胀')) {
+    return {
+      ...recipes.roseChenpi,
+      reason: phase.key === 'pms'
+        ? recipes.roseChenpi.reason
+        : '今天记录到压力偏高、焦虑、生气或腹胀，因此用低浓度、无咖啡因的玫瑰陈皮饮替代普通茶。传统思路取“调畅情志、理气和中”，这里只用于日常舒适支持。'
+    };
+  }
+  if (phase.key === 'period') return has('怕冷') ? recipes.gingerJujube : recipes.milletYam;
+  if (phase.key === 'ovulation') return recipes.pearLily;
+  if (energy <= 2 || has('嗜睡')) return recipes.blackSoyMilk;
+  return recipes.blackSoyWater;
+}
+
 function carePlan(phase, log = {}) {
   const symptoms = log.symptoms || [];
   const painLocations = (log.symptoms || []).filter((item) => item.startsWith('疼痛部位：')).map((item) => item.slice(5));
@@ -97,6 +161,7 @@ function carePlan(phase, log = {}) {
     }
   };
   const plan = plans[phase.key];
+  plan.tea = selectFoodDrink(phase, log);
   const notes = [];
   if (has('怕冷')) notes.push('你记录了怕冷：今天可优先保暖、温水；只有没有胃灼热、腹泻或明显热感时才考虑淡姜水。');
   if (has('腹胀')) notes.push('你记录了腹胀：正餐减慢速度，餐后轻走5–10分钟，不用力揉腹，也不靠浓茶“消胀”。');
@@ -111,16 +176,12 @@ function carePlan(phase, log = {}) {
   return { ...plan, notes: notes.slice(0, 3), urgent };
 }
 
-function card(kind, item, phaseKey) {
-  const icons = { tea: '茶', care: '暖', point: '按' };
-  const teaReasons = {
-    period: '以温热、低浓度饮品补水和获得舒适感为目的；不是治疗痛经或“驱寒”的配方。',
-    follicular: '经后恢复期更适合用淡茶或温水维持饮水与进食节奏，不把甜饮或药材当作“猛补”。',
-    ovulation: '没有明显不适时，温水或淡茶足以维持日常水分；不需要因日历估算阶段额外进补。',
-    pms: '经前更看重不扰睡眠；低浓度、低咖啡因饮品能保留热饮习惯，同时减少对休息的干扰。'
-  };
-  const reason = kind === 'tea' ? `<div><dt>为什么推荐</dt><dd>${teaReasons[phaseKey]}</dd></div>` : '';
-  return `<section class="traditional-card traditional-${kind}"><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><h3>${item.title}</h3></div><p class="traditional-steps">${item.steps}</p><dl>${reason}<div><dt>适合</dt><dd>${item.fit}</dd></div><div><dt>先跳过</dt><dd>${item.skip}</dd></div></dl></section>`;
+function card(kind, item) {
+  const icons = { tea: '饮', care: '暖', point: '按' };
+  if (kind === 'tea') {
+    return `<section class="traditional-card traditional-${kind}"><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><div><small>今日食养配方</small><h3>${item.title}</h3></div></div><dl class="recipe-details"><div><dt>食材</dt><dd>${item.ingredients}</dd></div><div><dt>做法</dt><dd>${item.steps}</dd></div><div><dt>为什么今天推荐</dt><dd>${item.reason}</dd></div><div><dt>先换一个</dt><dd>${item.skip}</dd></div></dl><p class="recipe-boundary">经典提供调养原则；本配方是结合阶段与今日记录生成的现代日常食养，不是古籍原方或医疗处方。</p></section>`;
+  }
+  return `<section class="traditional-card traditional-${kind}"><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><h3>${item.title}</h3></div><p class="traditional-steps">${item.steps}</p><dl><div><dt>适合</dt><dd>${item.fit}</dd></div><div><dt>先跳过</dt><dd>${item.skip}</dd></div></dl></section>`;
 }
 
 globalThis.renderTraditionalAdvice = (phase, log) => {
@@ -130,6 +191,6 @@ globalThis.renderTraditionalAdvice = (phase, log) => {
   document.querySelector('#tcmAdvice').innerHTML = `
     <div class="classic-basis"><strong>今天的调护思路</strong><p>${plan.observation}</p></div>
     ${plan.notes.length ? `<div class="symptom-guidance"><strong>结合今天的记录</strong>${plan.notes.map((note) => `<p>${note}</p>`).join('')}</div>` : ''}
-    <div class="traditional-plan">${card('tea', plan.tea, phase.key)}${card('care', plan.care, phase.key)}${card('point', plan.point, phase.key)}</div>
+    <div class="traditional-plan">${card('tea', plan.tea)}${card('care', plan.care)}${card('point', plan.point)}</div>
     <details class="traditional-basis-details"><summary>经典依据与使用边界 <span>展开</span></summary><div class="details-body"><p>《黄帝内经》强调“食饮有节、起居有常”，并指出同样是痛，寒热、按压后的反应并不相同；中医基础理论的整体观与辨证思路，以及《伤寒论》《金匮要略》《温病条辨》所体现的辨寒热、顾护津液、同症不一法，决定了这里不会按阶段一律温补；《景岳全书》把经水与饮食起居、气血变化联系起来。</p><p>《神农本草经》和《汤头歌诀》涉及药性与方剂配伍，因此本产品不把古方拆成茶饮，也不推荐经方、中药剂量或自行辨证。这里只把传统原则转成低风险、可停止的日常动作，并用现代安全资料校正禁忌。</p></div></details>`;
 };

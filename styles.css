@@ -1345,9 +1345,39 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .traditional-card dl > div:first-child dt { color: var(--primary); }
 .traditional-card dl > div:first-child dd { color: var(--ink); }
 .hero-action-tip { text-wrap: pretty; max-width: 31ch; }
+.traditional-tea .traditional-card-head { align-items: flex-start; }
+.traditional-tea .traditional-card-head small {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink-muted);
+  font-size: var(--font-caption);
+  font-weight: 700;
+}
+.traditional-tea .recipe-details {
+  margin-top: 13px;
+  gap: 10px;
+}
+.traditional-tea .recipe-details > div {
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: start;
+}
+.traditional-tea .recipe-details dt { color: var(--primary); }
+.traditional-tea .recipe-details > div:last-child dt { color: var(--danger); }
+.recipe-boundary {
+  margin: 13px 0 0;
+  padding-top: 11px;
+  border-top: 1px solid var(--soft-line);
+  color: var(--ink-muted);
+  font-size: var(--font-caption);
+  line-height: 1.55;
+}
 @media (max-width: 430px) {
   .supplemental-choice-grid .choice-field { padding: 11px; }
   .supplemental-choice-grid .choice-pills { display: grid; }
   .supplemental-choice-grid .choice-pills span { font-size: .76rem; }
   .hero-action-tip { max-width: 26ch; }
+  .traditional-tea .recipe-details > div {
+    grid-template-columns: 68px minmax(0, 1fr);
+    gap: 7px;
+  }
 }
