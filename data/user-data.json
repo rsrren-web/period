@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 52,
-  "updatedAt": "2026-08-09T06:03:18.842Z",
+  "revision": 53,
+  "updatedAt": "2026-08-09T17:30:17.195Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -345,8 +345,8 @@
       "energy": "2",
       "sleep": "3",
       "activity": "1",
-      "pain": "2",
       "stress": "4",
+      "pain": "2",
       "symptoms": [
         "疲倦",
         "焦虑",
@@ -360,6 +360,21 @@
       ],
       "temperature": "",
       "updatedAt": "2026-08-09T06:03:17.702Z"
+    },
+    "2026-08-09": {
+      "mood": "2",
+      "energy": "3",
+      "sleep": "3",
+      "activity": "2",
+      "pain": "0",
+      "stress": "4",
+      "symptoms": [
+        "疲倦",
+        "焦虑",
+        "情绪低落"
+      ],
+      "temperature": "",
+      "updatedAt": "2026-08-09T17:30:15.966Z"
     }
   },
   "tombstones": {
@@ -431,6 +446,7 @@
     "7a07e16b-0d3d-4003-a860-3f488a7e9694",
     "703d442e-6796-4d67-a40a-8bd064f59b32",
     "806ae761-08d7-4487-b63a-d5a77af03424",
-    "b6b59f42-6689-4f64-b42e-bc258097ff75"
+    "b6b59f42-6689-4f64-b42e-bc258097ff75",
+    "2d88f887-0283-4c32-86e7-56d5397b006d"
   ]
 }
