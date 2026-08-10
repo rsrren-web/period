@@ -69,21 +69,19 @@
 
     <section id="insights" class="view">
       <div class="page-heading"><p class="eyebrow">趋势</p><h1>认识自己的重复模式</h1><p>只描述个人记录中的相关变化，不代表因果或诊断。</p></div>
-      <nav class="insight-question-nav" aria-label="按问题查看趋势"><button type="button" data-question-target="questionNow">我现在怎么样？</button><button type="button" data-question-target="questionFactors">什么在影响我？</button><button type="button" data-question-target="questionPms">经前有什么规律？</button><button type="button" data-question-target="questionRhythm">周期稳定吗？</button></nav>
-      <div id="questionNow" class="question-heading"><span>问题一</span><h2>我现在的状态怎么样？</h2></div>
-      <section id="trendHighlights" class="trend-highlights" aria-label="近期重要观察"></section>
-      <article id="cyclePatternSummary" class="panel cycle-pattern-summary"></article>
-      <div id="summaryStats" class="stat-grid"></div>
-      <article id="dailyTrendPanel" class="panel daily-trend-panel"><div class="section-title"><div><p class="eyebrow">每日状态趋势</p><h2>先看结论，再查看变化依据</h2></div></div><div id="dailyTrendControls"></div><div id="dailyTrendChart" class="daily-trend-chart"></div><div id="dailyTrendSummary" class="daily-trend-summary"></div></article>
+      <nav class="insight-question-nav" aria-label="按问题查看趋势"><button class="active" type="button" data-question-target="now">当前状态</button><button type="button" data-question-target="factors">影响因素</button><button type="button" data-question-target="pms">经前规律</button><button type="button" data-question-target="rhythm">周期节律</button></nav>
+      <section id="trendHighlights" data-question-panel="now" class="trend-highlights" aria-label="近期重要观察"></section>
+      <article id="cyclePatternSummary" data-question-panel="rhythm" hidden class="panel cycle-pattern-summary"></article>
+      <div id="summaryStats" data-question-panel="rhythm" hidden class="stat-grid"></div>
+      <article id="dailyTrendPanel" data-question-panel="now" class="panel daily-trend-panel"><div class="section-title"><div><p class="eyebrow">变化依据</p><h2>状态为什么这样变化？</h2></div></div><div id="dailyTrendControls"></div><div id="dailyTrendChart" class="daily-trend-chart"></div><div id="dailyTrendSummary" class="daily-trend-summary"></div></article>
       <div class="content-grid personal-observation-grid">
-        <article id="questionFactors" class="panel personal-factor-panel"><div class="section-title"><div><p class="eyebrow">问题二 · 什么在影响我？</p><h2>哪些状态经常同时变化？</h2></div><span class="observation-badge">非因果</span></div><div id="personalFactorInsight"></div></article>
-        <article id="questionPms" class="panel pms-observation-panel"><div class="section-title"><div><p class="eyebrow">问题三 · 经前有什么规律？</p><h2>经前一周的负担与缓解方向</h2></div><strong id="pmsBurden" class="burden-badge">待记录</strong></div><div id="pmsInsight"></div></article>
+        <article id="questionFactors" data-question-panel="factors" hidden class="panel personal-factor-panel"><div class="section-title"><div><p class="eyebrow">影响因素</p><h2>哪些状态经常同时变化？</h2></div><span class="observation-badge">非因果</span></div><div id="personalFactorInsight"></div></article>
+        <article id="questionPms" data-question-panel="pms" hidden class="panel pms-observation-panel"><div class="section-title"><div><p class="eyebrow">经前规律</p><h2>经前一周的负担与缓解方向</h2></div><strong id="pmsBurden" class="burden-badge">待记录</strong></div><div id="pmsInsight"></div></article>
       </div>
-      <div id="questionRhythm" class="question-heading"><span>问题四</span><h2>我的周期节律稳定吗？</h2></div>
-      <article class="panel quarter-card"><div class="section-title"><div><p class="eyebrow">本季度观察</p><h2>准时情况与经期观察分</h2></div><strong id="quarterScore" class="health-score">—</strong></div><div id="quarterMetrics" class="quarter-metrics"></div><div id="quarterGuidance" class="quarter-guidance"></div><p class="fineprint">观察分用于整理个人记录，不是医学量表或诊断；记录不足时可信度会降低。</p></article>
-      <article class="panel"><div class="section-title"><div><p class="eyebrow">周期变化</p><h2>最近36次开始间隔</h2></div></div><div id="cycleChart" class="bar-chart" role="img" aria-label="周期长度趋势图"></div></article>
-      <div class="content-grid insight-grid"><article class="panel"><h2>哪个阶段情绪相对较好？</h2><div id="moodInsight"></div></article><article class="panel"><h2>睡眠、精力和活动有什么变化？</h2><div id="lifestyleInsight"></div></article></div>
-      <article class="panel"><h2>最近的周期稳定吗？</h2><div id="qualityInsight"></div></article>
+      <article data-question-panel="rhythm" hidden class="panel quarter-card"><div class="section-title"><div><p class="eyebrow">周期节律</p><h2>本季度准时情况</h2></div><strong id="quarterScore" class="health-score">—</strong></div><div id="quarterMetrics" class="quarter-metrics"></div><div id="quarterGuidance" class="quarter-guidance"></div><p class="fineprint">观察分用于整理个人记录，不是医学量表或诊断；记录不足时可信度会降低。</p></article>
+      <article data-question-panel="rhythm" hidden class="panel"><div class="section-title"><div><p class="eyebrow">周期变化</p><h2>最近36次开始间隔</h2></div></div><div id="cycleChart" class="bar-chart" role="img" aria-label="周期长度趋势图"></div></article>
+      <div data-question-panel="rhythm" hidden class="content-grid insight-grid"><article class="panel"><h2>哪个阶段情绪相对较好？</h2><div id="moodInsight"></div></article><article class="panel"><h2>睡眠、精力和活动有什么变化？</h2><div id="lifestyleInsight"></div></article></div>
+      <article data-question-panel="rhythm" hidden class="panel"><h2>最近的周期稳定吗？</h2><div id="qualityInsight"></div></article>
     </section>
 
     <section id="more" class="view">
@@ -127,6 +125,6 @@
   <dialog id="dayDialog" class="day-dialog"><div class="dialog-head"><div><p class="eyebrow">当天详情</p><h2 id="dayDialogTitle"></h2></div><button class="close-dialog round-button" aria-label="关闭">×</button></div><div id="dayDialogBody"></div><div class="day-primary-actions"><button id="daySetPeriodBtn" class="primary">标记为月经日</button><button id="dayCancelPeriodBtn" class="danger" hidden>取消当天经期</button><button id="dayEditPeriodBtn" class="soft" hidden>修改本次开始/结束日期</button></div><button id="dayEditLog" class="text-button day-log-action">记录身体状态</button></dialog>
 
   <div id="toast" class="toast" role="status"></div>
-  <script src="sync-config.js"></script><script type="module" src="traditional-care.js?v=36"></script><script type="module" src="daily-insights.js?v=41"></script><script type="module" src="personal-insights.js?v=39"></script><script type="module" src="app.js?v=39"></script>
+  <script src="sync-config.js"></script><script type="module" src="traditional-care.js?v=42"></script><script type="module" src="daily-insights.js?v=42"></script><script type="module" src="personal-insights.js?v=39"></script><script type="module" src="app.js?v=39"></script>
 </body>
 </html>

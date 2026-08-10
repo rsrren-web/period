@@ -179,9 +179,9 @@ function carePlan(phase, log = {}) {
 function card(kind, item) {
   const icons = { tea: '饮', care: '暖', point: '按' };
   if (kind === 'tea') {
-    return `<section class="traditional-card traditional-${kind}"><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><div><small>今日食养配方</small><h3>${item.title}</h3></div></div><dl class="recipe-details"><div><dt>食材</dt><dd>${item.ingredients}</dd></div><div><dt>做法</dt><dd>${item.steps}</dd></div><div><dt>为什么今天推荐</dt><dd>${item.reason}</dd></div><div><dt>先换一个</dt><dd>${item.skip}</dd></div></dl><p class="recipe-boundary">经典提供调养原则；本配方是结合阶段与今日记录生成的现代日常食养，不是古籍原方或医疗处方。</p></section>`;
+    return `<details class="traditional-card traditional-${kind}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><div><small>今日食养</small><h3>${item.title}</h3></div></div><span class="traditional-expand">查看做法</span></summary><div class="traditional-detail"><dl class="recipe-details"><div><dt>食材</dt><dd>${item.ingredients}</dd></div><div><dt>做法</dt><dd>${item.steps}</dd></div><div><dt>为什么今天推荐</dt><dd>${item.reason}</dd></div><div><dt>先换一个</dt><dd>${item.skip}</dd></div></dl><p class="recipe-boundary">经典提供调养原则；本配方是结合阶段与今日记录生成的现代日常食养，不是古籍原方或医疗处方。</p></div></details>`;
   }
-  return `<section class="traditional-card traditional-${kind}"><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><h3>${item.title}</h3></div><p class="traditional-steps">${item.steps}</p><dl><div><dt>适合</dt><dd>${item.fit}</dd></div><div><dt>先跳过</dt><dd>${item.skip}</dd></div></dl></section>`;
+  return `<details class="traditional-card traditional-${kind}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><div><small>${kind === 'care' ? '今日调护' : '今日穴位'}</small><h3>${item.title}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><p class="traditional-steps">${item.steps}</p><dl><div><dt>适合</dt><dd>${item.fit}</dd></div><div><dt>先跳过</dt><dd>${item.skip}</dd></div></dl></div></details>`;
 }
 
 globalThis.renderTraditionalAdvice = (phase, log) => {
