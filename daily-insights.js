@@ -55,6 +55,10 @@ const OVERVIEW_SERIES = {
 let comparisonMetrics = ['sleep', 'stress'];
 let focusedSymptom = '';
 let dailyContext = null;
+const ACTION_FEEDBACK_KEY = 'period-action-feedback-v1';
+
+function readActionFeedback() { try { return JSON.parse(localStorage.getItem(ACTION_FEEDBACK_KEY) || '{}'); } catch { return {}; } }
+function writeActionFeedback(value) { localStorage.setItem(ACTION_FEEDBACK_KEY, JSON.stringify(value)); }
 
 function overviewValue(log, key) { const value = metricValue(log, key); return value === null ? null : key === 'pain' ? value / 2 : value; }
 function medianDaily(values) { if (!values.length) return null; const sorted = [...values].sort((a, b) => a - b), middle = Math.floor(sorted.length / 2); return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2; }
@@ -98,17 +102,28 @@ function statusMeaning(score) {
   if (score >= 38) return '今天的压力、疲劳或不适较明显，建议减少非必要消耗。';
   return '今天的综合负担较高，优先照顾睡眠、疼痛和基本恢复。';
 }
-function statusActions(factors) {
-  const actions = factors.map(({ key, value }) => {
-    if (key === 'stress' && value >= 4) return { severity: value, text: '给自己留出10分钟不处理任务的休息时间' };
-    if (key === 'sleep' && value <= 2) return { severity: 6 - value, text: '今晚尽量在23点前上床，减少睡前屏幕刺激' };
-    if (key === 'energy' && value <= 2) return { severity: 6 - value, text: '把高消耗任务延后，只保留今天最重要的一件事' };
-    if (key === 'activity' && value <= 2) return { severity: 5 - value, text: '身体允许时轻松走动或舒展10–20分钟' };
-    if (key === 'mood' && value <= 2) return { severity: 5 - value, text: '降低额外社交负担，安排一件能让自己放松的小事' };
-    if (key === 'pain' && value >= 4) return { severity: value / 2, text: '先休息或热敷不适部位，避免勉强完成高强度运动' };
+function recommendedActions(factors) {
+  return factors.map(({ key, value }) => {
+    if (key === 'stress' && value >= 4) return { id: 'stress-break', severity: value, reason: `压力 ${value}/5，是今天最突出的负担`, text: '给自己留出10分钟不处理任务的休息时间' };
+    if (key === 'sleep' && value <= 2) return { id: 'early-bed', severity: 6 - value, reason: `睡眠 ${value}/5，恢复可能不充分`, text: '今晚尽量在23点前上床，减少睡前屏幕刺激' };
+    if (key === 'energy' && value <= 2) return { id: 'reduce-load', severity: 6 - value, reason: `精力 ${value}/5，今天不适合硬撑`, text: '把高消耗任务延后，只保留今天最重要的一件事' };
+    if (key === 'activity' && value <= 2) return { id: 'gentle-move', severity: 5 - value, reason: `活动 ${value}/5，轻微活动可能更适合今天`, text: '身体允许时轻松走动或舒展10–20分钟' };
+    if (key === 'mood' && value <= 2) return { id: 'mood-space', severity: 5 - value, reason: `情绪 ${value}/5，需要给自己更多空间`, text: '降低额外社交负担，安排一件能让自己放松的小事' };
+    if (key === 'pain' && value >= 4) return { id: 'pain-care', severity: value / 2, reason: `疼痛 ${value}/10，需要优先照顾不适`, text: '先休息或热敷不适部位，避免勉强完成高强度运动' };
     return null;
-  }).filter(Boolean).sort((a, b) => b.severity - a.severity).slice(0, 2);
+  }).filter(Boolean).sort((a, b) => b.severity - a.severity);
+}
+function statusActions(factors) {
+  const actions = recommendedActions(factors).slice(0, 2);
   return actions.length ? actions.map((item) => item.text).join('；') + '。' : '目前没有特别突出的负担，继续按自己的舒适节奏安排即可。';
+}
+
+function scoreHistory(logs) { return Object.entries(logs).map(([date, log]) => ({ date, phase: phaseForDailyDate(date), ...scoreForLog(log) })).filter((item) => item.score !== null).sort((a, b) => a.date.localeCompare(b.date)); }
+function scoreComparison(logs, date, score, phase) {
+  const history = scoreHistory(logs), phaseScores = history.filter((item) => item.date !== date && item.phase === phase).map((item) => item.score), baseline = phaseScores.length >= 3 ? medianDaily(phaseScores) : null, recent = history.filter((item) => item.date <= date).slice(-7), change = recent.length >= 2 ? recent.at(-1).score - recent[0].score : null;
+  const baselineText = baseline === null ? `同阶段还需${Math.max(0, 3 - phaseScores.length)}天记录形成个人基线` : `较个人${phaseName(phase)}基线${score >= baseline ? '高' : '低'} ${Math.abs(Math.round(score - baseline))}分`;
+  const trendText = change === null ? '近7次记录不足，暂不判断方向' : Math.abs(change) < 4 ? '近7次记录基本平稳' : `近7次记录${change > 0 ? '上升' : '下降'} ${Math.abs(Math.round(change))}分`;
+  return { baseline, change, baselineText, trendText };
 }
 function confidenceFor(count, cycles, dominant = 0) {
   if (count < 7) return { label: '数据不足', level: 'none' };
@@ -147,11 +162,35 @@ function renderTrendHighlights(logs) {
   if (!insights.length) insights.push({ priority: 1, title: '暂未发现明显偏离', text: `最近一次记录位于${phaseName(phase)}；继续记录会逐步形成同阶段个人范围。`, tone: 'steady' });
   root.innerHTML = insights.sort((a, b) => b.priority - a.priority).slice(0, 3).map((item, index) => `<article class="trend-highlight tone-${item.tone}"><span>${index === 0 ? '最值得注意' : '继续观察'}</span><h2>${escapeDaily(item.title)}</h2><p>${escapeDaily(item.text)}</p><button type="button" class="insight-info" aria-label="查看这条观察的计算说明" data-insight-info="${index}">i</button></article>`).join('');
 }
+function renderHomeDecision(logs) {
+  const root = document.querySelector('#homeDecisionCard'); if (!root) return;
+  const today = localIso(new Date()), log = logs[today], feedback = readActionFeedback(), yesterday = addDate(today, -1), yesterdayPlan = feedback[yesterday];
+  if (!log) {
+    root.innerHTML = '<span class="decision-kicker">今天只回答一个问题</span><h2>先记录今天的状态，再给你一个最值得做的行动</h2><p>不会根据周期阶段假定你一定疲倦、焦虑或疼痛。</p><button type="button" data-open-today-log>记录今天状态</button>';
+    return;
+  }
+  const phase = phaseForDailyDate(today), state = scoreForLog(log), factors = Object.entries(OVERVIEW_SERIES).map(([key, config]) => { const value = metricValue(log, key); return value === null ? null : { key, config, value }; }).filter(Boolean), action = recommendedActions(factors)[0] || { id: 'keep-rhythm', reason: `${phaseName(phase)}的今日记录没有明显突出负担`, text: '保持当前节奏，并给晚间留出稳定的休息时间' }, comparison = scoreComparison(logs, today, state.score, phase);
+  feedback[today] = { ...(feedback[today] || {}), actionId: action.id, action: action.text, score: state.score, phase, suggestedAt: feedback[today]?.suggestedAt || new Date().toISOString() }; writeActionFeedback(feedback);
+  let followup = '';
+  if (yesterdayPlan?.completed) { const delta = Number.isFinite(yesterdayPlan.score) ? state.score - yesterdayPlan.score : null; followup = `<div class="decision-followup"><strong>昨天的行动反馈</strong><p>你完成了“${escapeDaily(yesterdayPlan.action)}”。${delta === null ? '今天已有记录，继续积累后再判断是否反复有效。' : `今天观察分比昨天${delta >= 0 ? '高' : '低'} ${Math.abs(delta)}分；单日变化不能证明是行动造成的。`}</p></div>`; }
+  root.innerHTML = `<span class="decision-kicker">今天的一个重点</span><h2>${escapeDaily(statusLabel(state.score))}</h2><div class="decision-three"><div><small>核心结论</small><strong>${state.score}/100 · ${escapeDaily(comparison.trendText)}</strong></div><div><small>主要原因</small><strong>${escapeDaily(action.reason)}</strong></div><div><small>今日行动</small><strong>${escapeDaily(action.text)}</strong></div></div><button type="button" data-complete-action="${escapeDaily(today)}" ${feedback[today]?.completed ? 'disabled' : ''}>${feedback[today]?.completed ? '今天已完成 ✓' : '完成后点这里'}</button><p class="decision-baseline">${escapeDaily(comparison.baselineText)}。观察分越高表示当天自填负担越低。</p>${followup}`;
+}
+
+function renderCyclePatternSummary(logs) {
+  const root = document.querySelector('#cyclePatternSummary'); if (!root) return;
+  const periods = dailyPeriods(), intervals = periods.slice(1).map((period, index) => dayDistance(periods[index].start, period.start)).filter((value) => value > 0 && value < 90), recent = intervals.slice(-6), phaseScores = scoreHistory(logs).reduce((map, item) => { if (!map[item.phase]) map[item.phase] = []; map[item.phase].push(item.score); return map; }, {}), phaseAverages = Object.entries(phaseScores).filter(([, values]) => values.length >= 3).map(([phase, values]) => ({ phase, value: averageDaily(values), count: values.length })).sort((a, b) => b.value - a.value), symptomsByPhase = new Map();
+  Object.entries(logs).forEach(([date, log]) => symptomLabels(log).forEach((label) => { const key = `${phaseForDailyDate(date)}|${label}`; symptomsByPhase.set(key, (symptomsByPhase.get(key) || 0) + 1); }));
+  const repeated = [...symptomsByPhase.entries()].filter(([, count]) => count >= 3).sort((a, b) => b[1] - a[1])[0], lines = [];
+  if (recent.length >= 3) lines.push(`最近${recent.length}个周期中位数为${Math.round(medianDaily(recent))}天，范围${Math.min(...recent)}–${Math.max(...recent)}天。`); else lines.push('完整周期还不够，暂时不总结周期长短规律。');
+  if (phaseAverages.length >= 2) lines.push(`你的记录中，${phaseName(phaseAverages[0].phase)}状态分相对较高，${phaseName(phaseAverages.at(-1).phase)}相对较低。`);
+  if (repeated) { const [phase, label] = repeated[0].split('|'); lines.push(`${label}在${phaseName(phase)}记录了${repeated[1]}次，值得继续观察是否重复。`); }
+  root.innerHTML = `<div class="section-title"><div><p class="eyebrow">系统替你总结</p><h2>目前看见的周期规律</h2></div><span class="observation-badge">个人记录</span></div><ul>${lines.slice(0, 3).map((line) => `<li>${escapeDaily(line)}</li>`).join('')}</ul><p class="fineprint">只总结已有个人记录；样本不足时保持空白，不用人群平均替代。</p>`;
+}
 function renderStatusOverview(logs) {
   const entries = Object.entries(logs).sort(([a], [b]) => a.localeCompare(b)), latest = entries.at(-1); if (!latest) return '';
   const [date, log] = latest, phase = phaseForDailyDate(date), state = scoreForLog(log), factors = Object.entries(OVERVIEW_SERIES).map(([key, config]) => { const value = metricValue(log, key); if (value === null) return null; const baseline = phaseBaseline(logs, key, phase, date), delta = baseline.count >= 3 ? value - baseline.median : null, direction = delta === null || Math.abs(delta) < .75 ? '接近个人范围' : (config.favorable ? delta > 0 : delta < 0) ? '高于个人范围' : '需要留意'; return { key, config, value, baseline, direction }; }).filter(Boolean);
-  const score = state.score;
-  return `<section class="status-overview"><div class="status-score"><span>最近状态观察分</span><strong>${score ?? '—'}${score === null ? '' : '<small>/100</small>'}</strong><em>${score === null ? '等待记录' : statusLabel(score)}</em>${score === null ? '' : `<div class="status-scale" aria-label="状态观察分 ${score}/100"><i style="left:${score}%"></i></div><div class="status-scale-labels"><span>需要恢复</span><span>平稳</span><span>状态较稳</span></div><p>${statusMeaning(score)}</p>`}<small>${date.slice(5)} · ${phaseName(phase)} · 完整度 ${state.completeness}/${state.total}</small></div><div class="status-detail"><div class="status-contributors">${factors.map(({ key, config, value, baseline, direction }) => `<div><span style="--factor:${config.color}">${config.label}</span><strong>${value}${key === 'pain' ? '/10' : '/5'}</strong><small>${baseline.count >= 3 ? `${direction} · 基线${baseline.median.toFixed(1)}` : `同阶段仅${baseline.count}天，继续记录`}</small></div>`).join('')}</div><div class="status-next"><strong>今天可以先做</strong><p>${statusActions(factors)}</p></div></div><p class="method-inline"><button type="button" data-method-info>i</button>满分100分。分数越高，表示当天自填记录中的睡眠、情绪、精力、活动、压力和疼痛负担越低；它不是医学健康评分，也不与他人比较。</p></section>`;
+  const score = state.score, comparison = score === null ? null : scoreComparison(logs, date, score, phase);
+  return `<section class="status-overview"><div class="status-score"><span>最近状态观察分</span><strong>${score ?? '—'}${score === null ? '' : '<small>/100</small>'}</strong><em>${score === null ? '等待记录' : statusLabel(score)}</em>${score === null ? '' : `<div class="status-scale" aria-label="状态观察分 ${score}/100"><i style="left:${score}%"></i></div><div class="status-scale-labels"><span>需要恢复</span><span>平稳</span><span>状态较稳</span></div><p>${statusMeaning(score)}</p><div class="score-comparison"><span>${escapeDaily(comparison.baselineText)}</span><span>${escapeDaily(comparison.trendText)}</span></div>`}<small>${date.slice(5)} · ${phaseName(phase)} · 完整度 ${state.completeness}/${state.total}</small></div><div class="status-detail"><div class="status-contributors">${factors.map(({ key, config, value, baseline, direction }) => `<div><span style="--factor:${config.color}">${config.label}</span><strong>${value}${key === 'pain' ? '/10' : '/5'}</strong><small>${baseline.count >= 3 ? `${direction} · 基线${baseline.median.toFixed(1)}` : `同阶段仅${baseline.count}天，继续记录`}</small></div>`).join('')}</div><div class="status-next"><strong>今天可以先做</strong><p>${statusActions(factors)}</p></div></div><p class="method-inline"><button type="button" data-method-info>i</button>满分100分。分数越高，表示当天自填记录中的睡眠、情绪、精力、活动、压力和疼痛负担越低；它不是医学健康评分，也不与他人比较。</p></section>`;
 }
 function chartSeries(logs, range, selected, focusDates = new Set()) {
   const totalDays = dayDistance(range.start, range.end) + 1, width = 720, height = 260, top = 22, baseline = 216, yFor = (value) => top + ((5 - value) / 4) * (baseline - top);
@@ -181,8 +220,11 @@ function renderDailyOverview(logs) {
 }
 function renderDailyTrendView(logs) { renderTrendHighlights(logs); renderDailyOverview(logs); }
 
-globalThis.renderDailyEnhancements = (context) => { dailyContext = context || dailyContext || { logs: readDailyLogs(), periods: [] }; const logs = context?.logs || readDailyLogs(); markStatusDates(logs); renderHomeStatus(logs); renderDailyTrendView(logs); };
+globalThis.renderDailyEnhancements = (context) => { dailyContext = context || dailyContext || { logs: readDailyLogs(), periods: [] }; const logs = context?.logs || readDailyLogs(); markStatusDates(logs); renderHomeStatus(logs); renderHomeDecision(logs); renderCyclePatternSummary(logs); renderDailyTrendView(logs); };
 document.addEventListener('click', (event) => {
+  const question = event.target.closest('[data-question-target]'); if (question) { document.querySelector(`#${question.dataset.questionTarget}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  if (event.target.closest('[data-open-today-log]')) { document.querySelector('[data-open-log]')?.click(); return; }
+  const completeAction = event.target.closest('[data-complete-action]'); if (completeAction) { const feedback = readActionFeedback(), date = completeAction.dataset.completeAction; feedback[date] = { ...(feedback[date] || {}), completed: true, completedAt: new Date().toISOString() }; writeActionFeedback(feedback); renderHomeDecision(dailyContext?.logs || readDailyLogs()); return; }
   const range = event.target.closest('[data-trend-range]'); if (range) { dailyTrendRange = range.dataset.trendRange; focusedSymptom = ''; renderDailyTrendView(dailyContext?.logs || readDailyLogs()); return; }
   const compare = event.target.closest('[data-compare-metric]'); if (compare) { const key = compare.dataset.compareMetric; if (comparisonMetrics.includes(key)) { if (comparisonMetrics.length > 1) comparisonMetrics = comparisonMetrics.filter((item) => item !== key); } else comparisonMetrics = [...comparisonMetrics, key].slice(-2); renderDailyOverview(dailyContext?.logs || readDailyLogs()); return; }
   const symptom = event.target.closest('[data-heat-symptom]'); if (symptom) { focusedSymptom = focusedSymptom === symptom.dataset.heatSymptom ? '' : symptom.dataset.heatSymptom; renderDailyOverview(dailyContext?.logs || readDailyLogs()); return; }
