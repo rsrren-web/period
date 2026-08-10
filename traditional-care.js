@@ -1,196 +1,106 @@
-function selectFoodDrink(phase, log = {}) {
-  const symptoms = Array.isArray(log.symptoms) ? log.symptoms : [];
-  const has = (name) => symptoms.includes(name);
-  const energy = Number(log.energy) || 3;
-  const stress = Number(log.stress) || 3;
-  const recipes = {
-    roseChenpi: {
-      title: '玫瑰陈皮饮',
-      ingredients: '食用玫瑰花 2 朵、陈皮 1 小块（约 1 g）、热水 300 mL。',
-      steps: '玫瑰与陈皮快速冲洗后放入杯中，加入热水焖 8–10 分钟；温热时一次饮用，当天不反复续泡，也不隔夜。',
-      reason: '今天处于经前阶段，且记录到压力、焦虑、生气或腹胀时，选低浓度、无咖啡因的温热饮品。传统思路取“调畅情志、理气和中”，这里仅作日常舒适支持，不用于治疗 PMS。',
-      skip: '胃酸或反流明显、对花粉或柑橘过敏、正在服药且不清楚相互作用时，改喝温水；不要连续长期饮用。'
-    },
-    gingerJujube: {
-      title: '淡姜枣饮',
-      ingredients: '鲜姜 2 薄片（约 3 g）、红枣 2 枚、清水 350 mL。',
-      steps: '红枣去核并掰开，与姜片一起小火煮 10 分钟，放温后饮用；一天 1 次，不额外加糖。',
-      reason: '今天处于经期，并记录到怕冷或温热后更舒服时，少量姜枣与温水用于增加温暖和舒适感；这是食养饮品，不等同于“驱寒治痛”的处方。',
-      skip: '胃灼热、口干咽痛、腹泻、热敷或热饮后更不舒服，或出血量异常增加时，改喝温水。'
-    },
-    milletYam: {
-      title: '小米山药粥',
-      ingredients: '小米 30 g、鲜山药 50 g、清水 500 mL。',
-      steps: '小米洗净，山药去皮切小块，一起煮沸后转小火煮 25–30 分钟至软烂；温热吃一碗，不额外加糖。',
-      reason: '今天处于经期，但没有记录到明显怕冷；与其固定喝姜茶，更适合用一份温热、清淡的主食维持规律进食。传统思路是“顾护脾胃”，不是用食物治疗月经问题。',
-      skip: '山药过敏、吞咽困难，或医生要求限制淀粉、液体或钾时，按原有饮食要求调整。'
-    },
-    blackSoyMilk: {
-      title: '无糖黑豆浆',
-      ingredients: '黑大豆 20 g、清水 350–400 mL；不加糖。',
-      steps: '黑豆洗净后浸泡 6–8 小时，加水打浆；煮沸后继续小火充分煮熟 8–10 分钟。早餐时饮用 250–300 mL，并配一份主食。',
-      reason: '今天处于经后恢复阶段，且精力记录偏低，优先用一份真正含蛋白质的早餐饮品支持正常进食；黑豆属于大豆，这不是“补血方”。',
-      skip: '大豆过敏、饮用后明显腹胀，或因肾脏疾病被要求限制蛋白质或钾时不选；豆浆必须彻底煮熟。'
-    },
-    blackSoyWater: {
-      title: '黑豆煮水（连豆食用）',
-      ingredients: '黑大豆 20 g、清水 500 mL。',
-      steps: '黑豆洗净浸泡 4–6 小时，加水煮沸后小火煮 25–30 分钟至豆粒熟软。饮 250–300 mL 煮豆水；能耐受时把熟豆随餐吃掉，只喝水获得的营养有限。',
-      reason: '今天处于经后恢复阶段，适合把大豆作为正常饮食的一部分；用固定份量替代泛泛的“多喝茶”，也避免把它说成具有治疗作用的补品。',
-      skip: '大豆过敏、容易胀气，或因肾脏疾病被要求限制蛋白质或钾时不选；不要用生豆或未煮熟的豆水。'
-    },
-    pearLily: {
-      title: '雪梨百合饮',
-      ingredients: '雪梨 1/2 个（约 100 g）、干百合 8 g、清水 400 mL。',
-      steps: '雪梨去核切块，干百合洗净，一起小火煮 15 分钟；放温后饮汤并吃梨和百合，不额外加糖。',
-      reason: '今天处于排卵估算阶段，若同时感觉口干或偏热，用清淡、含水分的食物饮品维持补水；不因“排卵期”额外进补或清热。',
-      skip: '腹泻、胃肠敏感或食用梨后不舒服时，改喝温水；这不是确认排卵或治疗症状的方法。'
-    }
-  };
+import {
+  ACUPOINTS,
+  CARE_PRACTICES,
+  CONSTITUTION_OBSERVATIONS,
+  FOOD_RECIPES,
+  KNOWLEDGE_SOURCES,
+  KNOWLEDGE_VERSION,
+  PHASE_THEORY
+} from './knowledge/wellness-knowledge.js';
 
-  if (phase.key === 'pms' || stress >= 4 || has('焦虑') || has('生气') || has('腹胀')) {
-    return {
-      ...recipes.roseChenpi,
-      reason: phase.key === 'pms'
-        ? recipes.roseChenpi.reason
-        : '今天记录到压力偏高、焦虑、生气或腹胀，因此用低浓度、无咖啡因的玫瑰陈皮饮替代普通茶。传统思路取“调畅情志、理气和中”，这里只用于日常舒适支持。'
-    };
-  }
-  if (phase.key === 'period') return has('怕冷') ? recipes.gingerJujube : recipes.milletYam;
-  if (phase.key === 'ovulation') return recipes.pearLily;
-  if (energy <= 2 || has('嗜睡')) return recipes.blackSoyMilk;
-  return recipes.blackSoyWater;
+const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+const addDays = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
+const todayIso = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; };
+const normalizePain = (value) => { const pain = Number(value); if (!Number.isFinite(pain)) return 0; return pain > 5 ? Math.round(pain / 2) : pain; };
+const memoryStore = new Map();
+const storageGet = (key) => { try { return globalThis.localStorage?.getItem(key) ?? memoryStore.get(key) ?? null; } catch { return memoryStore.get(key) ?? null; } };
+const storageSet = (key, value) => { try { globalThis.localStorage?.setItem(key, value); } catch { memoryStore.set(key, value); } };
+
+function tags(log = {}) {
+  return Array.isArray(log.symptoms) ? log.symptoms : [];
 }
 
-function carePlan(phase, log = {}) {
-  const symptoms = log.symptoms || [];
-  const painLocations = (log.symptoms || []).filter((item) => item.startsWith('疼痛部位：')).map((item) => item.slice(5));
-  const pain = Number(log.pain) || 0;
-  const stress = Number(log.stress) || 3;
-  const sleep = Number(log.sleep) || 3;
-  const has = (name) => symptoms.includes(name);
-  const hurts = (name) => painLocations.includes(name);
-  const plans = {
-    period: {
-      title: '经期 · 因感受而调护',
-      observation: '以舒缓、适度保暖和不扰胃口为主；有热感、口干或热敷更痛时，不按“经期必寒”处理。',
-      tea: {
-        title: '温水为主，怕冷时才选淡姜水',
-        steps: '普通温水每次200–300 mL，按口渴分次喝。若同时怕冷、喜热饮且平时耐受姜：鲜姜2–3薄片，加300–400 mL热水浸5–10分钟，当天1杯即可。',
-        fit: '更适合怕冷、温热后更舒服的人。',
-        skip: '胃灼热、腹泻、口干咽痛明显、出血异常增多，或正在服药且不清楚相互作用时，跳过姜水。'
-      },
-      care: {
-        title: '下腹或腰背舒适热敷',
-        steps: '隔一层衣物或毛巾，温热不烫，15–20分钟；每5分钟摸一下皮肤，不抱着热源入睡。',
-        fit: '仅在腰腹不适且热后舒服时使用。',
-        skip: '皮肤破损或麻木、发热、异常大量出血，或热敷后更痛时立即停止。'
-      },
-      point: {
-        title: '内关轻按，必要时配合足三里',
-        steps: '内关：手腕掌侧横纹向上约三横指、两条筋之间；拇指垂直轻按30–60秒，左右各1–2轮。足三里：膝盖外侧凹陷下约四横指、胫骨前嵴外侧一横指，同样轻按。',
-        fit: '以放松、微酸胀但不痛为度。',
-        skip: '皮肤破损、红肿、静脉曲张处不按；不自行针刺或艾灸。'
-      }
-    },
-    follicular: {
-      title: '经后 · 先恢复，再加量',
-      observation: '《景岳全书》把经水与水谷、起居相联系；这里落实为规律吃饭和逐步恢复，不用甜饮或药材“猛补”。',
-      tea: {
-        title: '清淡补水，不必专门进补',
-        steps: '温水每次200–300 mL；想喝茶可用平常茶叶的一半浓度，先随餐或餐后饮用，避免用高糖饮品代替正餐。',
-        fit: '适合月经刚结束、胃口正常的恢复阶段。',
-        skip: '心悸、失眠、胃部不适时改喝温水；缺铁或正在补铁时，茶与正餐或铁剂错开。'
-      },
-      care: {
-        title: '温热淋浴 + 缓慢恢复活动',
-        steps: '温热淋浴5–10分钟，之后做5分钟舒展或散步；运动量每次只增加一点，以次日不明显疲劳为准。',
-        fit: '适合精力逐步回升、没有明显疼痛时。',
-        skip: '头晕、心慌、明显乏力时先坐下补水进食，不用高温泡澡硬撑。'
-      },
-      point: {
-        title: '足三里轻按作为放松提示',
-        steps: '膝盖外侧凹陷下约四横指、胫骨前嵴外侧一横指；坐稳后每侧轻按30–60秒，1–2轮。',
-        fit: '按后感觉放松即可，不追求强烈酸胀。',
-        skip: '位置不确定或按压会痛就跳过；不自行针刺或艾灸。'
-      }
-    },
-    ovulation: {
-      title: '排卵估算期 · 平和维持',
-      observation: '这是日历估算，不是已确认排卵。传统“寒热有别”的思路在这里意味着：没有不适就不额外温补或清热。',
-      tea: {
-        title: '按口渴补水，淡茶不过量',
-        steps: '每次温水200–300 mL；如喝普通茶，冲淡并尽量放在白天，下午易失眠的人改为温水。',
-        fit: '适合没有明显不适、维持平常节奏。',
-        skip: '心悸、失眠、胃酸不适时不喝含咖啡因茶；不因“排卵”自行加草药。'
-      },
-      care: {
-        title: '久坐后活动，不例行热敷',
-        steps: '每坐45–60分钟起身2–5分钟，活动肩颈和髋部；只有腰腹不适且温热后舒服时才短时热敷。',
-        fit: '适合工作日维持活动和舒适。',
-        skip: '单侧突发剧痛、晕厥或异常出血，不用热敷掩盖症状。'
-      },
-      point: {
-        title: '内关轻按用于安静放松',
-        steps: '手腕掌侧横纹上约三横指、两筋之间；配合慢呼气，左右各轻按30–60秒，1–2轮。',
-        fit: '压力偏高或久坐时可尝试。',
-        skip: '麻木、刺痛或皮肤不适立即停止；不自行针刺或艾灸。'
-      }
-    },
-    pms: {
-      title: '经前 · 疏缓而不过度刺激',
-      observation: '经前表现可偏胀、偏烦、偏倦或偏冷，不用一个“体质”解释所有日子；先依据当天重复出现的感受调整。',
-      tea: {
-        title: '低浓度、低咖啡因，优先不扰睡眠',
-        steps: '白天可喝半浓度普通茶150–250 mL；若下午后容易失眠、烦躁或心悸，改为温水。怕冷且没有胃灼热时，才按经期方法选1杯淡姜水。',
-        fit: '适合经前想喝热饮但不需要“功能茶”的时候。',
-        skip: '睡眠差、心悸、胃酸不适时跳过含咖啡因饮品；不把经方拆成日常茶饮。'
-      },
-      care: {
-        title: '睡前降刺激，腰腹不适再热敷',
-        steps: '睡前30分钟调暗屏幕、准备次日用品；腰腹不适且喜温时，隔布热敷15–20分钟。',
-        fit: '适合经前紧张、疲倦或腰腹发紧。',
-        skip: '烦热、口干明显或热敷更不舒服时不敷；不要高温泡澡后立即入睡。'
-      },
-      point: {
-        title: '内关 + 足三里轻按',
-        steps: '先按内关：腕横纹上约三横指、两筋间；再按足三里：膝外侧凹陷下约四横指、胫骨前嵴外一横指。每侧30–60秒，各1–2轮。',
-        fit: '用于放松和建立睡前停顿，不追求“通经”感。',
-        skip: '不强刺激合谷或三阴交；不自行针刺或艾灸。'
-      }
-    }
-  };
-  const plan = plans[phase.key];
-  plan.tea = selectFoodDrink(phase, log);
-  const notes = [];
-  if (has('怕冷')) notes.push('你记录了怕冷：今天可优先保暖、温水；只有没有胃灼热、腹泻或明显热感时才考虑淡姜水。');
-  if (has('腹胀')) notes.push('你记录了腹胀：正餐减慢速度，餐后轻走5–10分钟，不用力揉腹，也不靠浓茶“消胀”。');
-  if (has('头痛') || hurts('头部')) notes.push('你记录了头部疼痛：先补水、减少屏幕刺激并安静休息；不热敷头部。突然出现或异常剧烈的头痛应及时求助。');
-  if (has('烦躁') || has('情绪敏感') || has('焦虑') || has('生气') || has('害怕/紧张') || stress >= 4) notes.push('今天情绪紧张或压力较高：下午后减少咖啡因，把轻按配合缓慢呼气使用，不加辛辣、浓姜等刺激。');
-  if (has('嗜睡') || sleep <= 2) notes.push('今天嗜睡或睡眠不足：不靠浓茶硬撑；午后若小睡，尽量控制在20–30分钟，并优先提早入睡。');
-  if (has('食欲变化')) notes.push('你记录了食欲变化：少量、规律进食比“补品”更重要；持续吃不下、反复呕吐或明显体重变化时应评估。');
-  if ((has('腰腹不适') || hurts('腰背') || hurts('小腹/盆腔')) && !has('头痛') && !hurts('头部')) notes.push('你记录了腰腹部疼痛：可先试舒适热敷；若热后更痛就停止，不把“喜热”当作诊断。');
-  const urgent = pain >= 7
-    ? '疼痛已达7分或以上，若影响日常活动、越来越重或止痛与热敷仍无效，请尽快进行专业评估。'
-    : '若出现晕厥、发热、突发单侧剧痛、异常大量出血，或疼痛持续加重，请停止自我调养并及时求助。';
-  return { ...plan, notes: notes.slice(0, 3), urgent };
+function recentContext(logs = {}, days = 7) {
+  const today = todayIso(), start = addDays(today, -(days - 1));
+  const entries = Object.entries(logs).filter(([date]) => date >= start && date <= today).sort(([a], [b]) => a.localeCompare(b));
+  const counts = new Map();
+  entries.forEach(([, log]) => tags(log).forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1)));
+  const averages = (key) => { const values = entries.map(([, log]) => Number(log[key])).filter(Number.isFinite); return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null; };
+  const consecutive = (tag) => { let total = 0; for (let date = today; date >= start; date = addDays(date, -1)) { if (!tags(logs[date]).includes(tag)) break; total++; } return total; };
+  return { entries, counts, averages: { sleep: averages('sleep'), energy: averages('energy'), activity: averages('activity'), stress: averages('stress'), pain: entries.length ? entries.reduce((sum, [, log]) => sum + normalizePain(log.pain), 0) / entries.length : null }, consecutive };
 }
 
-function card(kind, item) {
-  const icons = { tea: '饮', care: '暖', point: '按' };
-  if (kind === 'tea') {
-    return `<details class="traditional-card traditional-${kind}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><div><small>今日食养</small><h3>${item.title}</h3></div></div><span class="traditional-expand">查看做法</span></summary><div class="traditional-detail"><dl class="recipe-details"><div><dt>食材</dt><dd>${item.ingredients}</dd></div><div><dt>做法</dt><dd>${item.steps}</dd></div><div><dt>为什么今天推荐</dt><dd>${item.reason}</dd></div><div><dt>先换一个</dt><dd>${item.skip}</dd></div></dl><p class="recipe-boundary">经典提供调养原则；本配方是结合阶段与今日记录生成的现代日常食养，不是古籍原方或医疗处方。</p></div></details>`;
-  }
-  return `<details class="traditional-card traditional-${kind}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icons[kind]}</span><div><small>${kind === 'care' ? '今日调护' : '今日穴位'}</small><h3>${item.title}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><p class="traditional-steps">${item.steps}</p><dl><div><dt>适合</dt><dd>${item.fit}</dd></div><div><dt>先跳过</dt><dd>${item.skip}</dd></div></dl></div></details>`;
+function signalsFor(log = {}, recent) {
+  const set = new Set(tags(log));
+  for (const [tag, count] of recent.counts) if (count >= 2) set.add(tag);
+  if ((recent.averages.energy ?? 3) <= 2.4) set.add('low-energy');
+  if ((recent.averages.activity ?? 3) <= 2.3) set.add('low-activity');
+  if ((recent.averages.sleep ?? 3) <= 2.4) set.add('sleep-low');
+  if ((recent.averages.stress ?? 3) >= 3.7) set.add('stress-high');
+  if (Number(log.energy) <= 2) set.add('low-energy');
+  if (Number(log.activity) <= 2) set.add('low-activity');
+  if (Number(log.sleep) <= 2) set.add('sleep-low');
+  if (Number(log.stress) >= 4) set.add('stress-high');
+  if (![...set].some((value) => ['怕冷', '怕热/潮热', '焦虑', '生气', '腹胀', '疲倦', '嗜睡', '未排便'].includes(value))) set.add('neutral');
+  return set;
 }
 
-globalThis.renderTraditionalAdvice = (phase, log) => {
-  const plan = carePlan(phase, log);
-  document.querySelector('#tcmPhaseTitle').textContent = plan.title;
+function choose(items, phaseKey, signals, recentIdsKey) {
+  const recentIds = JSON.parse(storageGet(recentIdsKey) || '[]');
+  const ranked = items
+    .filter((item) => item.phases.includes(phaseKey))
+    .map((item) => { const matches = item.signals.filter((signal) => signals.has(signal)).length; return { item, score: matches ? (item.priority || 1) + matches * 4 : -(item.priority || 1) - (recentIds.includes(item.id) ? 3 : 0) }; })
+    .sort((a, b) => b.score - a.score);
+  const selected = ranked[0]?.item || items.find((item) => item.phases.includes(phaseKey));
+  if (selected) storageSet(recentIdsKey, JSON.stringify([selected.id, ...recentIds.filter((id) => id !== selected.id)].slice(0, 4)));
+  return selected;
+}
+
+function constitutionHint(recent) {
+  const score = (profile) => profile.signals.reduce((sum, signal) => sum + (recent.counts.get(signal) || 0), 0);
+  const match = CONSTITUTION_OBSERVATIONS.map((profile) => ({ profile, total: score(profile) })).filter(({ profile, total }) => total >= profile.needs).sort((a, b) => b.total - a.total)[0];
+  return match ? { ...match.profile, total: match.total } : null;
+}
+
+function sourceNames(ids = []) {
+  return ids.map((id) => KNOWLEDGE_SOURCES.find((source) => source.id === id)?.title).filter(Boolean).join('、');
+}
+
+function foodCard(item) {
+  return `<details class="traditional-card traditional-tea"><summary><div class="traditional-card-head"><span aria-hidden="true">食</span><div><small>今日食养</small><h3>${esc(item.title)}</h3></div></div><span class="traditional-expand">查看食谱</span></summary><div class="traditional-detail"><dl class="recipe-details"><div><dt>食材</dt><dd>${esc(item.ingredients)}</dd></div><div><dt>做法</dt><dd>${esc(item.steps)}</dd></div><div><dt>为什么今天推荐</dt><dd>${esc(item.why)}</dd></div><div><dt>先换一个</dt><dd>${esc(item.skip)}</dd></div><div><dt>知识来源</dt><dd>${esc(sourceNames(item.sources))}</dd></div></dl></div></details>`;
+}
+
+function practiceCard(kind, item) {
+  const point = kind === 'point';
+  return `<details class="traditional-card traditional-${kind}"><summary><div class="traditional-card-head"><span aria-hidden="true">${point ? '按' : '养'}</span><div><small>${point ? '今日穴位' : '今日调护'}</small><h3>${esc(point ? `${item.name}轻按` : item.title)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail">${point ? `<dl><div><dt>位置</dt><dd>${esc(item.location)}</dd></div><div><dt>方法</dt><dd>${esc(item.method)}</dd></div>` : `<dl><div><dt>方法</dt><dd>${esc(item.steps)}</dd></div>`}<div><dt>为什么推荐</dt><dd>${esc(item.why)}</dd></div><div><dt>先跳过</dt><dd>${esc(item.skip)}</dd></div></dl></div></details>`;
+}
+
+function recentEvidence(recent, signals) {
+  const lines = [];
+  const late = recent.counts.get('入睡：23:00后') || recent.counts.get('23点后入睡') || 0;
+  const noBowel = recent.consecutive('排便：未排便') || recent.consecutive('未排便');
+  if (late >= 2) lines.push(`近7天有${late}天记录23点后入睡`);
+  if (noBowel >= 2) lines.push(`已连续${noBowel}天记录未排便`);
+  if ((recent.averages.stress ?? 0) >= 3.7) lines.push(`近7天压力平均${recent.averages.stress.toFixed(1)}/5`);
+  if ((recent.averages.activity ?? 5) <= 2.3) lines.push(`近7天活动平均${recent.averages.activity.toFixed(1)}/5`);
+  const common = [...recent.counts.entries()].filter(([tag, count]) => count >= 3 && !tag.includes('疼痛部位：') && !tag.includes('运动：') && !tag.includes('社交：')).sort((a, b) => b[1] - a[1])[0];
+  if (common) lines.push(`${common[0]}在近7天出现${common[1]}次`);
+  return lines.slice(0, 3);
+}
+
+globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
+  const root = document.querySelector('#tcmAdvice');
+  if (!root) return;
+  const recent = recentContext(logs), signals = signalsFor(log, recent), theory = PHASE_THEORY[phase.key] || PHASE_THEORY.follicular;
+  const food = choose(FOOD_RECIPES, phase.key, signals, 'period-recent-food-v1');
+  const care = choose(CARE_PRACTICES, phase.key, signals, 'period-recent-care-v1');
+  const point = choose(ACUPOINTS.filter((item) => !item.signals.includes('none')), phase.key, signals, 'period-recent-point-v1');
+  const constitution = constitutionHint(recent), evidence = recentEvidence(recent, signals);
+  document.querySelector('#tcmPhaseTitle').textContent = theory.title;
   document.querySelector('#tcmPhaseDot').className = `phase-dot phase-${phase.key}`;
-  document.querySelector('#tcmAdvice').innerHTML = `
-    <div class="classic-basis"><strong>今天的调护思路</strong><p>${plan.observation}</p></div>
-    ${plan.notes.length ? `<div class="symptom-guidance"><strong>结合今天的记录</strong>${plan.notes.map((note) => `<p>${note}</p>`).join('')}</div>` : ''}
-    <div class="traditional-plan">${card('tea', plan.tea)}${card('care', plan.care)}${card('point', plan.point)}</div>
-    <details class="traditional-basis-details"><summary>经典依据与使用边界 <span>展开</span></summary><div class="details-body"><p>《黄帝内经》强调“食饮有节、起居有常”，并指出同样是痛，寒热、按压后的反应并不相同；中医基础理论的整体观与辨证思路，以及《伤寒论》《金匮要略》《温病条辨》所体现的辨寒热、顾护津液、同症不一法，决定了这里不会按阶段一律温补；《景岳全书》把经水与饮食起居、气血变化联系起来。</p><p>《神农本草经》和《汤头歌诀》涉及药性与方剂配伍，因此本产品不把古方拆成茶饮，也不推荐经方、中药剂量或自行辨证。这里只把传统原则转成低风险、可停止的日常动作，并用现代安全资料校正禁忌。</p></div></details>`;
+  root.innerHTML = `
+    <section class="tcm-reasoning"><span>今天为什么这样建议</span><p>${esc(theory.theory)}</p>${evidence.length ? `<ul>${evidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : '<p class="muted">近7天记录仍少，今天主要按周期阶段提供低风险建议。</p>'}</section>
+    ${constitution ? `<details class="constitution-hint"><summary><span>体质观察线索</span><strong>${esc(constitution.name)} · ${constitution.total}次线索</strong></summary><div><p>${esc(constitution.explanation)}</p><p><strong>边界：</strong>${esc(constitution.avoid)}</p><small>这里只是近7天的感受倾向，不是体质诊断。</small></div></details>` : ''}
+    <div class="traditional-plan">${foodCard(food)}${practiceCard('care', care)}${practiceCard('point', point)}</div>
+    <details class="traditional-basis-details"><summary>理论脉络与资料来源 <span>展开</span></summary><div class="details-body"><p>本建议以《黄帝内经》“食饮有节、起居有常”的整体观为主线，并吸收《伤寒论》《金匮要略》《温病条辨》辨寒热、顾护胃气与津液的思路，以及《景岳全书》对经水、情志、饮食起居关系的讨论。经典用于组织观察，不把古籍原方拆成日常茶饮。</p><p>穴位仅提供无创轻按和经络位置认识；不推荐自行针刺、强刺激或艾灸。食材为日常食物量，仍需服从过敏、疾病和医生饮食要求。</p><p class="knowledge-version">知识库 ${esc(KNOWLEDGE_VERSION)} · ${KNOWLEDGE_SOURCES.length}项来源</p></div></details>`;
 };

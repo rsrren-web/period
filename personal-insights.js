@@ -83,7 +83,7 @@ function pmsSamples(context) {
     const entries = Object.entries(context.logs).filter(([date]) => date >= start && date <= end).map(([date, log]) => ({ date, log }));
     if (!entries.length) return null;
     const burdens = entries.map(({ log }) => {
-      const pain = clamp(Number(log.pain) || 0, 0, 10) / 10;
+      const rawPain = clamp(Number(log.pain) || 0, 0, 10), pain = (rawPain > 5 ? rawPain / 2 : rawPain) / 5;
       const mood = (5 - clamp(Number(log.mood) || 3, 1, 5)) / 4;
       const sleep = (5 - clamp(Number(log.sleep) || 3, 1, 5)) / 4;
       const energy = (5 - clamp(Number(log.energy) || 3, 1, 5)) / 4;

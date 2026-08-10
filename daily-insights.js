@@ -10,7 +10,7 @@ const METRICS = {
   energy: { label: '精力', min: 1, max: 5, unit: '/5' },
   stress: { label: '压力', min: 1, max: 5, unit: '/5' },
   activity: { label: '活动', min: 1, max: 5, unit: '/5' },
-  pain: { label: '疼痛', min: 0, max: 10, unit: '/10' },
+  pain: { label: '疼痛', min: 0, max: 5, unit: '/5' },
   bedtime: { label: '入睡', min: 0, max: 1, unit: '', binary: ['23:00后', '23:00前'] },
   bowel: { label: '排便', min: 0, max: 1, unit: '', binary: ['未排便', '已排便'] }
 };
@@ -23,12 +23,13 @@ function dayDistance(a, b) { return Math.round((dateAt(b) - dateAt(a)) / 8640000
 function escapeDaily(value) { return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]); }
 function tagged(log, prefix) { return (log?.symptoms || []).find((item) => item.startsWith(prefix))?.slice(prefix.length); }
 function painParts(log = {}) { const symptoms = log.symptoms || []; const parts = symptoms.filter((item) => item.startsWith('疼痛部位：')).map((item) => item.slice(5)); if (symptoms.includes('头痛') && !parts.includes('头部')) parts.push('头部'); if (symptoms.includes('腰腹不适')) { if (!parts.includes('小腹/盆腔')) parts.push('小腹/盆腔'); if (!parts.includes('腰背')) parts.push('腰背'); } return parts; }
+function painFive(log = {}) { const value = Number(log.pain); if (!Number.isFinite(value)) return null; return value > 5 ? Math.round(value / 2) : value; }
 function visibleSymptoms(log = {}) { return (log.symptoms || []).filter((item) => !item.startsWith('疼痛部位：') && !item.startsWith('入睡：') && !item.startsWith('排便：') && !['头痛', '腰腹不适'].includes(item)); }
 
 function rangeDates() { const now = new Date(), end = localIso(now); if (dailyTrendRange === 'week') { const mondayOffset = (now.getDay() + 6) % 7; return { start: addDate(end, -mondayOffset), end, title: '本周' }; } if (dailyTrendRange === 'month') return { start: `${end.slice(0, 8)}01`, end, title: '本月' }; const firstMonth = Math.floor(now.getMonth() / 3) * 3; return { start: localIso(new Date(now.getFullYear(), firstMonth, 1)), end, title: '本季度' }; }
 
 function markStatusDates(logs) { document.querySelectorAll('[data-date]').forEach((button) => { const hasStatus = Boolean(logs[button.dataset.date]); button.classList.toggle('has-status', hasStatus); button.querySelector('.status-star')?.remove(); if (hasStatus) button.insertAdjacentHTML('beforeend', '<span class="status-star" aria-hidden="true">♥</span>'); }); }
-function metricValue(log, key) { if (key === 'bedtime') { const value = tagged(log, '入睡：'); return value === '23:00前' ? 1 : value === '23:00后' ? 0 : null; } if (key === 'bowel') { const value = tagged(log, '排便：'); return value === '已排便' ? 1 : value === '未排便' ? 0 : null; } const value = Number(log?.[key]); return Number.isFinite(value) ? value : null; }
+function metricValue(log, key) { if (key === 'bedtime') { const value = tagged(log, '入睡：'); return value === '23:00前' ? 1 : value === '23:00后' ? 0 : null; } if (key === 'bowel') { const value = tagged(log, '排便：'); return value === '已排便' ? 1 : value === '未排便' ? 0 : null; } if (key === 'pain') return painFive(log); const value = Number(log?.[key]); return Number.isFinite(value) ? value : null; }
 function metricLabel(value, config) { return config.binary ? config.binary[value] : `${value}${config.unit}`; }
 
 function renderHomeStatus(logs) {
@@ -38,13 +39,13 @@ function renderHomeStatus(logs) {
   if (!log) detail.innerHTML = '<span class="muted">今天还没有记录身体状态。</span>';
   else {
     detail.type = 'button'; detail.dataset.openLog = '';
-    const ratings = [['情绪', log.mood, 5], ['精力', log.energy, 5], ['睡眠', log.sleep, 5], ['压力', log.stress, 5], ['疼痛', log.pain, 10]].filter(([, value]) => value !== '' && value !== undefined), symptoms = [...visibleSymptoms(log), ...painParts(log).map((part) => `疼痛·${part}`)], bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：');
+    const ratings = [['情绪', log.mood, 5], ['精力', log.energy, 5], ['睡眠', log.sleep, 5], ['压力', log.stress, 5], ['疼痛', painFive(log), 5]].filter(([, value]) => value !== '' && value !== undefined && value !== null), symptoms = [...visibleSymptoms(log), ...painParts(log).map((part) => `疼痛·${part}`)], bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：');
     detail.innerHTML = `<div class="compact-status-head"><strong>今日状态</strong><span>点击编辑</span></div><div class="compact-ratings">${ratings.map(([label, value, max]) => `<span><small>${label}</small><strong>${escapeDaily(value)}/${max}</strong></span>`).join('')}</div>${symptoms.length ? `<p>${symptoms.map(escapeDaily).join(' · ')}</p>` : ''}${bedtime || bowel ? `<small>${bedtime ? `入睡 ${escapeDaily(bedtime)}` : ''}${bedtime && bowel ? ' · ' : ''}${bowel ? escapeDaily(bowel) : ''}</small>` : ''}`;
   }
   grid.insertAdjacentElement('afterend', detail);
 }
 
-function statusCard(date, log) { if (!log) return '<section class="day-status-card empty"><strong>身体状态</strong><p>这一天还没有记录身体状态。</p></section>'; const ratings = [['情绪', DAILY_LABELS[Number(log.mood) - 1] || '—'], ['精力', DAILY_LABELS[Number(log.energy) - 1] || '—'], ['睡眠', DAILY_LABELS[Number(log.sleep) - 1] || '—'], ['活动', `${log.activity || '—'}/5`], ['压力', `${log.stress || '—'}/5`], ['疼痛', `${log.pain ?? '—'}/10`]], locations = painParts(log), symptoms = visibleSymptoms(log), bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：'); return `<section class="day-status-card"><div class="day-status-heading"><strong>身体状态记录</strong><span>${escapeDaily(date)}</span></div><div class="day-status-ratings">${ratings.map(([label, value]) => `<div><small>${label}</small><strong>${escapeDaily(value)}</strong></div>`).join('')}</div>${bedtime ? `<div class="day-status-row"><strong>入睡时间</strong><span>${escapeDaily(bedtime)}入睡</span></div>` : ''}${bowel ? `<div class="day-status-row"><strong>排便</strong><span>${escapeDaily(bowel)}</span></div>` : ''}${locations.length ? `<div class="day-status-row"><strong>疼痛部位</strong><span>${locations.map(escapeDaily).join('、')}</span></div>` : ''}${symptoms.length ? `<div class="day-status-row"><strong>今日感受</strong><span>${symptoms.map(escapeDaily).join('、')}</span></div>` : ''}${log.temperature !== '' && log.temperature !== undefined ? `<div class="day-status-row"><strong>基础体温</strong><span>${escapeDaily(log.temperature)}℃</span></div>` : ''}</section>`; }
+function statusCard(date, log) { if (!log) return '<section class="day-status-card empty"><strong>身体状态</strong><p>这一天还没有记录身体状态。</p></section>'; const ratings = [['情绪', tagged(log, '情绪：') || DAILY_LABELS[Number(log.mood) - 1] || '—'], ['精力', `${log.energy || '—'}/5`], ['睡眠', `${log.sleep || '—'}/5`], ['活动', `${log.activity || '—'}/5`], ['压力', `${log.stress || '—'}/5`], ['疼痛', `${painFive(log) ?? '—'}/5`]], locations = painParts(log), symptoms = visibleSymptoms(log).filter((item) => !item.startsWith('情绪：') && !item.startsWith('运动：') && !item.startsWith('社交：') && !item.startsWith('社交强度：') && !item.startsWith('社交影响：')), bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：'); return `<section class="day-status-card"><div class="day-status-heading"><strong>身体状态记录</strong><span>${escapeDaily(date)}</span></div><div class="day-status-ratings">${ratings.map(([label, value]) => `<div><small>${label}</small><strong>${escapeDaily(value)}</strong></div>`).join('')}</div>${bedtime ? `<div class="day-status-row"><strong>入睡时间</strong><span>${escapeDaily(bedtime)}入睡</span></div>` : ''}${bowel ? `<div class="day-status-row"><strong>排便</strong><span>${escapeDaily(bowel)}</span></div>` : ''}${locations.length ? `<div class="day-status-row"><strong>疼痛部位</strong><span>${locations.map(escapeDaily).join('、')}</span></div>` : ''}${symptoms.length ? `<div class="day-status-row"><strong>其他感受</strong><span>${symptoms.map(escapeDaily).join('、')}</span></div>` : ''}</section>`; }
 
 function enhanceDayDialog(date) { const dialog = document.querySelector('#dayDialog'), body = document.querySelector('#dayDialogBody'); if (!dialog?.open || !body) return; [...body.children].filter((element) => element.tagName === 'P' && !element.classList.contains('period-overlap-note')).forEach((element) => element.remove()); body.querySelector('.day-status-card')?.remove(); const log = readDailyLogs()[date]; body.insertAdjacentHTML('beforeend', statusCard(date, log)); const editButton = document.querySelector('#dayEditLog'); if (editButton) editButton.textContent = log ? '编辑身体状态' : '记录身体状态'; }
 
@@ -71,7 +72,7 @@ const ACTION_FEEDBACK_KEY = 'period-action-feedback-v1';
 function readActionFeedback() { try { return JSON.parse(localStorage.getItem(ACTION_FEEDBACK_KEY) || '{}'); } catch { return {}; } }
 function writeActionFeedback(value) { localStorage.setItem(ACTION_FEEDBACK_KEY, JSON.stringify(value)); }
 
-function overviewValue(log, key) { const value = metricValue(log, key); return value === null ? null : key === 'pain' ? value / 2 : value; }
+function overviewValue(log, key) { return metricValue(log, key); }
 function medianDaily(values) { if (!values.length) return null; const sorted = [...values].sort((a, b) => a - b), middle = Math.floor(sorted.length / 2); return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2; }
 function quantileDaily(values, ratio) { if (!values.length) return null; const sorted = [...values].sort((a, b) => a - b), position = (sorted.length - 1) * ratio, lower = Math.floor(position), rest = position - lower; return sorted[lower] + ((sorted[lower + 1] ?? sorted[lower]) - sorted[lower]) * rest; }
 function averageDaily(values) { return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null; }
@@ -103,7 +104,7 @@ function scoreForLog(log = {}) {
   ['sleep', 'mood', 'energy', 'activity'].forEach((key) => { const value = metricValue(log, key); if (value !== null) parts.push((value - 1) / 4); });
   const stress = metricValue(log, 'stress'), pain = metricValue(log, 'pain');
   if (stress !== null) parts.push((5 - stress) / 4);
-  if (pain !== null) parts.push((10 - pain) / 10);
+  if (pain !== null) parts.push((5 - pain) / 5);
   return { score: parts.length ? Math.round(averageDaily(parts) * 100) : null, completeness: parts.length, total: 6 };
 }
 function statusLabel(score) { return score >= 78 ? '状态较稳' : score >= 58 ? '适合平稳安排' : score >= 38 ? '建议适当放缓' : '优先恢复与休息'; }
@@ -120,7 +121,7 @@ function recommendedActions(factors) {
     if (key === 'energy' && value <= 2) return { id: 'reduce-load', severity: 6 - value, reason: `精力 ${value}/5，今天不适合硬撑`, text: '把高消耗任务延后，只保留今天最重要的一件事' };
     if (key === 'activity' && value <= 2) return { id: 'gentle-move', severity: 5 - value, reason: `活动 ${value}/5，轻微活动可能更适合今天`, text: '身体允许时轻松走动或舒展10–20分钟' };
     if (key === 'mood' && value <= 2) return { id: 'mood-space', severity: 5 - value, reason: `情绪 ${value}/5，需要给自己更多空间`, text: '降低额外社交负担，安排一件能让自己放松的小事' };
-    if (key === 'pain' && value >= 4) return { id: 'pain-care', severity: value / 2, reason: `疼痛 ${value}/10，需要优先照顾不适`, text: '先休息或热敷不适部位，避免勉强完成高强度运动' };
+    if (key === 'pain' && value >= 3) return { id: 'pain-care', severity: value, reason: `疼痛 ${value}/5，需要优先照顾不适`, text: '先休息或热敷不适部位，避免勉强完成高强度运动' };
     return null;
   }).filter(Boolean).sort((a, b) => b.severity - a.severity);
 }
@@ -166,7 +167,7 @@ function renderTrendHighlights(logs) {
   const entries = Object.entries(logs).sort(([a], [b]) => a.localeCompare(b)), latest = entries.at(-1), insights = [];
   if (!latest) { root.innerHTML = '<article class="trend-highlight is-progress"><span>开始记录</span><h2>先积累7天每日状态</h2><p>现在只展示原始记录，不会用人群平均值替代你的个人基线。</p></article>'; return; }
   const [date, log] = latest, phase = phaseForDailyDate(date);
-  Object.entries(OVERVIEW_SERIES).forEach(([key, config]) => { const value = metricValue(log, key), baseline = phaseBaseline(logs, key, phase, date); if (value === null || baseline.count < 3) return; const delta = value - baseline.median, adverseDelta = config.favorable ? delta : -delta; if (adverseDelta <= -.9) insights.push({ priority: Math.abs(delta) + .5, title: `${config.label}低于你的${phaseName(phase)}常见水平`, text: `最近为 ${value}${key === 'pain' ? '/10' : '/5'}，同阶段历史中位数为 ${baseline.median.toFixed(1)}；基于${baseline.count}天记录。`, tone: 'attention' }); });
+  Object.entries(OVERVIEW_SERIES).forEach(([key, config]) => { const value = metricValue(log, key), baseline = phaseBaseline(logs, key, phase, date); if (value === null || baseline.count < 3) return; const delta = value - baseline.median, adverseDelta = config.favorable ? delta : -delta; if (adverseDelta <= -.9) insights.push({ priority: Math.abs(delta) + .5, title: `${config.label}偏离你的${phaseName(phase)}常见水平`, text: `最近为 ${value}/5，同阶段历史中位数为 ${baseline.median.toFixed(1)}；基于${baseline.count}天记录。`, tone: 'attention' }); });
   const range = rangeDates(), events = symptomEvents(logs, range), counts = new Map(); events.forEach((item) => item.labels.forEach((label) => counts.set(label, (counts.get(label) || 0) + 1))); const repeated = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
   if (repeated?.[1] >= 3) insights.push({ priority: repeated[1], title: `${repeated[0]}反复出现`, text: `${range.title}已记录${repeated[1]}天；点击下方热力图可与睡眠、压力等日期对照。`, tone: 'pattern' });
   const relation = bestRelationship(logs); if (relation && Math.abs(relation.rho) >= .35) insights.push({ priority: 2.5, title: `${relation.label}曾${relation.rho * relation.direction > 0 ? '按预期方向' : '反向'}同时变化`, text: `${relation.detail}配对${relation.samples.length}组，覆盖${relation.cycles}个周期 · ${relation.confidence.label}；这只是相关，不代表因果。`, tone: 'relation' });
@@ -214,7 +215,7 @@ function renderHeatmap(logs, range) {
   const symptoms = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
   if (!symptoms.length) return '<section class="symptom-heatmap"><div class="symptom-heatmap-head"><h3>症状热力图</h3><span>这个范围内还没有症状记录</span></div></section>';
   const columns = `112px repeat(${dates.length}, 22px)`, width = 112 + dates.length * 22;
-  return `<section class="symptom-heatmap"><div class="symptom-heatmap-head"><div><h3>症状热力图</h3><span>点击症状，高亮上方同日期的数据点</span></div><button type="button" data-clear-symptom ${focusedSymptom ? '' : 'hidden'}>清除高亮</button></div><div class="heatmap-scroll"><div class="heatmap-grid" style="grid-template-columns:${columns};min-width:${width}px"><span class="heatmap-corner">症状 / 日期</span>${dates.map((date) => `<time>${date.slice(8)}</time>`).join('')}${symptoms.map(([label, total]) => `<button type="button" class="heatmap-label${focusedSymptom === label ? ' active' : ''}" data-heat-symptom="${escapeDaily(label)}">${escapeDaily(label)} <small>${total}</small></button>${dates.map((date) => { const present = eventMap.get(date)?.has(label); return `<span aria-hidden="true" class="heatmap-cell${present ? ' is-present' : ''}${focusedSymptom === label && present ? ' is-focused' : ''}"${present ? ` title="${date} · ${escapeDaily(label)}已记录"` : ''}></span>`; }).join('')}`).join('')}</div></div><p class="method-inline">单日色块只表示“出现/未出现”；疼痛强度仍以记录的0–10分为准。</p></section>`;
+  return `<section class="symptom-heatmap"><div class="symptom-heatmap-head"><div><h3>症状热力图</h3><span>点击症状，高亮上方同日期的数据点</span></div><button type="button" data-clear-symptom ${focusedSymptom ? '' : 'hidden'}>清除高亮</button></div><div class="heatmap-scroll"><div class="heatmap-grid" style="grid-template-columns:${columns};min-width:${width}px"><span class="heatmap-corner">症状 / 日期</span>${dates.map((date) => `<time>${date.slice(8)}</time>`).join('')}${symptoms.map(([label, total]) => `<button type="button" class="heatmap-label${focusedSymptom === label ? ' active' : ''}" data-heat-symptom="${escapeDaily(label)}">${escapeDaily(label)} <small>${total}</small></button>${dates.map((date) => { const present = eventMap.get(date)?.has(label); return `<span aria-hidden="true" class="heatmap-cell${present ? ' is-present' : ''}${focusedSymptom === label && present ? ' is-focused' : ''}"${present ? ` title="${date} · ${escapeDaily(label)}已记录"` : ''}></span>`; }).join('')}`).join('')}</div></div><p class="method-inline">单日色块只表示“出现/未出现”；疼痛强度统一按0–5分显示。</p></section>`;
 }
 function renderRelationshipSummary(logs) {
   const relation = bestRelationship(logs); if (!relation) return '<div class="relationship-card is-empty"><strong>关系分析仍在积累</strong><p>至少需要7组配对记录；14组以上且覆盖多个周期后，才会显示初步发现。</p></div>';
