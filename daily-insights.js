@@ -92,6 +92,24 @@ function scoreForLog(log = {}) {
   return { score: parts.length ? Math.round(averageDaily(parts) * 100) : null, completeness: parts.length, total: 6 };
 }
 function statusLabel(score) { return score >= 78 ? '状态较稳' : score >= 58 ? '适合平稳安排' : score >= 38 ? '建议适当放缓' : '优先恢复与休息'; }
+function statusMeaning(score) {
+  if (score >= 78) return '今天记录的整体负担较低，可以按原计划安排。';
+  if (score >= 58) return '今天有少量负担，适合维持日常节奏并留出休息。';
+  if (score >= 38) return '今天的压力、疲劳或不适较明显，建议减少非必要消耗。';
+  return '今天的综合负担较高，优先照顾睡眠、疼痛和基本恢复。';
+}
+function statusActions(factors) {
+  const actions = factors.map(({ key, value }) => {
+    if (key === 'stress' && value >= 4) return { severity: value, text: '给自己留出10分钟不处理任务的休息时间' };
+    if (key === 'sleep' && value <= 2) return { severity: 6 - value, text: '今晚尽量在23点前上床，减少睡前屏幕刺激' };
+    if (key === 'energy' && value <= 2) return { severity: 6 - value, text: '把高消耗任务延后，只保留今天最重要的一件事' };
+    if (key === 'activity' && value <= 2) return { severity: 5 - value, text: '身体允许时轻松走动或舒展10–20分钟' };
+    if (key === 'mood' && value <= 2) return { severity: 5 - value, text: '降低额外社交负担，安排一件能让自己放松的小事' };
+    if (key === 'pain' && value >= 4) return { severity: value / 2, text: '先休息或热敷不适部位，避免勉强完成高强度运动' };
+    return null;
+  }).filter(Boolean).sort((a, b) => b.severity - a.severity).slice(0, 2);
+  return actions.length ? actions.map((item) => item.text).join('；') + '。' : '目前没有特别突出的负担，继续按自己的舒适节奏安排即可。';
+}
 function confidenceFor(count, cycles, dominant = 0) {
   if (count < 7) return { label: '数据不足', level: 'none' };
   if (count < 14 || cycles < 2) return { label: '观察中', level: 'watch' };
@@ -132,7 +150,8 @@ function renderTrendHighlights(logs) {
 function renderStatusOverview(logs) {
   const entries = Object.entries(logs).sort(([a], [b]) => a.localeCompare(b)), latest = entries.at(-1); if (!latest) return '';
   const [date, log] = latest, phase = phaseForDailyDate(date), state = scoreForLog(log), factors = Object.entries(OVERVIEW_SERIES).map(([key, config]) => { const value = metricValue(log, key); if (value === null) return null; const baseline = phaseBaseline(logs, key, phase, date), delta = baseline.count >= 3 ? value - baseline.median : null, direction = delta === null || Math.abs(delta) < .75 ? '接近个人范围' : (config.favorable ? delta > 0 : delta < 0) ? '高于个人范围' : '需要留意'; return { key, config, value, baseline, direction }; }).filter(Boolean);
-  return `<section class="status-overview"><div class="status-score"><span>最近状态观察分</span><strong>${state.score ?? '—'}</strong><em>${state.score === null ? '等待记录' : statusLabel(state.score)}</em><small>${date.slice(5)} · ${phaseName(phase)} · 完整度 ${state.completeness}/${state.total}</small></div><div class="status-contributors">${factors.map(({ key, config, value, baseline, direction }) => `<div><span style="--factor:${config.color}">${config.label}</span><strong>${value}${key === 'pain' ? '/10' : '/5'}</strong><small>${baseline.count >= 3 ? `${direction} · 基线${baseline.median.toFixed(1)}` : `同阶段仅${baseline.count}天，继续记录`}</small></div>`).join('')}</div><p class="method-inline"><button type="button" data-method-info>i</button>观察分用于汇总当天自愿记录，不是健康评分；缺失项目不补成正常值。</p></section>`;
+  const score = state.score;
+  return `<section class="status-overview"><div class="status-score"><span>最近状态观察分</span><strong>${score ?? '—'}${score === null ? '' : '<small>/100</small>'}</strong><em>${score === null ? '等待记录' : statusLabel(score)}</em>${score === null ? '' : `<div class="status-scale" aria-label="状态观察分 ${score}/100"><i style="left:${score}%"></i></div><div class="status-scale-labels"><span>需要恢复</span><span>平稳</span><span>状态较稳</span></div><p>${statusMeaning(score)}</p>`}<small>${date.slice(5)} · ${phaseName(phase)} · 完整度 ${state.completeness}/${state.total}</small></div><div class="status-detail"><div class="status-contributors">${factors.map(({ key, config, value, baseline, direction }) => `<div><span style="--factor:${config.color}">${config.label}</span><strong>${value}${key === 'pain' ? '/10' : '/5'}</strong><small>${baseline.count >= 3 ? `${direction} · 基线${baseline.median.toFixed(1)}` : `同阶段仅${baseline.count}天，继续记录`}</small></div>`).join('')}</div><div class="status-next"><strong>今天可以先做</strong><p>${statusActions(factors)}</p></div></div><p class="method-inline"><button type="button" data-method-info>i</button>满分100分。分数越高，表示当天自填记录中的睡眠、情绪、精力、活动、压力和疼痛负担越低；它不是医学健康评分，也不与他人比较。</p></section>`;
 }
 function chartSeries(logs, range, selected, focusDates = new Set()) {
   const totalDays = dayDistance(range.start, range.end) + 1, width = 720, height = 260, top = 22, baseline = 216, yFor = (value) => top + ((5 - value) / 4) * (baseline - top);
