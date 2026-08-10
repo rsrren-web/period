@@ -1465,3 +1465,173 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .symptom-timeline-head { display: grid; gap: 3px; }
   .daily-trend-summary .overview-summary-wide { grid-column: 1 / -1; }
 }
+
+/* Insight-first trends: conclusion, personal baseline, evidence, then detail. */
+.trend-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.trend-highlight {
+  position: relative;
+  min-height: 144px;
+  padding: 18px 42px 18px 18px;
+  border: 1px solid var(--soft-line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+.trend-highlight:first-child { background: var(--primary-soft); border-color: var(--primary); }
+.trend-highlight > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--primary);
+  font-size: var(--font-caption);
+  font-weight: 800;
+  letter-spacing: .05em;
+}
+.trend-highlight h2 { margin: 0; font-size: 1rem; line-height: 1.35; }
+.trend-highlight p { margin: 8px 0 0; color: var(--ink-muted); font-size: .82rem; line-height: 1.55; }
+.insight-info,
+.method-inline button {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-content: center;
+  border: 1px solid var(--soft-line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: .72rem;
+  font-weight: 850;
+}
+.insight-info { position: absolute; top: 15px; right: 15px; }
+.status-overview {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background: var(--surface-muted);
+}
+.status-score { display: grid; align-content: center; padding: 15px; border-radius: var(--radius-inner); background: var(--surface); }
+.status-score > span { color: var(--ink-muted); font-size: var(--font-caption); }
+.status-score > strong { margin: 4px 0 0; color: var(--ink); font-size: 2.65rem; line-height: 1; }
+.status-score > em { margin-top: 7px; color: var(--primary); font-size: .84rem; font-style: normal; font-weight: 800; }
+.status-score > small { margin-top: 7px; color: var(--ink-muted); line-height: 1.4; }
+.status-contributors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.status-contributors > div { min-width: 0; padding: 11px; border-radius: var(--radius-inner); background: var(--surface); }
+.status-contributors span,
+.status-contributors strong,
+.status-contributors small { display: block; }
+.status-contributors span { color: var(--ink-muted); font-size: var(--font-caption); }
+.status-contributors span::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--factor); }
+.status-contributors strong { margin-top: 4px; font-size: .96rem; }
+.status-contributors small { margin-top: 3px; color: var(--ink-muted); font-size: .68rem; line-height: 1.35; }
+.status-overview > .method-inline { grid-column: 1 / -1; }
+.method-inline { margin: 0; color: var(--ink-muted); font-size: var(--font-caption); line-height: 1.5; }
+.method-inline button { margin-right: 6px; vertical-align: middle; }
+.comparison-picker { display: grid; gap: 7px; margin-top: 3px; }
+.comparison-picker > span { color: var(--ink-muted); font-size: var(--font-caption); }
+.comparison-picker > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.comparison-picker button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--soft-line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink-muted);
+}
+.comparison-picker button i { width: 10px; height: 4px; border-radius: 99px; background: var(--series-color); opacity: .35; }
+.comparison-picker button.active { border-color: var(--series-color); color: var(--ink); font-weight: 750; }
+.comparison-picker button.active i { opacity: 1; }
+.comparison-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--soft-line); }
+.comparison-heading,
+.symptom-heatmap-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.comparison-heading span,
+.comparison-heading small,
+.symptom-heatmap-head span { color: var(--ink-muted); font-size: var(--font-caption); }
+.comparison-heading h3,
+.symptom-heatmap-head h3 { margin: 3px 0 0; }
+.comparison-chart { margin-top: 10px; padding: 12px 8px 0; overflow-x: auto; border-radius: var(--radius-inner); background: var(--surface-muted); }
+.comparison-chart svg { min-width: 620px; }
+.overview-dot.is-muted { opacity: .18; }
+.overview-dot.is-focused { stroke: var(--ink); stroke-width: 2.5; }
+.symptom-heatmap { margin-top: 16px; padding: 14px; border-radius: var(--radius-inner); background: var(--surface-muted); }
+.symptom-heatmap-head { margin-bottom: 10px; }
+.symptom-heatmap-head button {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font-size: var(--font-caption);
+  font-weight: 750;
+}
+.heatmap-scroll { overflow-x: auto; padding-bottom: 5px; }
+.heatmap-grid { display: grid; gap: 3px; align-items: center; }
+.heatmap-grid time,
+.heatmap-corner { color: var(--ink-muted); font-size: .62rem; text-align: center; }
+.heatmap-corner { position: sticky; left: 0; z-index: 3; padding-right: 7px; background: var(--surface-muted); text-align: left; }
+.heatmap-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 0;
+  overflow: hidden;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-size: .72rem;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.heatmap-label small { color: var(--ink-muted); }
+.heatmap-label.active { background: var(--primary-soft); color: var(--primary); font-weight: 800; }
+.heatmap-cell { width: 18px; height: 18px; border-radius: 5px; background: var(--surface); }
+.heatmap-cell.is-present { background: var(--primary); opacity: .55; }
+.heatmap-cell.is-focused { opacity: 1; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--primary); }
+.symptom-heatmap .method-inline { margin-top: 10px; }
+.daily-trend-summary .relationship-card {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 16px;
+  padding: 16px;
+  border: 1px solid var(--soft-line);
+  border-radius: var(--radius-inner);
+  background: var(--surface);
+}
+.relationship-card > div > span { color: var(--primary); font-size: var(--font-caption); font-weight: 800; }
+.relationship-card > div > strong { display: block; margin-top: 3px; }
+.relationship-card > div > p { margin: 5px 0 0; color: var(--ink-muted); font-size: .78rem; }
+.relationship-card dl { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
+.relationship-card dl > div { padding: 9px; border-radius: 10px; background: var(--surface-muted); }
+.relationship-card dt { color: var(--ink-muted); font-size: .68rem; }
+.relationship-card dd { margin: 3px 0 0; font-size: .8rem; font-weight: 750; }
+.relationship-card .method-inline { grid-column: 1 / -1; }
+.confidence-badge { align-self: start; padding: 5px 8px; border-radius: 999px; background: var(--surface-muted); color: var(--ink-muted); font-size: .7rem; font-weight: 800; }
+.confidence-badge.level-early { background: var(--phase-luteal-soft); color: var(--phase-luteal-base); }
+.confidence-badge.level-stable { background: var(--mint-soft); color: var(--ink); }
+.relationship-card.is-empty { display: block; }
+.relationship-card.is-empty p { margin: 6px 0 0; color: var(--ink-muted); }
+
+@media (max-width: 760px) {
+  .trend-highlights { grid-template-columns: 1fr; }
+  .trend-highlight { min-height: 0; }
+  .status-overview { grid-template-columns: 1fr; }
+  .status-overview > .method-inline { grid-column: auto; }
+}
+@media (max-width: 430px) {
+  .status-contributors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .comparison-picker button { flex: 1 1 calc(33.333% - 6px); justify-content: center; padding-inline: 6px; }
+  .comparison-chart { margin-inline: -4px; }
+  .comparison-chart svg { min-width: 560px; }
+  .relationship-card dl { grid-template-columns: 1fr; }
+  .comparison-heading { align-items: flex-end; }
+}

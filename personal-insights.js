@@ -61,12 +61,12 @@ function renderFactors(context) {
     const raw = correlation(usable.map((sample) => sample[factor.key]), usable.map((sample) => sample.length));
     const aligned = raw === null ? null : raw * factor.direction;
     const absolute = Math.abs(aligned || 0);
-    const strength = usable.length < 4 || raw === null ? '样本不足' : absolute >= .6 ? '较强关联' : absolute >= .35 ? '中等关联' : '弱关联';
+    const strength = usable.length < 4 || raw === null ? '数据不足' : usable.length < 6 ? '观察中' : absolute >= .6 ? '较明显关联' : absolute >= .35 ? '初步关联' : '未见明显关联';
     const tone = absolute >= .6 ? 'strong' : absolute >= .35 ? 'medium' : 'light';
     return { ...factor, usable: usable.length, aligned, strength, tone };
   }).sort((a, b) => Math.abs(b.aligned || 0) - Math.abs(a.aligned || 0));
-  const meaningful = factors.filter((factor) => factor.aligned > .2 && factor.usable >= 4);
-  root.innerHTML = `<div class="factor-list">${factors.map((factor) => `<div class="factor-row"><div><strong>${factor.label}</strong><span>${factor.usable}个可比较周期</span></div><span class="factor-strength ${factor.tone}">${factor.strength}</span></div>`).join('')}</div><div class="observation-note">${meaningful.length ? `你的记录中，${meaningful.slice(0, 2).map((factor) => factor.label).join('、')}与周期较长曾较常同时出现。可以在未来周期优先观察，但不能据此判断它们造成了周期变化。` : '目前没有看到稳定的中等以上个人关联；继续记录比强行解释更可靠。'}</div><p class="observation-method">分析最近最多12个完整周期；每周期至少3条每日状态。关联不是病因，也未排除疾病、旅行等未记录因素。</p>`;
+  const meaningful = factors.filter((factor) => factor.aligned > .2 && factor.usable >= 6);
+  root.innerHTML = `<div class="factor-list">${factors.map((factor) => `<div class="factor-row"><div><strong>${factor.label}</strong><span>${factor.usable}个可比较周期</span></div><span class="factor-strength ${factor.tone}">${factor.strength}</span></div>`).join('')}</div><div class="observation-note">${meaningful.length ? `你的记录中，${meaningful.slice(0, 2).map((factor) => factor.label).join('、')}与周期较长曾较常同时出现。可以在未来周期优先观察，但不能据此判断它们造成了周期变化。` : '目前没有看到跨多个周期重复的中等以上个人关联；继续记录比强行解释更可靠。'}</div><p class="observation-method">分析最近最多12个完整周期；每周期至少3条每日状态，至少6个可比较周期后才称为初步关联。关联不是病因，也未排除旅行、疾病等未记录因素。</p>`;
 }
 
 function symptomName(value) {
@@ -112,11 +112,11 @@ function renderPms(context) {
   if (!root || !badge) return;
   const samples = pmsSamples(context);
   const loggedDays = samples.reduce((sum, sample) => sum + sample.entries.length, 0);
-  root.closest('.panel')?.classList.toggle('is-empty-state', samples.length < 2 || loggedDays < 4);
-  if (samples.length < 2 || loggedDays < 4) {
+  root.closest('.panel')?.classList.toggle('is-empty-state', samples.length < 2 || loggedDays < 7);
+  if (samples.length < 2 || loggedDays < 7) {
     badge.textContent = '记录不足';
     badge.dataset.level = 'unknown';
-    root.innerHTML = `<div class="observation-empty"><strong>还不能稳定评估经前不适</strong><p>需要至少2个经前窗口、合计4天的每日状态。系统会关注疼痛、睡眠、情绪、精力、压力和症状频率，不会诊断PMS或PMDD。</p></div><p class="observation-method">当前：${samples.length}个经前窗口，${loggedDays}个记录日。</p>`;
+    root.innerHTML = `<div class="observation-empty"><strong>还不能稳定评估经前不适</strong><p>需要至少2个经前窗口、合计7天的每日状态。系统会关注疼痛、睡眠、情绪、精力、压力和症状频率，不会诊断PMS或PMDD。</p></div><p class="observation-method">当前：${samples.length}个经前窗口，${loggedDays}个记录日。</p>`;
     return;
   }
   const burden = Math.round(mean(samples.map((sample) => sample.burden)));
