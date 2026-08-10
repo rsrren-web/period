@@ -167,7 +167,7 @@ function renderPhasePatterns(logs, context) {
       const configs = [['mood', '情绪'], ['sleep', '睡眠'], ['energy', '精力'], ['activity', '运动'], ['stress', '压力']];
       const phaseAverages = configs.map(([key, label]) => ({ key, label, value: average(entries.map(([, log]) => metric(log, key)).filter(Number.isFinite)) })).filter((item) => item.value !== null);
       const favorable = phaseAverages.filter((item) => item.key !== 'stress').sort((a, b) => b.value - a.value)[0];
-      const burden = phaseAverages.filter((item) => item.key === 'stress' || item.value <= 2.5).sort((a, b) => item.key === 'stress' ? b.value - a.value : a.value - b.value)[0];
+      const burden = phaseAverages.filter((item) => item.key === 'stress' || item.value <= 2.5).sort((a, b) => (b.key === 'stress' ? b.value : 5 - b.value) - (a.key === 'stress' ? a.value : 5 - a.value))[0];
       if (favorable) observations.push(`${favorable.label}平均${favorable.value.toFixed(1)}/5`);
       if (burden) observations.push(`${burden.label}${burden.key === 'stress' ? '平均' : '偏低，平均'}${burden.value.toFixed(1)}/5`);
       const symptomCounts = new Map(); entries.forEach(([, log]) => tags(log).filter((tag) => !tag.includes('：')).forEach((tag) => symptomCounts.set(tag, (symptomCounts.get(tag) || 0) + 1)));
