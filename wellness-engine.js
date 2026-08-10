@@ -64,6 +64,9 @@ function statusIcon(label, value, detail, icon, tone = '') {
 function renderReadableToday(logs) {
   const root = document.querySelector('#todaySnapshot');
   if (!root) return;
+  // The legacy summary hides this container after a log is saved. This
+  // renderer replaces that summary, so restore the interactive card.
+  root.hidden = false;
   document.querySelector('#todayStatusDetail')?.remove();
   const log = logs[isoToday()];
   if (!log) {
