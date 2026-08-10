@@ -210,7 +210,7 @@ function renderPms(logs, context) {
 
 function renderCycleObservation(logs, context) {
   const root = document.querySelector('#cycleObservationCard'); if (!root) return;
-  const periods = [...(context.periods || [])].filter((period) => period.start && period.end).sort((a, b) => a.start.localeCompare(b.start)), period = periods.at(-1);
+  const periods = [...(context.periods || [])].filter((period) => period.start && period.end && period.status !== 'ongoing').sort((a, b) => a.start.localeCompare(b.start)), period = periods.at(-1);
   if (!period) { root.innerHTML = '<div class="light-empty"><strong>还没有完整周期可评分</strong><p>周期结束后生成观察分；缺失记录不会被当作身体问题扣分。</p></div>'; return; }
   const index = periods.length - 1, priorStarts = periods.slice(Math.max(0, index - 7), index).map((item) => item.start), priorLengths = priorStarts.slice(1).map((start, position) => dayDiff(priorStarts[position], start)).filter(Number.isFinite), currentLength = index ? dayDiff(periods[index - 1].start, period.start) : null, baseline = median(priorLengths), cycleLogs = Object.entries(logs).filter(([date]) => date >= period.start && date <= period.end), painValues = cycleLogs.map(([, log]) => normalizedPain(log)).filter(Number.isFinite), sleepValues = cycleLogs.map(([, log]) => metric(log, 'sleep')).filter(Number.isFinite), energyValues = cycleLogs.map(([, log]) => metric(log, 'energy')).filter(Number.isFinite), duration = dayDiff(period.start, period.end) + 1;
   const deductions = [];
