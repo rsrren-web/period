@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "revision": 53,
-  "updatedAt": "2026-08-09T17:30:17.195Z",
+  "revision": 54,
+  "updatedAt": "2026-08-10T01:07:56.933Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -12,6 +12,15 @@
       "status": "confirmed",
       "updatedAt": "2026-07-22T05:15:17.935Z",
       "originalStart": "2026-07-11"
+    },
+    {
+      "id": "ee0bd4b7-94f2-4b0d-90f7-18f9d5526020",
+      "start": "2026-08-09",
+      "end": "2026-08-09",
+      "type": "period",
+      "source": "本设备",
+      "status": "ongoing",
+      "updatedAt": "2026-08-10T01:07:56.084Z"
     }
   ],
   "logs": {
@@ -366,8 +375,8 @@
       "energy": "3",
       "sleep": "3",
       "activity": "2",
-      "pain": "0",
       "stress": "4",
+      "pain": "0",
       "symptoms": [
         "疲倦",
         "焦虑",
@@ -447,6 +456,7 @@
     "703d442e-6796-4d67-a40a-8bd064f59b32",
     "806ae761-08d7-4487-b63a-d5a77af03424",
     "b6b59f42-6689-4f64-b42e-bc258097ff75",
-    "2d88f887-0283-4c32-86e7-56d5397b006d"
+    "2d88f887-0283-4c32-86e7-56d5397b006d",
+    "7052b90b-e8fa-428e-b3f4-74c48c9c4e29"
   ]
 }
