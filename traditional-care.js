@@ -83,7 +83,8 @@ function recentEvidence(recent, signals) {
   if (noBowel >= 2) lines.push(`已连续${noBowel}天记录未排便`);
   if ((recent.averages.stress ?? 0) >= 3.7) lines.push(`近7天压力平均${recent.averages.stress.toFixed(1)}/5`);
   if ((recent.averages.activity ?? 5) <= 2.3) lines.push(`近7天活动平均${recent.averages.activity.toFixed(1)}/5`);
-  const common = [...recent.counts.entries()].filter(([tag, count]) => count >= 3 && !tag.includes('疼痛部位：') && !tag.includes('运动：') && !tag.includes('社交：')).sort((a, b) => b[1] - a[1])[0];
+  const structuredPrefixes = ['情绪：', '入睡：', '排便：', '社交强度：', '社交影响：', '疼痛部位：', '运动：', '社交：'];
+  const common = [...recent.counts.entries()].filter(([tag, count]) => count >= 3 && !structuredPrefixes.some((prefix) => tag.startsWith(prefix))).sort((a, b) => b[1] - a[1])[0];
   if (common) lines.push(`${common[0]}在近7天出现${common[1]}次`);
   return lines.slice(0, 3);
 }

@@ -64,6 +64,7 @@ function statusIcon(label, value, detail, icon, tone = '') {
 function renderReadableToday(logs) {
   const root = document.querySelector('#todaySnapshot');
   if (!root) return;
+  document.querySelector('#todayStatusDetail')?.remove();
   const log = logs[isoToday()];
   if (!log) {
     root.innerHTML = `<button class="empty-today-state" type="button" data-open-log><span>＋</span><div><strong>记录今天的状态</strong><small>情绪、运动、社交、睡眠、排便和疼痛</small></div></button>`;
