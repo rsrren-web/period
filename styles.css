@@ -2277,7 +2277,9 @@ small,
 .burden-badge,
 .insight-question-nav button { font-size: var(--text-caption); }
 .day .status-star,
-.mini-day .status-star { font-size: var(--text-micro); }
+.mini-day .status-star,
+.day.recorded .status-star,
+.mini-day.recorded .status-star { font-size: var(--text-micro); }
 .mini-day { font-size: var(--text-micro); }
 .log-section-title > span,
 .traditional-card-head > span,
