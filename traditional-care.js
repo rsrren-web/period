@@ -3,9 +3,7 @@ import {
   CARE_PRACTICES,
   CONSTITUTION_OBSERVATIONS,
   FOOD_RECIPES,
-  KNOWLEDGE_GUARDRAILS,
   KNOWLEDGE_SOURCES,
-  KNOWLEDGE_VERSION,
   PHASE_THEORY,
   STATUS_SIGNAL_RULES
 } from './knowledge/wellness-knowledge.js';
@@ -116,6 +114,6 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   root.innerHTML = `
     <section class="tcm-reasoning"><span>今天为什么这样建议</span><p class="phase-rhythm">${esc(theory.rhythm || '')}</p><p>${esc(theory.theory)}</p>${evidence.length ? `<ul>${evidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : '<p class="muted">近7天记录仍少，今天主要按周期阶段提供低风险建议。</p>'}</section>
     ${constitution ? `<details class="constitution-hint"><summary><span>体质观察线索</span><strong>${esc(constitution.name)} · ${constitution.total}次线索</strong></summary><div><p>${esc(constitution.explanation)}</p><p><strong>边界：</strong>${esc(constitution.avoid)}</p><small>这里只是近7天的感受倾向，不是体质诊断。</small></div></details>` : ''}
-    <div class="traditional-plan">${foodCard(food)}${practiceCard('care', care)}${practiceCard('point', point)}</div>
-    <details class="traditional-basis-details"><summary>理论脉络与资料来源 <span>展开</span></summary><div class="details-body"><p>本建议以《黄帝内经》“食饮有节、起居有常”的整体观为主线，并吸收《伤寒论》《金匮要略》《温病条辨》辨寒热、顾护胃气与津液的思路，以及《景岳全书》对经水、情志、饮食起居关系的讨论。新增的四期“动降—阴长—转化—阳长”脉络来自用户提供的调周研究报告，只用于组织每日观察。</p><p>穴位仅提供无创轻按和经络位置认识；不推荐自行针刺、强刺激或艾灸。食材为日常食物量，仍需服从过敏、疾病和医生饮食要求。</p><ul class="knowledge-guardrails">${KNOWLEDGE_GUARDRAILS.slice(0, 3).map((rule) => `<li>${esc(rule)}</li>`).join('')}</ul><p class="knowledge-version">知识库 ${esc(KNOWLEDGE_VERSION)} · ${KNOWLEDGE_SOURCES.length}项来源 · ${FOOD_RECIPES.length}份食谱 · ${ACUPOINTS.length}个穴位</p></div></details>`;
+    <div class="traditional-plan">${foodCard(food)}${practiceCard('care', care)}${practiceCard('point', point)}</div>`;
 };
+
