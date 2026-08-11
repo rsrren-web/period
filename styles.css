@@ -2178,4 +2178,8 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   .phase-pattern-grid { grid-template-columns: 1fr; }
   .cycle-score-action ol { padding-left: 18px; }
 }
-
+.email-preview-role { display: grid; gap: 4px; padding: 11px 0; border-bottom: 1px solid var(--soft-line); font-family: var(--font-family); }
+.email-preview-role:first-child { padding-top: 0; }
+.email-preview-role strong { color: var(--ink); }
+.email-preview-role span { color: var(--ink-muted); font-size: var(--font-caption); line-height: 1.5; }
+.email-preview > small { display: block; margin-top: 11px; color: var(--ink-muted); font-family: var(--font-family); }
