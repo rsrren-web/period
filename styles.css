@@ -2183,3 +2183,8 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .email-preview-role strong { color: var(--ink); }
 .email-preview-role span { color: var(--ink-muted); font-size: var(--font-caption); line-height: 1.5; }
 .email-preview > small { display: block; margin-top: 11px; color: var(--ink-muted); font-family: var(--font-family); }
+
+:root {
+  --font-family: "LXGW 975 Yuan SC 400W", ui-rounded, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: var(--font-family);
+}
