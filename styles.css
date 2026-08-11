@@ -2059,3 +2059,78 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .traditional-detail p { font-size: .82rem; line-height: 1.65; }
 .cycle-chart-wrap { overflow-x: auto !important; touch-action: pan-x pan-y; }
 .cycle-line-chart { min-width: 760px; }
+
+/* v49: compact whole-cycle progress below the current phase. */
+.cycle-hero {
+  grid-template-areas:
+    "date date"
+    "phase stage"
+    "progress progress"
+    "headline headline"
+    "action action"
+    "prediction prediction"
+    "controls controls";
+}
+.cycle-progress {
+  grid-area: progress;
+  min-width: 0;
+  margin: 2px 0 5px;
+  padding: 13px 14px 10px;
+  border: 1px solid var(--soft-line);
+  border-radius: var(--radius-inner);
+  background: rgba(255,255,255,.72);
+}
+.cycle-progress-meta,
+.cycle-progress-ends {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cycle-progress-meta { margin-bottom: 9px; color: var(--ink-muted); font-size: var(--font-caption); }
+.cycle-progress-meta strong { color: var(--ink); font-size: var(--font-body); }
+.cycle-progress-track,
+.cycle-progress-labels {
+  display: grid;
+  grid-template-columns: var(--period-days, 6fr) var(--follicular-days, 11fr) var(--ovulation-days, 5fr) var(--luteal-days, 7fr);
+}
+.cycle-progress-track {
+  position: relative;
+  height: 10px;
+  overflow: visible;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+.cycle-segment:first-child { border-radius: 999px 0 0 999px; }
+.cycle-segment:last-of-type { border-radius: 0 999px 999px 0; }
+.cycle-segment.period { background: var(--phase-period-soft); }
+.cycle-segment.follicular { background: var(--phase-follicular-soft); }
+.cycle-segment.ovulation { background: var(--phase-ovulation-soft); }
+.cycle-segment.luteal { background: var(--phase-luteal-soft); }
+.cycle-progress-marker {
+  position: absolute;
+  z-index: 2;
+  left: var(--progress-position, 2%);
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  border: 4px solid var(--primary);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(48,44,52,.14);
+  transform: translate(-50%,-50%);
+}
+.cycle-progress-marker.phase-period { border-color: var(--phase-period-base); }
+.cycle-progress-marker.phase-follicular { border-color: var(--phase-follicular-base); }
+.cycle-progress-marker.phase-ovulation { border-color: var(--phase-ovulation-base); }
+.cycle-progress-marker.phase-pms { border-color: var(--phase-luteal-base); }
+.cycle-progress-labels { margin-top: 9px; color: var(--ink-muted); font-size: .68rem; font-weight: 650; text-align: center; }
+.cycle-progress-labels span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cycle-progress-ends { margin-top: 4px; color: var(--ink-disabled); font-size: .64rem; font-weight: 700; }
+@media (max-width: 430px) {
+  .cycle-progress { padding: 11px 10px 8px; }
+  .cycle-progress-meta { margin-bottom: 8px; }
+  .cycle-progress-track { height: 8px; }
+  .cycle-progress-marker { width: 20px; height: 20px; border-width: 3px; }
+  .cycle-progress-labels { gap: 1px; font-size: .6rem; }
+}
