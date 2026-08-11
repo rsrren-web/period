@@ -25,6 +25,22 @@ assert.equal(endMail.length,1);
 assert.equal(endMail[0].cc,'partner@example.com');
 assert.match(endMail[0].text,/公主大人/);
 assert.match(endMail[0].text,/毛毛球/);
+assert.match(endMail[0].text,/——/);
+
+const periodCharacters=new Set();
+for(let day=1;day<=7;day++){
+  const [mail]=mailForEvent({type:'period-daily',key:`period-daily:2026-07-11:day-${day}`,period:{start:'2026-07-11'},day},{prediction,ownerEmail:'owner@example.com',partnerEmail:'partner@example.com'});
+  assert.match(mail.subject,/经期第\d天/);
+  assert.match(mail.text,/公主大人/);
+  const signature=mail.text.match(/——(.+)$/m)?.[1];
+  assert.ok(signature,'经期邮件缺少角色落款');
+  periodCharacters.add(signature);
+}
+assert.equal(periodCharacters.size,7,'同一经期前7天角色不得重复');
+
+const stageOwner=mailForEvent({type:'stage-period',label:'预计经期',key:'stage-period:2026-08-09'},{prediction,ownerEmail:'owner@example.com',partnerEmail:'partner@example.com'});
+assert.match(stageOwner[0].text,/——魈/);
+assert.match(stageOwner[1].text,/——最好的伙伴与向导·派蒙/);
 
 const endedBeforeBatch={periods:[{id:'p2',start:'2026-07-11',end:'2026-07-17',type:'period',status:'confirmed',updatedAt:'2026-07-17T16:00:00Z'}]};
 assert.deepEqual(buildReminderEvents({date:'2026-07-17',prediction,periods,userData:endedBeforeBatch}).map(event=>event.type),['period-ended']);
