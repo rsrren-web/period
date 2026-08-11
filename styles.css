@@ -2191,111 +2191,7 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .tcm-reasoning > span,
 .traditional-detail dt { color: var(--ink); }
 
-/* v56: quieter surfaces and a single, collision-free daily-log header. */
-.cycle-hero {
-  border: 0;
-  box-shadow: none;
-}
-.cycle-progress {
-  padding-inline: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.prediction-grid > div {
-  min-height: 72px;
-  padding: 10px 14px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.prediction-grid > div + div { border-left: 1px solid var(--soft-line); }
-
-#today > .section-block {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.snapshot-grid {
-  gap: 0;
-  padding: 12px 4px;
-  border-radius: var(--radius-card);
-  background: var(--surface);
-}
-.snapshot-group,
-.snapshot-group:nth-child(2) {
-  padding: 0 12px;
-  border-radius: 0;
-  background: transparent;
-}
-.snapshot-group + .snapshot-group { border-left: 1px solid var(--soft-line); }
-.snapshot-group .snapshot,
-.snapshot-group .snapshot:nth-child(n) {
-  min-height: 66px;
-  padding: 9px;
-  background: transparent !important;
-}
-
-.home-decision-card {
-  padding: 4px 0 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.decision-three { gap: 0; }
-.decision-three > div {
-  padding: 10px 14px;
-  border-radius: 0;
-  background: transparent;
-}
-.decision-three > div + div { border-left: 1px solid var(--soft-line); }
-.tcm-panel {
-  padding-inline: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.traditional-card {
-  border: 0;
-  border-top: 1px solid var(--soft-line);
-  border-radius: 0;
-  background: transparent;
-}
-.traditional-card:last-child { border-bottom: 1px solid var(--soft-line); }
-
-.calendar-panel {
-  border: 0;
-  box-shadow: none;
-}
-.cycle-observation-card,
-.history-card {
-  padding-inline: 0;
-  border: 0;
-  border-top: 1px solid var(--soft-line);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-#insights .panel {
-  padding-inline: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.trend-highlight {
-  border: 0;
-  box-shadow: none;
-}
-.trend-highlight:not(:first-child) { background: transparent; }
-.phase-pattern {
-  border: 0;
-  box-shadow: none;
-}
-
+/* v57: retain the established card hierarchy; only fix the daily-log header collision. */
 .wellness-log-dialog .dialog-head.sticky {
   position: sticky;
   top: 0;
@@ -2342,26 +2238,6 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
     padding-inline: 14px;
   }
   .log-section { padding: 20px 0; }
-}
-
-@media (max-width: 560px) {
-  .snapshot-grid { padding: 10px 0; }
-  .snapshot-group,
-  .snapshot-group:nth-child(2) { padding: 0 10px; }
-  .decision-three > div { padding: 10px 0; }
-  .decision-three > div + div {
-    border-top: 1px solid var(--soft-line);
-    border-left: 0;
-  }
-}
-
-@media (max-width: 430px) {
-  .cycle-progress { padding-inline: 0; }
-  .prediction-grid > div { padding-inline: 10px; }
-  .calendar-panel { padding-inline: 12px; }
-  .cycle-observation-card,
-  .history-card,
-  #insights .panel { padding-inline: 0; }
 }
 
 :root {
