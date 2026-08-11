@@ -165,20 +165,21 @@ function renderPhasePatterns(logs, context) {
   const root = document.querySelector('#phasePatternPanel'); if (!root) return;
   const phases = ['follicular', 'ovulation', 'pms', 'period'];
   const cards = phases.map((phase) => {
-    const entries = Object.entries(logs).filter(([date]) => phaseFor(date, context) === phase), observations = [];
+    const entries = Object.entries(logs).filter(([date]) => phaseFor(date, context) === phase); let summary = '继续记录', rows = [];
     if (entries.length >= 3) {
       const configs = [['mood', '情绪'], ['sleep', '睡眠'], ['energy', '精力'], ['activity', '运动'], ['stress', '压力']];
       const phaseAverages = configs.map(([key, label]) => ({ key, label, value: average(entries.map(([, log]) => metric(log, key)).filter(Number.isFinite)) })).filter((item) => item.value !== null);
       const favorable = phaseAverages.filter((item) => item.key !== 'stress').sort((a, b) => b.value - a.value)[0];
       const burden = phaseAverages.filter((item) => item.key === 'stress' || item.value <= 2.5).sort((a, b) => (b.key === 'stress' ? b.value : 5 - b.value) - (a.key === 'stress' ? a.value : 5 - a.value))[0];
-      if (favorable) observations.push(`${favorable.label}平均${favorable.value.toFixed(1)}/5`);
-      if (burden) observations.push(`${burden.label}${burden.key === 'stress' ? '平均' : '偏低，平均'}${burden.value.toFixed(1)}/5`);
+      if (favorable) rows.push({ label: `较好 · ${favorable.label}`, value: `${favorable.value.toFixed(1)}/5` });
+      if (burden) rows.push({ label: `留意 · ${burden.label}`, value: `${burden.value.toFixed(1)}/5` });
       const symptomCounts = new Map(); entries.forEach(([, log]) => tags(log).filter((tag) => !tag.includes('：')).forEach((tag) => symptomCounts.set(tag, (symptomCounts.get(tag) || 0) + 1)));
-      const common = [...symptomCounts.entries()].sort((a, b) => b[1] - a[1])[0]; if (common?.[1] >= 2) observations.push(`${common[0]}出现${common[1]}次`);
+      const common = [...symptomCounts.entries()].sort((a, b) => b[1] - a[1])[0]; if (common?.[1] >= 2) rows.push({ label: `常见 · ${common[0]}`, value: `${common[1]}次` });
+      summary = burden ? `${burden.label}${burden.key === 'stress' ? '偏高' : '偏低'}` : favorable ? `${favorable.label}相对较好` : '暂未见明显特点';
     }
-    return `<article class="phase-pattern phase-${phase}"><span>${escapeWellness(PHASE_NAMES[phase])}</span><strong>${entries.length}天记录</strong>${entries.length >= 3 ? `<p>${escapeWellness(observations.slice(0, 2).join('；') || '暂未发现明显特征')}</p>` : '<p>至少需要3天同阶段记录</p>'}</article>`;
+    return `<article class="phase-pattern phase-${phase}"><header><span class="phase-pattern-dot" aria-hidden="true"></span><div><strong>${escapeWellness(PHASE_NAMES[phase])}</strong><small>${entries.length}天记录</small></div></header><p class="phase-pattern-summary">${escapeWellness(summary)}</p>${entries.length >= 3 ? `<dl>${rows.slice(0, 3).map((row) => `<div><dt>${escapeWellness(row.label)}</dt><dd>${escapeWellness(row.value)}</dd></div>`).join('')}</dl>` : '<p class="phase-pattern-empty">同阶段至少记录3天后生成特征</p>'}</article>`;
   });
-  root.innerHTML = `<div class="section-title"><div><p class="eyebrow">个人模式</p><h2>四个阶段各有什么特征？</h2></div></div><div class="phase-pattern-grid">${cards.join('')}</div><p class="fineprint">只比较你的个人记录；排卵期为日历估算。样本少时不生成结论。</p>`;
+  root.innerHTML = `<div class="section-title"><div><p class="eyebrow">个人模式</p><h2>四个阶段，一眼看懂</h2></div></div><p class="phase-pattern-intro">每张卡先显示这个阶段最明显的特点，再列出数据依据。</p><div class="phase-pattern-grid">${cards.join('')}</div><p class="fineprint">仅比较你的个人记录；排卵期为日历估算。</p>`;
 }
 
 function pearson(pairs) {
@@ -215,16 +216,16 @@ function renderCycleObservation(logs, context) {
   const root = document.querySelector('#cycleObservationCard'); if (!root) return;
   const periods = [...(context.periods || [])].filter((period) => period.start && period.end && period.status !== 'ongoing').sort((a, b) => a.start.localeCompare(b.start)), period = periods.at(-1);
   if (!period) { root.innerHTML = '<div class="light-empty"><strong>还没有完整周期可评分</strong><p>周期结束后生成观察分；缺失记录不会被当作身体问题扣分。</p></div>'; return; }
-  const index = periods.length - 1, priorStarts = periods.slice(Math.max(0, index - 7), index).map((item) => item.start), priorLengths = priorStarts.slice(1).map((start, position) => dayDiff(priorStarts[position], start)).filter(Number.isFinite), currentLength = index ? dayDiff(periods[index - 1].start, period.start) : null, baseline = median(priorLengths), cycleLogs = Object.entries(logs).filter(([date]) => date >= period.start && date <= period.end), painValues = cycleLogs.map(([, log]) => normalizedPain(log)).filter(Number.isFinite), sleepValues = cycleLogs.map(([, log]) => metric(log, 'sleep')).filter(Number.isFinite), energyValues = cycleLogs.map(([, log]) => metric(log, 'energy')).filter(Number.isFinite), duration = dayDiff(period.start, period.end) + 1;
+  const index = periods.length - 1, priorStarts = periods.slice(Math.max(0, index - 7), index).map((item) => item.start), priorLengths = priorStarts.slice(1).map((start, position) => dayDiff(priorStarts[position], start)).filter(Number.isFinite), currentLength = index ? dayDiff(periods[index - 1].start, period.start) : null, baseline = median(priorLengths), cycleLogs = Object.entries(logs).filter(([date]) => date >= period.start && date <= period.end), painValues = cycleLogs.map(([, log]) => normalizedPain(log)).filter(Number.isFinite), sleepValues = cycleLogs.map(([, log]) => metric(log, 'sleep')).filter(Number.isFinite), energyValues = cycleLogs.map(([, log]) => metric(log, 'energy')).filter(Number.isFinite), duration = dayDiff(period.start, period.end) + 1, historicalDuration = median(periods.slice(-7, -1).map((item) => dayDiff(item.start, item.end) + 1).filter(Number.isFinite));
   const deductions = [];
   let score = 100, available = 0;
-  if (baseline !== null && currentLength !== null) { available += 30; const difference = Math.abs(currentLength - baseline), deduction = Math.min(30, Math.round(difference * 4)); score -= deduction; if (deduction) deductions.push(`周期长度较个人近期中位数偏离${difference.toFixed(0)}天：-${deduction}`); }
-  available += 15; const durationDifference = Math.abs(duration - median(periods.slice(-7).map((item) => dayDiff(item.start, item.end) + 1))); const durationDeduction = Math.min(15, Math.round(durationDifference * 4)); score -= durationDeduction; if (durationDeduction) deductions.push(`经期天数与个人历史差异较大：-${durationDeduction}`);
-  if (painValues.length) { available += 20; const painDeduction = Math.round((average(painValues) / 5) * 20); score -= painDeduction; if (painDeduction) deductions.push(`经期疼痛负担：-${painDeduction}`); }
-  if (sleepValues.length || energyValues.length) { available += 20; const recovery = average([...sleepValues, ...energyValues]); const recoveryDeduction = Math.round(((5 - recovery) / 4) * 20); score -= recoveryDeduction; if (recoveryDeduction) deductions.push(`睡眠与精力恢复：-${recoveryDeduction}`); }
+  if (baseline !== null && currentLength !== null) { available += 30; const difference = Math.abs(currentLength - baseline), deduction = Math.min(30, Math.round(difference * 4)); score -= deduction; if (deduction) deductions.push({ text: `本周期${currentLength}天，个人近期中位数${baseline.toFixed(0)}天，相差${difference.toFixed(0)}天`, points: deduction, action: '继续准确确认月经开始日；下次按个人预测范围提前准备，不用靠饮食或运动强行改变周期长度。' }); }
+  if (historicalDuration !== null) { available += 15; const durationDifference = Math.abs(duration - historicalDuration), durationDeduction = Math.min(15, Math.round(durationDifference * 4)); score -= durationDeduction; if (durationDeduction) deductions.push({ text: `本次经期${duration}天，近6次个人中位数${historicalDuration.toFixed(0)}天，相差${durationDifference.toFixed(0)}天`, points: durationDeduction, action: '下次逐日确认出血开始和结束；若明显变化连续出现，再把日期记录带给医生评估。' }); }
+  if (painValues.length) { available += 20; const painAverage = average(painValues), painDeduction = Math.round((painAverage / 5) * 20); score -= painDeduction; if (painDeduction) deductions.push({ text: `有${painValues.length}天疼痛记录，平均${painAverage.toFixed(1)}/5`, points: painDeduction, action: '下周期记录疼痛部位、强度和开始时间；当天先减少高强度运动，选择舒适热敷或轻走。' }); }
+  if (sleepValues.length || energyValues.length) { available += 20; const recovery = average([...sleepValues, ...energyValues]), recoveryDeduction = Math.round(((5 - recovery) / 4) * 20); score -= recoveryDeduction; if (recoveryDeduction) deductions.push({ text: `睡眠与精力合计${sleepValues.length + energyValues.length}条，平均${recovery.toFixed(1)}/5`, points: recoveryDeduction, action: '经前一周优先选择23点前入睡，并连续记录次日精力，比较是否改善。' }); }
   const finalScore = Math.max(0, Math.min(100, Math.round(score))), confidence = available >= 70 ? '较高' : available >= 45 ? '中等' : '较低';
-  const action = deductions[0]?.includes('疼痛') ? '下周期优先记录疼痛部位与强度，并在疼痛开始时减少高强度活动。' : deductions[0]?.includes('睡眠') ? '下周期经前一周优先选择23点前入睡，观察次日精力是否改善。' : deductions[0]?.includes('周期长度') ? '为下次日期预留个人预测窗口，并继续确认月经开始日。' : '本周期接近个人近期节律，继续保持记录和规律作息。';
-  root.innerHTML = `<div class="cycle-score-head"><div><p class="eyebrow">最近完整周期</p><h2>本周期观察分</h2></div><strong>${finalScore}<small>/100</small></strong></div><div class="cycle-score-meta"><span>${period.start}–${period.end}</span><span>数据可信度：${confidence}</span></div>${deductions.length ? `<div class="deduction-list"><strong>主要扣分</strong>${deductions.slice(0, 3).map((item) => `<p>${escapeWellness(item)}</p>`).join('')}</div>` : '<p class="score-steady">现有数据未发现明显扣分项。</p>'}<div class="cycle-score-action"><strong>下个周期可以改善什么</strong><p>${escapeWellness(action)}</p></div><p class="fineprint">这是个人记录观察分，不是医学健康评分；数据完整度只影响可信度，不直接扣分。</p>`;
+  const actions = deductions.length ? [...new Set(deductions.slice(0, 3).map((item) => item.action))] : ['本周期接近个人近期节律；继续准确记录开始日、结束日和明显不适。'];
+  root.innerHTML = `<div class="cycle-score-head"><div><p class="eyebrow">最近完整周期</p><h2>本周期观察分</h2></div><strong>${finalScore}<small>/100</small></strong></div><div class="cycle-score-meta"><span>${period.start}–${period.end}</span><span>数据可信度：${confidence}</span></div>${deductions.length ? `<div class="deduction-list"><strong>主要扣分与数据</strong>${deductions.slice(0, 3).map((item) => `<div><p>${escapeWellness(item.text)}</p><b>−${item.points}分</b></div>`).join('')}</div>` : '<p class="score-steady">现有数据未发现明显扣分项。</p>'}<div class="cycle-score-action"><strong>下个周期这样做</strong><ol>${actions.map((action) => `<li>${escapeWellness(action)}</li>`).join('')}</ol></div><p class="fineprint">这是个人记录观察分，不是医学健康评分；数据完整度只影响可信度，不直接扣分。</p>`;
 }
 
 globalThis.renderDailyEnhancements = (context) => {
@@ -238,3 +239,4 @@ globalThis.renderDailyEnhancements = (context) => {
   renderPms(logs, context || {});
   renderCycleObservation(logs, context || {});
 };
+
