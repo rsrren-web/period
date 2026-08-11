@@ -1,4 +1,4 @@
-export const KNOWLEDGE_VERSION = '2026.08.10-v2';
+export const KNOWLEDGE_VERSION = '2026.08.10-v3';
 
 export const KNOWLEDGE_SOURCES = [
   { id: 'neijing', title: '《黄帝内经》', role: '食饮有节、起居有常、因时调护与整体观的理论脉络' },
@@ -135,17 +135,11 @@ export const FOOD_RECIPES = [
     steps: '雪梨去核切块，小火煮12分钟，关火后放入玫瑰焖3分钟；温热饮汤并吃梨。',
     why: '经前同时记录口干与情绪紧绷时，提供低浓度、无咖啡因的替代饮品；避免把偏热感受仍机械配姜或过浓陈皮。',
     skip: '花粉过敏、吃梨腹泻、胃肠敏感或医生要求限制液体时改温水。', sources: ['uploaded-cycle-report', 'wenbing']
-  },
-  {
-    id: 'warm-water', title: '分次温水', phases: ['period', 'follicular', 'ovulation', 'pms'], signals: ['neutral'], priority: 1,
-    ingredients: '温水200–300毫升。', steps: '按口渴分次饮用，不强迫大量灌水。',
-    why: '没有明确适配的食养条件时，温水是低负担的默认选择，不用为了阶段强行喝功能茶。',
-    skip: '医生要求限制液体时遵循原医嘱。', sources: ['neijing']
   }
 ];
 
 export const ACUPOINTS = [
-  { id: 'neiguan', name: '内关', phases: ['period', 'ovulation', 'pms'], signals: ['焦虑', '恶心', 'stress-high'], location: '腕横纹向上约三横指、两条筋之间。', method: '拇指垂直轻按30–60秒，配合缓慢呼气，左右各1–2轮。', why: '作为暂停与放松提示；传统经络脉络用于和胃、宁心的日常按揉表达。', skip: '皮肤破损、麻木或刺痛处不按；不自行针刺。', sources: ['natcm-literacy'] },
+  { id: 'neiguan', name: '内关', phases: ['period', 'ovulation', 'pms'], signals: ['焦虑', '恶心', 'stress-high'], location: '腕横纹向上约三横指、两条筋之间。', method: '拇指垂直轻按30–60秒，配合缓慢呼气，左右各1–2轮。', why: '用短暂停顿和缓慢呼气帮助放松。', skip: '按压不舒服就停止。', sources: ['natcm-literacy'] },
   { id: 'zusanli', name: '足三里', phases: ['period', 'follicular', 'pms'], signals: ['疲倦', 'low-energy', 'low-appetite'], location: '膝盖外侧凹陷下约四横指、胫骨前嵴外侧一横指。', method: '坐稳后每侧轻按30–60秒，1–2轮，以微酸胀但不痛为度。', why: '传统上与脾胃、体力调护相关；项目中只用于建立放松和规律进食提示。', skip: '位置不确定、局部红肿疼痛或静脉曲张处跳过。', sources: ['natcm-literacy'] },
   { id: 'shenmen', name: '神门', phases: ['follicular', 'ovulation', 'pms'], signals: ['焦虑', '23点后入睡', 'sleep-low'], location: '手腕掌侧、小指一侧腕横纹附近凹陷处。', method: '用另一手拇指轻按30秒，放松10秒，左右各2轮。', why: '用于睡前减少刺激的仪式感；不能替代失眠评估和治疗。', skip: '局部疼痛、皮肤破损或按后不适时停止。', sources: ['natcm-literacy', 'nih-sleep'] },
   { id: 'hegu', name: '合谷（仅轻按）', phases: ['follicular', 'ovulation'], signals: ['头部'], location: '手背虎口，第一、二掌骨之间肌肉隆起处。', method: '仅轻柔按压20–30秒，左右各1轮；不追求强烈酸痛。', why: '作为头面紧张时暂停、放松手部与减少屏幕刺激的提示。', skip: '可能怀孕、局部疼痛或皮肤损伤时跳过；不自行针刺。', sources: ['natcm-literacy'] },
@@ -170,8 +164,9 @@ export const CARE_PRACTICES = [
 ];
 
 export const PHASE_THEORY = {
-  period: { title: '经期 · 舒缓与顾护', rhythm: '传统调周理论称为“动降”阶段，重点是顺势休息与观察经血、疼痛和整体感受。', theory: '传统脉络重视经行时气血变化，但不把所有经期不适都归为寒。今天以疼痛、寒热感受、胃口和出血情况决定是否保暖、活动或只做休息。' },
+  period: { title: '经期 · 舒缓与顾护', rhythm: '经期重点是休息，并观察经血、疼痛和整体感受。', theory: '根据今天的疼痛、冷热感受、胃口和出血情况，选择保暖、轻活动或休息。' },
   follicular: { title: '经后 · 恢复而不骤补', rhythm: '传统调周理论称为“阴长”阶段，可把它理解为经后逐步恢复与积累，而不是骤然进补。', theory: '经后调护可从水谷、睡眠和活动恢复着手；《内经》“食饮有节”和《景岳全书》关于经水与水谷、起居的联系，落实为正常饮食和逐步加量。' },
   ovulation: { title: '排卵估算期 · 平和维持', rhythm: '传统调周理论称为“重阴转阳、动升”的转换窗口；App只把它用作日历组织方式。', theory: '排卵阶段是日历估算，不是生理确认。传统“因人、因时制宜”在这里意味着：没有不适时保持原节奏，不为了阶段额外温补、活血或清热。' },
   pms: { title: '经前 · 观察重复模式', rhythm: '传统调周理论称为“阳长”阶段，更适合提前观察睡眠、情绪、胀感和压力是否形成个人重复模式。', theory: '经前可出现胀、烦、倦、冷等不同表现。传统整体观可帮助组织情志、饮食与起居线索，但必须以连续个人记录为依据，不能用一个体质标签解释所有日子。' }
 };
+
