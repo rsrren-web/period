@@ -165,7 +165,7 @@ function renderPhasePatterns(logs, context) {
   const root = document.querySelector('#phasePatternPanel'); if (!root) return;
   const phases = ['follicular', 'ovulation', 'pms', 'period'];
   const cards = phases.map((phase) => {
-    const entries = Object.entries(logs).filter(([date]) => phaseFor(date, context) === phase); let summary = '继续记录', rows = [];
+    const entries = Object.entries(logs).filter(([date]) => phaseFor(date, context) === phase); const rows = [];
     if (entries.length >= 3) {
       const configs = [['mood', '情绪'], ['sleep', '睡眠'], ['energy', '精力'], ['activity', '运动'], ['stress', '压力']];
       const phaseAverages = configs.map(([key, label]) => ({ key, label, value: average(entries.map(([, log]) => metric(log, key)).filter(Number.isFinite)) })).filter((item) => item.value !== null);
@@ -175,11 +175,10 @@ function renderPhasePatterns(logs, context) {
       if (burden) rows.push({ label: `留意 · ${burden.label}`, value: `${burden.value.toFixed(1)}/5` });
       const symptomCounts = new Map(); entries.forEach(([, log]) => tags(log).filter((tag) => !tag.includes('：')).forEach((tag) => symptomCounts.set(tag, (symptomCounts.get(tag) || 0) + 1)));
       const common = [...symptomCounts.entries()].sort((a, b) => b[1] - a[1])[0]; if (common?.[1] >= 2) rows.push({ label: `常见 · ${common[0]}`, value: `${common[1]}次` });
-      summary = burden ? `${burden.label}${burden.key === 'stress' ? '偏高' : '偏低'}` : favorable ? `${favorable.label}相对较好` : '暂未见明显特点';
     }
-    return `<article class="phase-pattern phase-${phase}"><header><span class="phase-pattern-dot" aria-hidden="true"></span><div><strong>${escapeWellness(PHASE_NAMES[phase])}</strong><small>${entries.length}天记录</small></div></header><p class="phase-pattern-summary">${escapeWellness(summary)}</p>${entries.length >= 3 ? `<dl>${rows.slice(0, 3).map((row) => `<div><dt>${escapeWellness(row.label)}</dt><dd>${escapeWellness(row.value)}</dd></div>`).join('')}</dl>` : '<p class="phase-pattern-empty">同阶段至少记录3天后生成特征</p>'}</article>`;
+    return `<article class="phase-pattern phase-${phase}"><header><span class="phase-pattern-dot" aria-hidden="true"></span><div><strong>${escapeWellness(PHASE_NAMES[phase])}</strong><small>${entries.length}天记录</small></div></header>${entries.length >= 3 ? `<dl>${rows.slice(0, 3).map((row) => `<div><dt>${escapeWellness(row.label)}</dt><dd>${escapeWellness(row.value)}</dd></div>`).join('')}</dl>` : '<p class="phase-pattern-empty">同阶段至少记录3天后生成数据</p>'}</article>`;
   });
-  root.innerHTML = `<div class="section-title"><div><p class="eyebrow">个人模式</p><h2>四个阶段，一眼看懂</h2></div></div><p class="phase-pattern-intro">每张卡先显示这个阶段最明显的特点，再列出数据依据。</p><div class="phase-pattern-grid">${cards.join('')}</div><p class="fineprint">仅比较你的个人记录；排卵期为日历估算。</p>`;
+  root.innerHTML = `<div class="section-title"><div><p class="eyebrow">个人模式</p><h2>阶段特征</h2></div></div><div class="phase-pattern-grid">${cards.join('')}</div><p class="fineprint">仅显示你的个人记录数据；排卵期为日历估算。</p>`;
 }
 
 function pearson(pairs) {
