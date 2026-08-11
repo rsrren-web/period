@@ -3,9 +3,11 @@ import {
   CARE_PRACTICES,
   CONSTITUTION_OBSERVATIONS,
   FOOD_RECIPES,
+  KNOWLEDGE_GUARDRAILS,
   KNOWLEDGE_SOURCES,
   KNOWLEDGE_VERSION,
-  PHASE_THEORY
+  PHASE_THEORY,
+  STATUS_SIGNAL_RULES
 } from './knowledge/wellness-knowledge.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -33,6 +35,7 @@ function recentContext(logs = {}, days = 7) {
 function signalsFor(log = {}, recent) {
   const set = new Set(tags(log));
   for (const [tag, count] of recent.counts) if (count >= 2) set.add(tag);
+  STATUS_SIGNAL_RULES.forEach((rule) => { if (rule.tags.some((tag) => set.has(tag))) rule.signals.forEach((signal) => set.add(signal)); });
   if ((recent.averages.energy ?? 3) <= 2.4) set.add('low-energy');
   if ((recent.averages.activity ?? 3) <= 2.3) set.add('low-activity');
   if ((recent.averages.sleep ?? 3) <= 2.4) set.add('sleep-low');
@@ -41,7 +44,12 @@ function signalsFor(log = {}, recent) {
   if (Number(log.activity) <= 2) set.add('low-activity');
   if (Number(log.sleep) <= 2) set.add('sleep-low');
   if (Number(log.stress) >= 4) set.add('stress-high');
-  if (![...set].some((value) => ['怕冷', '怕热/潮热', '焦虑', '生气', '腹胀', '疲倦', '嗜睡', '未排便'].includes(value))) set.add('neutral');
+  const meaningfulSignals = new Set(
+    [...FOOD_RECIPES, ...CARE_PRACTICES, ...ACUPOINTS]
+      .flatMap((item) => item.signals)
+      .filter((signal) => signal !== 'neutral' && signal !== 'none')
+  );
+  if (![...set].some((value) => meaningfulSignals.has(value))) set.add('neutral');
   return set;
 }
 
@@ -57,7 +65,12 @@ function choose(items, phaseKey, signals, recentIdsKey) {
 }
 
 function constitutionHint(recent) {
-  const score = (profile) => profile.signals.reduce((sum, signal) => sum + (recent.counts.get(signal) || 0), 0);
+  const signalCount = (signal) => {
+    const direct = recent.counts.get(signal) || 0;
+    const mapped = STATUS_SIGNAL_RULES.filter((rule) => rule.signals.includes(signal)).map((rule) => Math.max(...rule.tags.map((tag) => recent.counts.get(tag) || 0), 0));
+    return Math.max(direct, ...mapped, 0);
+  };
+  const score = (profile) => profile.signals.reduce((sum, signal) => sum + signalCount(signal), 0);
   const match = CONSTITUTION_OBSERVATIONS.map((profile) => ({ profile, total: score(profile) })).filter(({ profile, total }) => total >= profile.needs).sort((a, b) => b.total - a.total)[0];
   return match ? { ...match.profile, total: match.total } : null;
 }
@@ -72,7 +85,8 @@ function foodCard(item) {
 
 function practiceCard(kind, item) {
   const point = kind === 'point';
-  return `<details class="traditional-card traditional-${kind}"><summary><div class="traditional-card-head"><span aria-hidden="true">${point ? '按' : '养'}</span><div><small>${point ? '今日穴位' : '今日调护'}</small><h3>${esc(point ? `${item.name}轻按` : item.title)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail">${point ? `<dl><div><dt>位置</dt><dd>${esc(item.location)}</dd></div><div><dt>方法</dt><dd>${esc(item.method)}</dd></div>` : `<dl><div><dt>方法</dt><dd>${esc(item.steps)}</dd></div>`}<div><dt>为什么推荐</dt><dd>${esc(item.why)}</dd></div><div><dt>先跳过</dt><dd>${esc(item.skip)}</dd></div></dl></div></details>`;
+  const title = point ? (item.name.includes('轻按') ? item.name : `${item.name}轻按`) : item.title;
+  return `<details class="traditional-card traditional-${kind}"><summary><div class="traditional-card-head"><span aria-hidden="true">${point ? '按' : '养'}</span><div><small>${point ? '今日穴位' : '今日调护'}</small><h3>${esc(title)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail">${point ? `<dl><div><dt>位置</dt><dd>${esc(item.location)}</dd></div><div><dt>方法</dt><dd>${esc(item.method)}</dd></div>` : `<dl><div><dt>方法</dt><dd>${esc(item.steps)}</dd></div>`}<div><dt>为什么推荐</dt><dd>${esc(item.why)}</dd></div><div><dt>先跳过</dt><dd>${esc(item.skip)}</dd></div></dl></div></details>`;
 }
 
 function recentEvidence(recent, signals) {
@@ -100,8 +114,8 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   document.querySelector('#tcmPhaseTitle').textContent = theory.title;
   document.querySelector('#tcmPhaseDot').className = `phase-dot phase-${phase.key}`;
   root.innerHTML = `
-    <section class="tcm-reasoning"><span>今天为什么这样建议</span><p>${esc(theory.theory)}</p>${evidence.length ? `<ul>${evidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : '<p class="muted">近7天记录仍少，今天主要按周期阶段提供低风险建议。</p>'}</section>
+    <section class="tcm-reasoning"><span>今天为什么这样建议</span><p class="phase-rhythm">${esc(theory.rhythm || '')}</p><p>${esc(theory.theory)}</p>${evidence.length ? `<ul>${evidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : '<p class="muted">近7天记录仍少，今天主要按周期阶段提供低风险建议。</p>'}</section>
     ${constitution ? `<details class="constitution-hint"><summary><span>体质观察线索</span><strong>${esc(constitution.name)} · ${constitution.total}次线索</strong></summary><div><p>${esc(constitution.explanation)}</p><p><strong>边界：</strong>${esc(constitution.avoid)}</p><small>这里只是近7天的感受倾向，不是体质诊断。</small></div></details>` : ''}
     <div class="traditional-plan">${foodCard(food)}${practiceCard('care', care)}${practiceCard('point', point)}</div>
-    <details class="traditional-basis-details"><summary>理论脉络与资料来源 <span>展开</span></summary><div class="details-body"><p>本建议以《黄帝内经》“食饮有节、起居有常”的整体观为主线，并吸收《伤寒论》《金匮要略》《温病条辨》辨寒热、顾护胃气与津液的思路，以及《景岳全书》对经水、情志、饮食起居关系的讨论。经典用于组织观察，不把古籍原方拆成日常茶饮。</p><p>穴位仅提供无创轻按和经络位置认识；不推荐自行针刺、强刺激或艾灸。食材为日常食物量，仍需服从过敏、疾病和医生饮食要求。</p><p class="knowledge-version">知识库 ${esc(KNOWLEDGE_VERSION)} · ${KNOWLEDGE_SOURCES.length}项来源</p></div></details>`;
+    <details class="traditional-basis-details"><summary>理论脉络与资料来源 <span>展开</span></summary><div class="details-body"><p>本建议以《黄帝内经》“食饮有节、起居有常”的整体观为主线，并吸收《伤寒论》《金匮要略》《温病条辨》辨寒热、顾护胃气与津液的思路，以及《景岳全书》对经水、情志、饮食起居关系的讨论。新增的四期“动降—阴长—转化—阳长”脉络来自用户提供的调周研究报告，只用于组织每日观察。</p><p>穴位仅提供无创轻按和经络位置认识；不推荐自行针刺、强刺激或艾灸。食材为日常食物量，仍需服从过敏、疾病和医生饮食要求。</p><ul class="knowledge-guardrails">${KNOWLEDGE_GUARDRAILS.slice(0, 3).map((rule) => `<li>${esc(rule)}</li>`).join('')}</ul><p class="knowledge-version">知识库 ${esc(KNOWLEDGE_VERSION)} · ${KNOWLEDGE_SOURCES.length}项来源 · ${FOOD_RECIPES.length}份食谱 · ${ACUPOINTS.length}个穴位</p></div></details>`;
 };

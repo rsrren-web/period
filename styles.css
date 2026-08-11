@@ -2134,3 +2134,14 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   .cycle-progress-marker { width: 20px; height: 20px; border-width: 3px; }
   .cycle-progress-labels { gap: 1px; font-size: .6rem; }
 }
+
+/* v50: richer but still readable traditional-care reasoning. */
+.phase-rhythm {
+  margin: 9px 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--phase-follicular-base);
+  border-radius: 0 var(--radius-inner) var(--radius-inner) 0;
+  background: var(--phase-follicular-soft);
+  color: var(--ink);
+}
+.knowledge-guardrails { display: grid; gap: 7px; margin: 12px 0; padding-left: 20px; color: var(--ink-muted); font-size: var(--font-caption); line-height: 1.55; }
