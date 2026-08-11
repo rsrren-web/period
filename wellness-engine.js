@@ -12,9 +12,9 @@ const metric = (log, key) => key === 'pain' ? normalizedPain(log) : Number.isFin
 const painParts = (log) => tags(log).filter((tag) => tag.startsWith('疼痛部位：')).map((tag) => tag.slice(5));
 
 const EMOTIONS = {
-  开心: { icon: '⌣', className: 'happy', score: 5 }, 平静: { icon: '˘', className: 'calm', score: 4 }, 满足: { icon: '◡', className: 'content', score: 5 },
-  普通: { icon: '—', className: 'neutral', score: 3 }, 疲倦: { icon: '⌢', className: 'tired', score: 2 }, 低落: { icon: '︵', className: 'sad', score: 1 },
-  焦虑: { icon: '∿', className: 'anxious', score: 2 }, 生气: { icon: '⌁', className: 'angry', score: 1 }, 害怕: { icon: '·', className: 'afraid', score: 1 }
+  开心: { icon: '😄', className: 'happy', score: 5 }, 平静: { icon: '😌', className: 'calm', score: 4 }, 满足: { icon: '🥰', className: 'content', score: 5 },
+  普通: { icon: '😐', className: 'neutral', score: 3 }, 疲倦: { icon: '🥱', className: 'tired', score: 2 }, 低落: { icon: '😔', className: 'sad', score: 1 },
+  焦虑: { icon: '😰', className: 'anxious', score: 2 }, 生气: { icon: '😠', className: 'angry', score: 1 }, 害怕: { icon: '😨', className: 'afraid', score: 1 }
 };
 
 function phaseFor(date, context) {
@@ -70,20 +70,20 @@ function renderReadableToday(logs) {
   document.querySelector('#todayStatusDetail')?.remove();
   const log = logs[isoToday()];
   if (!log) {
-    root.innerHTML = `<button class="empty-today-state" type="button" data-open-log><span>＋</span><div><strong>记录今天的状态</strong><small>情绪、运动、社交、睡眠、排便和疼痛</small></div></button>`;
+    root.innerHTML = `<button class="empty-today-state" type="button" data-open-log><span class="emoji-icon">➕</span><div><strong>记录今天的状态</strong><small>情绪、运动、社交、睡眠、排便和疼痛</small></div></button>`;
     return;
   }
   const emotion = tagged(log, '情绪：') || Object.keys(EMOTIONS).find((name) => tags(log).includes(name)) || '普通';
   const emotionInfo = EMOTIONS[emotion] || EMOTIONS.普通, bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：'), exercise = tags(log).filter((tag) => tag.startsWith('运动：')).map((tag) => tag.slice(3)), social = tags(log).filter((tag) => tag.startsWith('社交：')).map((tag) => tag.slice(3)), socialEffect = tagged(log, '社交影响：'), pain = normalizedPain(log), parts = painParts(log);
   root.innerHTML = `<button class="readable-today-card" type="button" data-open-log aria-label="编辑今日状态">
-    <div class="today-emotion"><span class="emotion-blob emotion-${emotionInfo.className}" aria-hidden="true">${emotionInfo.icon}</span><div><small>主要情绪</small><strong>${escapeWellness(emotion)}</strong></div></div>
+    <div class="today-emotion"><span class="emotion-blob emoji-icon emotion-${emotionInfo.className}" aria-hidden="true">${emotionInfo.icon}</span><div><small>主要情绪</small><strong>${escapeWellness(emotion)}</strong></div></div>
     <div class="today-status-icons">
-      ${statusIcon('精力', `${log.energy || '—'}/5`, Number(log.energy) <= 2 ? '偏低' : '', '⚡', Number(log.energy) <= 2 ? 'attention' : '')}
-      ${statusIcon('睡眠', `${log.sleep || '—'}/5`, bedtime || '', '☾')}
-      ${statusIcon('运动', `${log.activity || '—'}/5`, exercise.slice(0, 2).join('、'), '↗')}
-      ${statusIcon('社交', tagged(log, '社交强度：') ? `${tagged(log, '社交强度：')}/5` : '—', socialEffect || social.slice(0, 2).join('、'), '◎')}
-      ${statusIcon('排便', bowel || '未记录', '', bowel === '未排便' ? '—' : '✓', bowel === '未排便' ? 'attention' : '')}
-      ${statusIcon('疼痛', pain === null ? '未记录' : `${pain}/5`, parts.slice(0, 2).join('、'), '♥', pain >= 3 ? 'attention' : '')}
+      ${statusIcon('精力', `${log.energy || '—'}/5`, Number(log.energy) <= 2 ? '偏低' : '', '⚡️', Number(log.energy) <= 2 ? 'attention' : '')}
+      ${statusIcon('睡眠', `${log.sleep || '—'}/5`, bedtime || '', '🌙')}
+      ${statusIcon('运动', `${log.activity || '—'}/5`, exercise.slice(0, 2).join('、'), '🏃‍♀️')}
+      ${statusIcon('社交', tagged(log, '社交强度：') ? `${tagged(log, '社交强度：')}/5` : '—', socialEffect || social.slice(0, 2).join('、'), '💬')}
+      ${statusIcon('排便', bowel || '未记录', '', bowel === '未排便' ? '➖' : '✅', bowel === '未排便' ? 'attention' : '')}
+      ${statusIcon('疼痛', pain === null ? '未记录' : `${pain}/5`, parts.slice(0, 2).join('、'), '🩹', pain >= 3 ? 'attention' : '')}
     </div>
   </button>`;
 }
@@ -238,4 +238,3 @@ globalThis.renderDailyEnhancements = (context) => {
   renderPms(logs, context || {});
   renderCycleObservation(logs, context || {});
 };
-
