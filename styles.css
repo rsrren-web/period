@@ -2198,17 +2198,74 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .cycle-hero {
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
-    "phase controls"
+    "phase phase"
     "stage controls"
+    "rule rule"
     "prediction prediction"
     "progress progress";
   gap: 8px 18px;
   align-items: center;
 }
-.cycle-hero .hero-content,
-.cycle-hero .eyebrow-row { display: contents; }
-.cycle-hero .cycle-ring { grid-area: phase; justify-self: start; }
-.cycle-hero #phasePill { grid-area: stage; justify-self: start; }
+.cycle-hero .hero-content { display: contents; }
+.hero-phase-row {
+  grid-area: phase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.hero-phase-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--phase-color, var(--mint));
+}
+.hero-phase-row.phase-period { --phase-color: var(--period); }
+.hero-phase-row.phase-follicular { --phase-color: var(--mint); }
+.hero-phase-row.phase-ovulation { --phase-color: var(--primary); }
+.hero-phase-row.phase-pms { --phase-color: var(--sun); }
+.cycle-hero .cycle-ring {
+  width: auto;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.cycle-hero .cycle-ring span { font-size: var(--text-title); }
+.cycle-day-badge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-size: var(--text-caption);
+  font-weight: 650;
+  white-space: nowrap;
+}
+.hero-stage-copy { grid-area: stage; min-width: 0; }
+.cycle-hero #phasePill {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-heading);
+  font-weight: 650;
+}
+.cycle-hero #phasePill::before { display: none; }
+.cycle-hero #todayHeadline {
+  display: block;
+  margin: 3px 0 0;
+  color: var(--ink-muted);
+  font-size: var(--text-body-secondary);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
 .cycle-hero .period-controls {
   grid-area: controls;
   width: max-content;
@@ -2217,17 +2274,98 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   justify-items: stretch;
 }
 .cycle-hero .period-action { width: 100%; margin: 0; }
+.hero-rule {
+  grid-area: rule;
+  height: 1px;
+  margin: 12px 0 8px;
+  background: var(--surface-muted);
+}
 .cycle-hero .prediction-grid {
   grid-area: prediction;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: 0;
   width: 100%;
-  margin: 14px 0 0;
+  margin: 0;
 }
-.cycle-hero .prediction-grid > :last-child { grid-column: auto; }
+.cycle-hero .prediction-grid > div {
+  min-height: 82px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.cycle-hero .prediction-primary {
+  display: grid;
+  align-content: center;
+  padding-right: 22px;
+  border-right: 1px solid var(--surface-muted);
+}
+.cycle-hero .prediction-primary > strong {
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 34px;
+  line-height: 1;
+}
+.cycle-hero .prediction-window {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding-left: 26px;
+}
+.cycle-hero .prediction-window > span { display: flex; align-items: baseline; gap: 8px; }
+.cycle-hero .prediction-window small { min-width: 48px; margin: 0; }
+.cycle-hero .prediction-window strong { font-size: var(--text-body); }
 .cycle-hero .cycle-progress {
   grid-area: progress;
   width: 100%;
-  margin: 4px 0 0;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.cycle-progress-meta,
+.cycle-progress-ends { display: none; }
+.cycle-progress-ranges {
+  display: grid;
+  grid-template-columns: var(--period-days, 6fr) var(--follicular-days, 11fr) var(--ovulation-days, 5fr) var(--luteal-days, 7fr);
+  margin-top: 2px;
+  color: var(--ink-muted);
+  font-size: var(--text-caption);
+  text-align: center;
+}
+.cycle-progress-labels { margin-top: 13px; color: var(--ink); font-size: var(--text-label); }
+.cycle-progress-labels span,
+.cycle-progress-ranges span { overflow: visible; text-overflow: clip; white-space: nowrap; }
+.hero-action-tip { display: none; }
+.cycle-progress-marker {
+  left: clamp(18px, var(--progress-position), calc(100% - 18px));
+}
+.cycle-progress-marker::after {
+  content: "今天";
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.cycle-progress-marker::before {
+  content: "";
+  position: absolute;
+  top: 19px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--ink);
+  transform: translateX(-50%) rotate(45deg);
 }
 
 /* Mobile foundation: the canonical component rules for type, touch and safe areas. */
@@ -2386,9 +2524,18 @@ main {
   .home-decision-card { padding: 18px; }
   .home-date-heading { margin: 2px 2px 18px; }
   .cycle-hero { gap: 7px 12px; }
-  .cycle-hero .period-controls { max-width: 132px; }
-  .cycle-hero .prediction-grid { grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: 10px; }
-  .cycle-hero .prediction-grid > :last-child { grid-column: auto; }
+  .hero-phase-row { gap: 9px; }
+  .cycle-hero .cycle-ring span { font-size: 24px; }
+  .cycle-day-badge { padding: 4px 9px; }
+  .cycle-hero .period-controls { max-width: 126px; }
+  .cycle-hero .period-action { padding-inline: 12px; }
+  .cycle-hero .prediction-primary { padding-right: 16px; }
+  .cycle-hero .prediction-window { padding-left: 20px; }
+  .cycle-hero .prediction-window > span { gap: 5px; }
+  .cycle-hero .prediction-window small { min-width: 42px; }
+  .cycle-hero .prediction-primary > strong { font-size: 31px; }
+  .cycle-progress-labels { font-size: var(--text-caption); }
+  .cycle-progress-ranges { font-size: var(--text-micro); }
   .score-field,
   .metric-grid label,
   .optional-fields label,
