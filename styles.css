@@ -2210,11 +2210,11 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .hero-phase-row {
   grid-area: phase;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   min-width: 0;
 }
-.hero-phase-row .period-controls { margin-left: auto; }
+.hero-phase-row .period-controls { margin: 0 0 0 auto; align-self: flex-start; }
 .hero-phase-row .period-action {
   min-width: 88px;
   min-height: 44px;
@@ -2303,10 +2303,21 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   background: transparent;
 }
 .cycle-hero .prediction-primary {
+  position: relative;
   display: grid;
   align-content: center;
-  padding-right: 22px;
-  border-right: 1px solid rgba(48, 44, 52, .18) !important;
+  padding-right: 28px !important;
+  border-right: 0 !important;
+}
+.cycle-hero .prediction-primary::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 1px;
+  height: 44px;
+  background: rgba(48, 44, 52, .18);
+  transform: translateY(-50%);
 }
 .cycle-hero .prediction-primary > strong {
   margin-top: 4px;
@@ -2318,7 +2329,7 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   display: grid;
   align-content: center;
   gap: 8px;
-  padding-left: 26px;
+  padding-left: 30px !important;
 }
 .cycle-hero .prediction-window > span { display: flex; align-items: baseline; gap: 8px; }
 .cycle-hero .prediction-window small { min-width: 48px; margin: 0; }
@@ -2511,8 +2522,8 @@ main {
   .cycle-day-badge { padding: 4px 9px; }
   .cycle-hero .period-controls { max-width: 126px; }
   .cycle-hero .period-action { padding-inline: 12px; }
-  .cycle-hero .prediction-primary { padding-right: 16px; }
-  .cycle-hero .prediction-window { padding-left: 20px; }
+  .cycle-hero .prediction-primary { padding-right: 22px !important; }
+  .cycle-hero .prediction-window { padding-left: 24px !important; }
   .cycle-hero .prediction-window > span { gap: 5px; }
   .cycle-hero .prediction-window small { min-width: 42px; }
   .cycle-hero .prediction-primary > strong { font-size: 31px; }
