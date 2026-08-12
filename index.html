@@ -18,7 +18,7 @@
   <link rel="apple-touch-icon" href="public/icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="https://fontsapi.zeoseven.com/184/main/result.css">
-  <link rel="stylesheet" href="styles.css?v=62">
+  <link rel="stylesheet" href="styles.css?v=63">
   <title>周期生活助手</title>
 </head>
 <body>
@@ -31,10 +31,14 @@
     <div id="systemAlert" class="system-alert" role="alert" hidden></div>
 
     <section id="today" class="view active">
+      <header class="home-date-heading">
+        <h1>今天</h1>
+        <span id="todayDate" class="muted"></span>
+      </header>
       <article class="cycle-hero">
         <div id="cycleRing" class="cycle-ring phase-follicular"><span id="phaseRingName">卵泡期</span><small id="phaseRingHint">经后恢复阶段</small></div>
         <div class="hero-content">
-          <div class="eyebrow-row"><span id="phasePill" class="phase-pill">载入中</span><span id="todayDate" class="muted"></span></div>
+          <div class="eyebrow-row"><span id="phasePill" class="phase-pill">载入中</span></div>
           <div id="cycleProgress" class="cycle-progress" role="progressbar" aria-label="当前周期进度" aria-valuemin="1" aria-valuemax="29" aria-valuenow="1">
             <div class="cycle-progress-meta"><span id="cycleProgressDay">第 1 / 29 天</span><strong id="cycleProgressPercent">3%</strong></div>
             <div class="cycle-progress-track" aria-hidden="true"><span class="cycle-segment period"></span><span class="cycle-segment follicular"></span><span class="cycle-segment ovulation"></span><span class="cycle-segment luteal"></span><i id="cycleProgressMarker" class="cycle-progress-marker"></i></div>

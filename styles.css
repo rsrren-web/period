@@ -2187,6 +2187,49 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   .log-section { padding: 20px 0; }
 }
 
+/* Canonical home hero layout. Content, color and type tokens remain unchanged. */
+.home-date-heading {
+  display: grid;
+  gap: 2px;
+  margin: 4px 0 20px;
+}
+.home-date-heading h1 { margin: 0; }
+.home-date-heading .muted { display: block; }
+.cycle-hero {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "phase controls"
+    "stage controls"
+    "prediction prediction"
+    "progress progress";
+  gap: 8px 18px;
+  align-items: center;
+}
+.cycle-hero .hero-content,
+.cycle-hero .eyebrow-row { display: contents; }
+.cycle-hero .cycle-ring { grid-area: phase; justify-self: start; }
+.cycle-hero #phasePill { grid-area: stage; justify-self: start; }
+.cycle-hero .period-controls {
+  grid-area: controls;
+  width: max-content;
+  max-width: 152px;
+  align-self: center;
+  justify-items: stretch;
+}
+.cycle-hero .period-action { width: 100%; margin: 0; }
+.cycle-hero .prediction-grid {
+  grid-area: prediction;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  width: 100%;
+  margin: 14px 0 0;
+}
+.cycle-hero .prediction-grid > :last-child { grid-column: auto; }
+.cycle-hero .cycle-progress {
+  grid-area: progress;
+  width: 100%;
+  margin: 4px 0 0;
+}
+
 /* Mobile foundation: the canonical component rules for type, touch and safe areas. */
 html { font-family: var(--font-ui); font-size: 16px; }
 body,
@@ -2341,6 +2384,11 @@ main {
   .period-editor { padding: 18px; }
   .cycle-hero,
   .home-decision-card { padding: 18px; }
+  .home-date-heading { margin: 2px 2px 18px; }
+  .cycle-hero { gap: 7px 12px; }
+  .cycle-hero .period-controls { max-width: 132px; }
+  .cycle-hero .prediction-grid { grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: 10px; }
+  .cycle-hero .prediction-grid > :last-child { grid-column: auto; }
   .score-field,
   .metric-grid label,
   .optional-fields label,
