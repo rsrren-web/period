@@ -18,7 +18,7 @@
   <link rel="apple-touch-icon" href="public/icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="https://fontsapi.zeoseven.com/184/main/result.css">
-  <link rel="stylesheet" href="styles.css?v=70">
+  <link rel="stylesheet" href="styles.css?v=71">
   <title>周期生活助手</title>
 </head>
 <body>
@@ -39,10 +39,11 @@
         <div class="hero-phase-row">
           <i class="hero-phase-dot" aria-hidden="true"></i>
           <div id="cycleRing" class="cycle-ring phase-follicular"><span id="phaseRingName">卵泡期</span><small id="phaseRingHint">经后恢复阶段</small></div>
+          <span id="phasePill" class="phase-pill">载入中</span>
           <span id="phaseDayBadge" class="cycle-day-badge">第 1 天</span>
         </div>
         <div class="hero-content">
-          <div class="hero-stage-copy"><div class="hero-stage-heading"><span id="phasePill" class="phase-pill">载入中</span></div><h1 id="todayHeadline">正在准备今天的生活建议</h1></div>
+          <div class="hero-stage-copy"><h1 id="todayHeadline">正在准备今天的生活建议</h1></div>
           <div class="hero-rule" aria-hidden="true"></div>
           <div class="prediction-grid"><div class="prediction-primary"><small>距离下次月经还有</small><strong id="daysToPeriod">—</strong></div><div class="prediction-window"><span><small>预计</small><strong id="expectedDate">—</strong></span><span><small>可能范围</small><strong id="predictionRange">—</strong></span></div></div>
           <div id="cycleProgress" class="cycle-progress" role="progressbar" aria-label="当前周期进度" aria-valuemin="1" aria-valuemax="29" aria-valuenow="1">
@@ -181,6 +182,6 @@
   <dialog id="dayDialog" class="day-dialog"><div class="dialog-head"><div><p class="eyebrow">当天详情</p><h2 id="dayDialogTitle"></h2></div><button class="close-dialog round-button emoji-icon" aria-label="关闭">✖️</button></div><div id="dayDialogBody"></div><div class="day-primary-actions"><button id="daySetPeriodBtn" class="primary">标记为月经日</button><button id="dayCancelPeriodBtn" class="danger" hidden>取消当天经期</button><button id="dayEditPeriodBtn" class="soft" hidden>修改本次开始/结束日期</button></div><button id="dayEditLog" class="text-button day-log-action">记录身体状态</button></dialog>
 
   <div id="toast" class="toast" role="status"></div>
-  <script src="sync-config.js"></script><script type="module" src="traditional-care.js?v=53"></script><script type="module" src="daily-insights.js?v=59"></script><script type="module" src="personal-insights.js?v=53"></script><script type="module" src="wellness-engine.js?v=59"></script><script type="module" src="app.js?v=70"></script>
+  <script src="sync-config.js"></script><script type="module" src="traditional-care.js?v=53"></script><script type="module" src="daily-insights.js?v=59"></script><script type="module" src="personal-insights.js?v=53"></script><script type="module" src="wellness-engine.js?v=59"></script><script type="module" src="app.js?v=71"></script>
 </body>
 </html>

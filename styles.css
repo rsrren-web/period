@@ -2244,7 +2244,7 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .hero-phase-row {
   grid-area: phase;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   min-width: 0;
 }
@@ -2284,7 +2284,7 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 .hero-stage-heading .period-edit {
   flex: 0 0 auto;
@@ -2297,19 +2297,23 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   font-size: var(--text-caption);
 }
 .cycle-hero #phasePill {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--ink);
   font-family: var(--font-ui);
-  font-size: var(--text-heading);
-  font-weight: 650;
+  font-size: var(--text-body-secondary);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 .cycle-hero #phasePill::before { display: none; }
 .cycle-hero #todayHeadline {
   display: block;
-  margin: 3px 0 0;
+  margin: 0;
   color: var(--ink-muted);
   font-size: var(--text-body-secondary);
   font-weight: 400;
@@ -2565,8 +2569,8 @@ main {
   .home-decision-card { padding: 18px; }
   .home-date-heading { margin: 2px 2px 18px; }
   .cycle-hero { gap: 7px 12px; }
-  .hero-phase-row { gap: 9px; }
-  .cycle-hero .cycle-ring span { font-size: 24px; }
+  .hero-phase-row { gap: 7px; }
+  .cycle-hero .cycle-ring span { font-size: var(--text-heading); }
   .cycle-day-badge { padding: 4px 9px; }
   .cycle-hero .period-controls { max-width: 126px; }
   .cycle-hero .period-action { padding-inline: 12px; }
