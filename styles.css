@@ -2254,6 +2254,22 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   white-space: nowrap;
 }
 .hero-stage-copy { grid-area: stage; min-width: 0; }
+.hero-stage-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hero-stage-heading .period-edit {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 4px 0;
+  min-height: 32px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  font-size: var(--text-caption);
+}
 .cycle-hero #phasePill {
   display: block;
   padding: 0;
