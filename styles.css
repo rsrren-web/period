@@ -2199,7 +2199,7 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     "phase phase"
-    "stage controls"
+    "stage stage"
     "rule rule"
     "prediction prediction"
     "progress progress";
@@ -2213,6 +2213,14 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   align-items: center;
   gap: 12px;
   min-width: 0;
+}
+.hero-phase-row .period-controls { margin-left: auto; }
+.hero-phase-row .period-action {
+  min-width: 88px;
+  min-height: 44px;
+  padding-inline: 8px;
+  font-size: var(--text-micro);
+  white-space: nowrap;
 }
 .hero-phase-dot {
   width: 10px;
@@ -2267,9 +2275,8 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   letter-spacing: 0;
 }
 .cycle-hero .period-controls {
-  grid-area: controls;
   width: max-content;
-  max-width: 152px;
+  max-width: 126px;
   align-self: center;
   justify-items: stretch;
 }
@@ -2299,7 +2306,7 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   display: grid;
   align-content: center;
   padding-right: 22px;
-  border-right: 1px solid var(--surface-muted);
+  border-right: 1px solid rgba(48, 44, 52, .18) !important;
 }
 .cycle-hero .prediction-primary > strong {
   margin-top: 4px;
@@ -2341,31 +2348,6 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .hero-action-tip { display: none; }
 .cycle-progress-marker {
   left: clamp(18px, var(--progress-position), calc(100% - 18px));
-}
-.cycle-progress-marker::after {
-  content: "今天";
-  position: absolute;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: #fff;
-  font-size: var(--text-micro);
-  font-weight: 600;
-  line-height: 1.4;
-  white-space: nowrap;
-}
-.cycle-progress-marker::before {
-  content: "";
-  position: absolute;
-  top: 19px;
-  left: 50%;
-  width: 7px;
-  height: 7px;
-  background: var(--ink);
-  transform: translateX(-50%) rotate(45deg);
 }
 
 /* Mobile foundation: the canonical component rules for type, touch and safe areas. */
