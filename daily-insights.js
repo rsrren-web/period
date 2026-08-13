@@ -1,3 +1,5 @@
+import { compatibilityTags } from './daily-record-model.js';
+
 const DAILY_STORE_KEY = 'period-helper-state-v1';
 const DAILY_LABELS = ['很低', '偏低', '一般', '较好', '很好'];
 let dailyTrendRange = 'week';
@@ -21,15 +23,15 @@ function dateAt(value) { return new Date(`${value}T12:00:00`); }
 function addDate(value, amount) { const date = dateAt(value); date.setDate(date.getDate() + amount); return localIso(date); }
 function dayDistance(a, b) { return Math.round((dateAt(b) - dateAt(a)) / 86400000); }
 function escapeDaily(value) { return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]); }
-function tagged(log, prefix) { return (log?.symptoms || []).find((item) => item.startsWith(prefix))?.slice(prefix.length); }
-function painParts(log = {}) { const symptoms = log.symptoms || []; const parts = symptoms.filter((item) => item.startsWith('疼痛部位：')).map((item) => item.slice(5)); if (symptoms.includes('头痛') && !parts.includes('头部')) parts.push('头部'); if (symptoms.includes('腰腹不适')) { if (!parts.includes('小腹/盆腔')) parts.push('小腹/盆腔'); if (!parts.includes('腰背')) parts.push('腰背'); } return parts; }
-function painFive(log = {}) { const value = Number(log.pain); if (!Number.isFinite(value)) return null; return value > 5 ? Math.round(value / 2) : value; }
-function visibleSymptoms(log = {}) { return (log.symptoms || []).filter((item) => !item.startsWith('疼痛部位：') && !item.startsWith('入睡：') && !item.startsWith('排便：') && !['头痛', '腰腹不适'].includes(item)); }
+function tagged(log, prefix) { return compatibilityTags(log).find((item) => item.startsWith(prefix))?.slice(prefix.length); }
+function painParts(log = {}) { const symptoms = compatibilityTags(log); const parts = symptoms.filter((item) => item.startsWith('疼痛部位：')).map((item) => item.slice(5)); if (symptoms.includes('头痛') && !parts.includes('头部')) parts.push('头部'); if (symptoms.includes('腰腹不适')) { if (!parts.includes('小腹/盆腔')) parts.push('小腹/盆腔'); if (!parts.includes('腰背')) parts.push('腰背'); } return parts; }
+function painFive(log = {}) { if (log.pain === null || log.pain === undefined || log.pain === '') return null; const value = Number(log.pain); if (!Number.isFinite(value)) return null; return value > 5 ? Math.round(value / 2) : value; }
+function visibleSymptoms(log = {}) { return compatibilityTags(log).filter((item) => !item.startsWith('疼痛部位：') && !item.startsWith('入睡：') && !item.startsWith('排便：') && !['头痛', '腰腹不适'].includes(item)); }
 
 function rangeDates() { const now = new Date(), end = localIso(now); if (dailyTrendRange === 'week') { const mondayOffset = (now.getDay() + 6) % 7; return { start: addDate(end, -mondayOffset), end, title: '本周' }; } if (dailyTrendRange === 'month') return { start: `${end.slice(0, 8)}01`, end, title: '本月' }; const firstMonth = Math.floor(now.getMonth() / 3) * 3; return { start: localIso(new Date(now.getFullYear(), firstMonth, 1)), end, title: '本季度' }; }
 
 function markStatusDates(logs) { document.querySelectorAll('[data-date]').forEach((button) => { const hasStatus = Boolean(logs[button.dataset.date]); button.classList.toggle('has-status', hasStatus); button.querySelector('.status-star')?.remove(); if (hasStatus) button.insertAdjacentHTML('beforeend', '<span class="status-star emoji-icon" aria-hidden="true">🖤</span>'); }); }
-function metricValue(log, key) { if (key === 'bedtime') { const value = tagged(log, '入睡：'); return value === '23:00前' ? 1 : value === '23:00后' ? 0 : null; } if (key === 'bowel') { const value = tagged(log, '排便：'); return value === '已排便' ? 1 : value === '未排便' ? 0 : null; } if (key === 'pain') return painFive(log); const value = Number(log?.[key]); return Number.isFinite(value) ? value : null; }
+function metricValue(log, key) { if (key === 'bedtime') { const value = tagged(log, '入睡：'); return value === '23:00前' ? 1 : value === '23:00后' ? 0 : null; } if (key === 'bowel') { const value = tagged(log, '排便：'); return value === '已排便' ? 1 : value === '未排便' ? 0 : null; } if (key === 'pain') return painFive(log); if (log?.[key] === null || log?.[key] === undefined || log?.[key] === '') return null; const value = Number(log[key]); return Number.isFinite(value) ? value : null; }
 function metricLabel(value, config) { return config.binary ? config.binary[value] : `${value}${config.unit}`; }
 
 function renderHomeStatus(logs) {

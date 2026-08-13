@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "revision": 39,
   "updatedAt": "2026-08-13T21:24:38.168Z",
   "periods": [
@@ -25,75 +25,201 @@
   ],
   "logs": {
     "2026-07-19": {
-      "mood": "4",
-      "energy": "4",
-      "sleep": "2",
-      "activity": "1",
-      "stress": "3",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 4,
+      "energy": 4,
+      "sleep": 2,
+      "activity": 1,
+      "stress": 3,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": null,
+      "bowelMovement": null,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": [
         "嗜睡",
         "情绪敏感"
       ],
-      "temperature": "",
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
+        "嗜睡",
+        "情绪敏感"
+      ],
       "updatedAt": "2026-07-20T03:08:03.542Z"
     },
     "2026-07-21": {
-      "mood": "3",
-      "energy": "2",
-      "sleep": "2",
-      "activity": "4",
-      "stress": "2",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 3,
+      "energy": 2,
+      "sleep": 2,
+      "activity": 4,
+      "stress": 2,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": false,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "头部"
+      ],
+      "symptomTags": [
+        "腹胀",
+        "恶心"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "腹胀",
         "恶心",
         "疼痛部位：头部",
         "入睡：23:00后",
         "排便：未排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-07-22T07:38:55.651Z"
     },
     "2026-07-22": {
-      "mood": "2",
-      "energy": "2",
-      "sleep": "3",
-      "activity": "2",
-      "stress": "1",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 2,
+      "energy": 2,
+      "sleep": 3,
+      "activity": 2,
+      "stress": 1,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": false,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": [
+        "疲倦",
+        "情绪低落"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "情绪低落",
         "入睡：23:00后",
         "排便：未排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-07-23T06:36:33.698Z"
     },
     "2026-07-23": {
-      "mood": "1",
-      "energy": "3",
-      "sleep": "3",
-      "activity": "3",
-      "stress": "2",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 1,
+      "energy": 3,
+      "sleep": 3,
+      "activity": 3,
+      "stress": 2,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": [
+        "生气"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "生气",
         "入睡：23:00后",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-07-24T15:22:54.696Z"
     },
     "2026-07-24": {
-      "mood": "3",
-      "energy": "3",
-      "sleep": "4",
-      "activity": "3",
-      "stress": "3",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 3,
+      "energy": 3,
+      "sleep": 4,
+      "activity": 3,
+      "stress": 3,
+      "pain": 2,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": false,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "腰背",
+        "肌肉/关节"
+      ],
+      "symptomTags": [
+        "疲倦",
+        "焦虑",
+        "害怕/紧张"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "焦虑",
         "害怕/紧张",
@@ -102,46 +228,120 @@
         "入睡：23:00后",
         "排便：未排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-07-25T18:02:16.876Z"
     },
     "2026-07-25": {
-      "mood": "3",
-      "energy": "4",
-      "sleep": "4",
-      "activity": "2",
-      "stress": "1",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 3,
+      "energy": 4,
+      "sleep": 4,
+      "activity": 2,
+      "stress": 1,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": false,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": [
+        "疲倦"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "入睡：23:00后",
         "排便：未排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-07-26T05:48:05.540Z"
     },
     "2026-07-27": {
-      "mood": "3",
-      "energy": "4",
-      "sleep": "2",
-      "activity": "3",
-      "stress": "1",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 3,
+      "energy": 4,
+      "sleep": 2,
+      "activity": 3,
+      "stress": 1,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "before_23",
+      "bowelMovement": false,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": null,
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported"
+      },
+      "legacySymptoms": [
         "入睡：23:00前",
         "排便：未排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-07-29T19:50:10.450Z"
     },
     "2026-07-28": {
-      "mood": "1",
-      "energy": "2",
-      "sleep": "1",
-      "activity": "3",
-      "stress": "3",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 1,
+      "energy": 2,
+      "sleep": 1,
+      "activity": 3,
+      "stress": 3,
+      "pain": 2,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "胃/上腹"
+      ],
+      "symptomTags": [
+        "疲倦",
+        "焦虑",
+        "生气",
+        "情绪低落",
+        "腹胀",
+        "恶心"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "焦虑",
         "生气",
@@ -152,17 +352,46 @@
         "入睡：23:00后",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-07-29T19:51:03.818Z"
     },
     "2026-07-29": {
-      "mood": "2",
-      "energy": "3",
-      "sleep": "3",
-      "activity": "3",
-      "stress": "2",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 2,
+      "energy": 3,
+      "sleep": 3,
+      "activity": 3,
+      "stress": 2,
+      "pain": 2,
+      "primaryEmotion": null,
+      "bedtime": null,
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "胃/上腹"
+      ],
+      "symptomTags": [
+        "疲倦",
+        "情绪低落",
+        "腹胀",
+        "恶心",
+        "食欲变化"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "情绪低落",
         "腹胀",
@@ -171,61 +400,156 @@
         "疼痛部位：上腹/胃部",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-07-29T19:51:31.641Z"
     },
     "2026-07-26": {
-      "mood": "4",
-      "energy": "4",
-      "sleep": "3",
-      "activity": "4",
-      "stress": "1",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 4,
+      "energy": 4,
+      "sleep": 3,
+      "activity": 4,
+      "stress": 1,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "before_23",
+      "bowelMovement": false,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": [
+        "怕冷"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "怕冷",
         "入睡：23:00前",
         "排便：未排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-07-29T19:52:10.045Z"
     },
     "2026-07-30": {
-      "mood": "2",
-      "energy": "3",
-      "sleep": "4",
-      "activity": "3",
-      "stress": "2",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 2,
+      "energy": 3,
+      "sleep": 4,
+      "activity": 3,
+      "stress": 2,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "before_23",
+      "bowelMovement": false,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": [
+        "生气",
+        "食欲变化"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "生气",
         "食欲变化",
         "入睡：23:00前",
         "排便：未排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-01T01:14:54.819Z"
     },
     "2026-07-31": {
-      "mood": "3",
-      "energy": "3",
-      "sleep": "4",
-      "activity": "1",
-      "stress": "1",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 3,
+      "energy": 3,
+      "sleep": 4,
+      "activity": 1,
+      "stress": 1,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": null,
+      "bowelMovement": false,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": null,
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bowelMovement": "reported"
+      },
+      "legacySymptoms": [
         "排便：未排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-01T01:15:19.584Z"
     },
     "2026-08-01": {
-      "mood": "3",
-      "energy": "4",
-      "sleep": "2",
-      "activity": "3",
-      "stress": "2",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 3,
+      "energy": 4,
+      "sleep": 2,
+      "activity": 3,
+      "stress": 2,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "before_23",
+      "bowelMovement": false,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "胃/上腹",
+        "腰背",
+        "肌肉/关节"
+      ],
+      "symptomTags": [
+        "疲倦",
+        "害怕/紧张"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "害怕/紧张",
         "疼痛部位：上腹/胃部",
@@ -234,17 +558,49 @@
         "入睡：23:00前",
         "排便：未排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-03T06:07:36.122Z"
     },
     "2026-08-02": {
-      "mood": "3",
-      "energy": "1",
-      "sleep": "1",
-      "activity": "2",
-      "stress": "2",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 3,
+      "energy": 1,
+      "sleep": 1,
+      "activity": 2,
+      "stress": 2,
+      "pain": 2,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "头部",
+        "小腹/盆腔",
+        "腰背",
+        "肌肉/关节"
+      ],
+      "symptomTags": [
+        "嗜睡",
+        "疲倦",
+        "食欲变化",
+        "皮肤变化"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "嗜睡",
         "疲倦",
         "食欲变化",
@@ -256,17 +612,46 @@
         "入睡：23:00后",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-03T06:08:34.717Z"
     },
     "2026-08-03": {
-      "mood": "4",
-      "energy": "4",
-      "sleep": "4",
-      "activity": "3",
-      "stress": "3",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 4,
+      "energy": 4,
+      "sleep": 4,
+      "activity": 3,
+      "stress": 3,
+      "pain": 2,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "小腹/盆腔",
+        "腰背",
+        "肌肉/关节"
+      ],
+      "symptomTags": [
+        "疲倦",
+        "焦虑"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "焦虑",
         "疼痛部位：小腹/盆腔",
@@ -275,17 +660,46 @@
         "入睡：23:00后",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-04T06:31:03.872Z"
     },
     "2026-08-04": {
-      "mood": "4",
-      "energy": "4",
-      "sleep": "4",
-      "activity": "3",
-      "stress": "3",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 4,
+      "energy": 4,
+      "sleep": 4,
+      "activity": 3,
+      "stress": 3,
+      "pain": 2,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "小腹/盆腔",
+        "腰背",
+        "肌肉/关节"
+      ],
+      "symptomTags": [
+        "疲倦",
+        "焦虑"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "焦虑",
         "疼痛部位：小腹/盆腔",
@@ -294,31 +708,81 @@
         "入睡：23:00后",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-05T16:23:59.462Z"
     },
     "2026-08-05": {
-      "mood": "3",
-      "energy": "2",
-      "sleep": "3",
-      "activity": "2",
-      "stress": "3",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 3,
+      "energy": 2,
+      "sleep": 3,
+      "activity": 2,
+      "stress": 3,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": null,
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported"
+      },
+      "legacySymptoms": [
         "入睡：23:00后",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-07T18:57:24.259Z"
     },
     "2026-08-06": {
-      "mood": "2",
-      "energy": "2",
-      "sleep": "1",
-      "activity": "2",
-      "stress": "4",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 2,
+      "energy": 2,
+      "sleep": 1,
+      "activity": 2,
+      "stress": 4,
+      "pain": 2,
+      "primaryEmotion": null,
+      "bedtime": "before_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "胃/上腹",
+        "小腹/盆腔",
+        "腰背",
+        "肌肉/关节"
+      ],
+      "symptomTags": [
+        "疲倦",
+        "生气"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "生气",
         "疼痛部位：上腹/胃部",
@@ -328,17 +792,45 @@
         "入睡：23:00前",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-07T18:58:09.780Z"
     },
     "2026-08-07": {
-      "mood": "2",
-      "energy": "2",
-      "sleep": "3",
-      "activity": "2",
-      "stress": "4",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 2,
+      "energy": 2,
+      "sleep": 3,
+      "activity": 2,
+      "stress": 4,
+      "pain": 2,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "小腹/盆腔",
+        "肌肉/关节"
+      ],
+      "symptomTags": [
+        "疲倦",
+        "害怕/紧张"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "害怕/紧张",
         "疼痛部位：小腹/盆腔",
@@ -346,17 +838,48 @@
         "入睡：23:00后",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-07T18:58:49.205Z"
     },
     "2026-08-08": {
-      "mood": "2",
-      "energy": "2",
-      "sleep": "3",
-      "activity": "1",
-      "stress": "4",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 2,
+      "energy": 2,
+      "sleep": 3,
+      "activity": 1,
+      "stress": 4,
+      "pain": 2,
+      "primaryEmotion": null,
+      "bedtime": "before_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [
+        "小腹/盆腔",
+        "腰背",
+        "肌肉/关节"
+      ],
+      "symptomTags": [
+        "疲倦",
+        "焦虑",
+        "生气",
+        "情绪低落"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "painLocations": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "焦虑",
         "生气",
@@ -367,34 +890,93 @@
         "入睡：23:00前",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-09T06:03:17.702Z"
     },
     "2026-08-09": {
-      "mood": "2",
-      "energy": "3",
-      "sleep": "3",
-      "activity": "2",
-      "stress": "4",
-      "pain": "0",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 2,
+      "energy": 3,
+      "sleep": 3,
+      "activity": 2,
+      "stress": 4,
+      "pain": 0,
+      "primaryEmotion": null,
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": [
+        "疲倦",
+        "焦虑",
+        "情绪低落"
+      ],
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "symptomTags": "reported"
+      },
+      "legacySymptoms": [
         "疲倦",
         "焦虑",
         "情绪低落",
         "入睡：23:00后",
         "排便：已排便"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-10T06:30:41.303Z"
     },
     "2026-08-10": {
-      "mood": "2",
-      "energy": "2",
-      "sleep": "3",
-      "activity": "2",
-      "stress": "3",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 2,
+      "energy": 2,
+      "sleep": 3,
+      "activity": 2,
+      "stress": 3,
+      "pain": 2,
+      "primaryEmotion": "疲倦",
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": [
+        "拉伸"
+      ],
+      "socialTypes": [
+        "日常"
+      ],
+      "socialIntensity": 1,
+      "socialEffect": "draining",
+      "painLocations": [
+        "头部",
+        "小腹/盆腔",
+        "腰背"
+      ],
+      "symptomTags": null,
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "primaryEmotion": "reported",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "exerciseTypes": "reported",
+        "socialTypes": "reported",
+        "socialIntensity": "reported",
+        "socialEffect": "reported",
+        "painLocations": "reported"
+      },
+      "legacySymptoms": [
         "情绪：疲倦",
         "入睡：23:00后",
         "排便：已排便",
@@ -406,17 +988,48 @@
         "疼痛部位：小腹/盆腔",
         "疼痛部位：腰背"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-10T23:32:37.021Z"
     },
     "2026-08-11": {
-      "mood": "5",
-      "energy": "3",
-      "sleep": "2",
-      "activity": "2",
-      "stress": "2",
-      "pain": "2",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 5,
+      "energy": 3,
+      "sleep": 2,
+      "activity": 2,
+      "stress": 2,
+      "pain": 2,
+      "primaryEmotion": "满足",
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": [
+        "娱乐",
+        "日常"
+      ],
+      "socialIntensity": 3,
+      "socialEffect": "neutral",
+      "painLocations": [
+        "小腹/盆腔",
+        "腰背"
+      ],
+      "symptomTags": null,
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "primaryEmotion": "reported",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "socialTypes": "reported",
+        "socialIntensity": "reported",
+        "socialEffect": "reported",
+        "painLocations": "reported"
+      },
+      "legacySymptoms": [
         "情绪：满足",
         "入睡：23:00后",
         "排便：已排便",
@@ -427,17 +1040,45 @@
         "疼痛部位：小腹/盆腔",
         "疼痛部位：腰背"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-11T22:01:26.135Z"
     },
     "2026-08-12": {
-      "mood": "3",
-      "energy": "3",
-      "sleep": "3",
-      "activity": "1",
-      "stress": "2",
-      "pain": "4",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 3,
+      "energy": 3,
+      "sleep": 3,
+      "activity": 1,
+      "stress": 2,
+      "pain": 4,
+      "primaryEmotion": "普通",
+      "bedtime": "after_23",
+      "bowelMovement": true,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": 1,
+      "socialEffect": "neutral",
+      "painLocations": [
+        "小腹/盆腔",
+        "腰背",
+        "臀髋"
+      ],
+      "symptomTags": null,
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "primaryEmotion": "reported",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "socialIntensity": "reported",
+        "socialEffect": "reported",
+        "painLocations": "reported"
+      },
+      "legacySymptoms": [
         "情绪：普通",
         "入睡：23:00后",
         "排便：已排便",
@@ -447,17 +1088,48 @@
         "疼痛部位：腰背",
         "疼痛部位：臀髋"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-13T06:40:50.512Z"
     },
     "2026-08-13": {
-      "mood": "5",
-      "energy": "4",
-      "sleep": "3",
-      "activity": "2",
-      "pain": "1",
-      "stress": "1",
-      "symptoms": [
+      "modelVersion": 2,
+      "mood": 5,
+      "energy": 4,
+      "sleep": 3,
+      "activity": 2,
+      "stress": 1,
+      "pain": 1,
+      "primaryEmotion": "开心",
+      "bedtime": "after_23",
+      "bowelMovement": null,
+      "exerciseTypes": null,
+      "socialTypes": [
+        "日常"
+      ],
+      "socialIntensity": 1,
+      "socialEffect": "neutral",
+      "painLocations": [
+        "头部",
+        "肩颈",
+        "腿部",
+        "足部"
+      ],
+      "symptomTags": null,
+      "temperature": null,
+      "fieldStatus": {
+        "mood": "legacy_uncertain",
+        "energy": "legacy_uncertain",
+        "sleep": "legacy_uncertain",
+        "activity": "legacy_uncertain",
+        "stress": "legacy_uncertain",
+        "pain": "legacy_uncertain",
+        "primaryEmotion": "reported",
+        "bedtime": "reported",
+        "socialTypes": "reported",
+        "socialIntensity": "reported",
+        "socialEffect": "reported",
+        "painLocations": "reported"
+      },
+      "legacySymptoms": [
         "情绪：开心",
         "入睡：23:00后",
         "社交强度：1",
@@ -468,7 +1140,6 @@
         "疼痛部位：腿部",
         "疼痛部位：足部"
       ],
-      "temperature": "",
       "updatedAt": "2026-08-13T21:24:36.711Z"
     }
   },

@@ -7,6 +7,7 @@ import {
   PHASE_THEORY,
   STATUS_SIGNAL_RULES
 } from './knowledge/wellness-knowledge.js';
+import { compatibilityTags } from './daily-record-model.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const addDays = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
@@ -17,7 +18,7 @@ const storageGet = (key) => { try { return globalThis.localStorage?.getItem(key)
 const storageSet = (key, value) => { try { globalThis.localStorage?.setItem(key, value); } catch { memoryStore.set(key, value); } };
 
 function tags(log = {}) {
-  return Array.isArray(log.symptoms) ? log.symptoms : [];
+  return compatibilityTags(log);
 }
 
 function recentContext(logs = {}, days = 7) {
@@ -25,7 +26,7 @@ function recentContext(logs = {}, days = 7) {
   const entries = Object.entries(logs).filter(([date]) => date >= start && date <= today).sort(([a], [b]) => a.localeCompare(b));
   const counts = new Map();
   entries.forEach(([, log]) => tags(log).forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1)));
-  const averages = (key) => { const values = entries.map(([, log]) => Number(log[key])).filter(Number.isFinite); return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null; };
+  const averages = (key) => { const values = entries.map(([, log]) => log[key] === null || log[key] === undefined || log[key] === '' ? null : Number(log[key])).filter(Number.isFinite); return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null; };
   const consecutive = (tag) => { let total = 0; for (let date = today; date >= start; date = addDays(date, -1)) { if (!tags(logs[date]).includes(tag)) break; total++; } return total; };
   return { entries, counts, averages: { sleep: averages('sleep'), energy: averages('energy'), activity: averages('activity'), stress: averages('stress'), pain: entries.length ? entries.reduce((sum, [, log]) => sum + normalizePain(log.pain), 0) / entries.length : null }, consecutive };
 }
@@ -38,10 +39,10 @@ function signalsFor(log = {}, recent) {
   if ((recent.averages.activity ?? 3) <= 2.3) set.add('low-activity');
   if ((recent.averages.sleep ?? 3) <= 2.4) set.add('sleep-low');
   if ((recent.averages.stress ?? 3) >= 3.7) set.add('stress-high');
-  if (Number(log.energy) <= 2) set.add('low-energy');
-  if (Number(log.activity) <= 2) set.add('low-activity');
-  if (Number(log.sleep) <= 2) set.add('sleep-low');
-  if (Number(log.stress) >= 4) set.add('stress-high');
+  if (log.energy !== null && log.energy !== undefined && Number(log.energy) <= 2) set.add('low-energy');
+  if (log.activity !== null && log.activity !== undefined && Number(log.activity) <= 2) set.add('low-activity');
+  if (log.sleep !== null && log.sleep !== undefined && Number(log.sleep) <= 2) set.add('sleep-low');
+  if (log.stress !== null && log.stress !== undefined && Number(log.stress) >= 4) set.add('stress-high');
   const meaningfulSignals = new Set(
     [...FOOD_RECIPES, ...CARE_PRACTICES, ...ACUPOINTS]
       .flatMap((item) => item.signals)

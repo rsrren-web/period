@@ -1,3 +1,5 @@
+import { compatibilityTags } from './daily-record-model.js';
+
 const previousDailyEnhancements = globalThis.renderDailyEnhancements;
 const escapeWellness = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const isoToday = () => { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
@@ -5,10 +7,10 @@ const shiftDate = (date, amount) => { const next = new Date(`${date}T12:00:00`);
 const dayDiff = (start, end) => Math.round((new Date(`${end}T12:00:00`) - new Date(`${start}T12:00:00`)) / 86400000);
 const average = (values) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 const median = (values) => { if (!values.length) return null; const sorted = [...values].sort((a, b) => a - b), middle = Math.floor(sorted.length / 2); return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2; };
-const tags = (log = {}) => Array.isArray(log.symptoms) ? log.symptoms : [];
+const tags = (log = {}) => compatibilityTags(log);
 const tagged = (log, prefix) => tags(log).find((tag) => tag.startsWith(prefix))?.slice(prefix.length) || '';
-const normalizedPain = (log = {}) => { const pain = Number(log.pain); if (!Number.isFinite(pain)) return null; return pain > 5 ? Math.round(pain / 2) : pain; };
-const metric = (log, key) => key === 'pain' ? normalizedPain(log) : Number.isFinite(Number(log?.[key])) ? Number(log[key]) : null;
+const normalizedPain = (log = {}) => { if (log.pain === null || log.pain === undefined || log.pain === '') return null; const pain = Number(log.pain); if (!Number.isFinite(pain)) return null; return pain > 5 ? Math.round(pain / 2) : pain; };
+const metric = (log, key) => key === 'pain' ? normalizedPain(log) : log?.[key] === null || log?.[key] === undefined || log?.[key] === '' ? null : Number.isFinite(Number(log[key])) ? Number(log[key]) : null;
 const painParts = (log) => tags(log).filter((tag) => tag.startsWith('疼痛部位：')).map((tag) => tag.slice(5));
 
 const EMOTIONS = {
