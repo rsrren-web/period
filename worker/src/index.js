@@ -1,4 +1,4 @@
-import { DAILY_ENUMS, SCORE_FIELDS, STRUCTURED_FIELDS, migrateDailyLogs } from '../../daily-record-model.js';
+import { DAILY_ENUMS, FIELD_STATUS_VALUES, SCORE_FIELDS, STRUCTURED_FIELDS, migrateDailyLogs } from '../../daily-record-model.js';
 
 const JSON_HEADERS={'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
 const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
@@ -129,7 +129,7 @@ function validatePeriod(period){
 }
 function validateLog(date,log){
   assertDate(date,'记录');assertObject(log,'每日记录');
-  if(log.modelVersion!==2){
+  if(![2,3].includes(log.modelVersion)){
     const allowed=new Set(['mood','energy','sleep','activity','stress','pain','symptoms','temperature','updatedAt']);for(const key of Object.keys(log))if(!allowed.has(key))throw clientError('每日记录包含已停用字段');
     for(const key of ['mood','energy','sleep','activity','stress'])assertRating(log[key],key,1,5);
     assertRating(log.pain,'pain',0,10);
@@ -138,7 +138,7 @@ function validateLog(date,log){
     if(log.temperature!==''&&(!['string','number'].includes(typeof log.temperature)||Number(log.temperature)<34||Number(log.temperature)>42))throw clientError('基础体温超出范围');
     assertTimestamp(log.updatedAt,'每日记录更新时间');return;
   }
-  const allowed=new Set(['modelVersion',...STRUCTURED_FIELDS,'fieldStatus','legacySymptoms','updatedAt']);for(const key of Object.keys(log))if(!allowed.has(key))throw clientError('每日记录包含未知字段');
+  const allowed=new Set(['modelVersion',...STRUCTURED_FIELDS,'cycle_day_source','cycle_day_anchor_start','fieldStatus','legacySymptoms','updatedAt']);for(const key of Object.keys(log))if(!allowed.has(key))throw clientError('每日记录包含未知字段');
   for(const key of SCORE_FIELDS)assertNullableRating(log[key],key,key==='pain'?0:1,key==='pain'?10:5);
   assertNullableEnum(log.primaryEmotion,'情绪',DAILY_ENUMS.primaryEmotion);
   assertNullableEnum(log.bedtime,'入睡时间',DAILY_ENUMS.bedtime);
@@ -150,8 +150,27 @@ function validateLog(date,log){
   assertNullableEnumList(log.painLocations,'疼痛部位',DAILY_ENUMS.painLocations);
   assertNullableStringList(log.symptomTags,'症状',50,50);
   if(log.temperature!==null&&(typeof log.temperature!=='number'||!Number.isFinite(log.temperature)||log.temperature<34||log.temperature>42))throw clientError('基础体温超出范围');
-  assertObject(log.fieldStatus,'字段记录状态');for(const [field,status] of Object.entries(log.fieldStatus)){if(!STRUCTURED_FIELDS.includes(field)||!['reported','legacy_uncertain','legacy_inferred'].includes(status))throw clientError('字段记录状态无效')}
+  assertObject(log.fieldStatus,'字段记录状态');if(log.modelVersion===3)for(const field of STRUCTURED_FIELDS)if(!(field in log.fieldStatus))throw clientError(`字段记录状态缺少${field}`);for(const [field,status] of Object.entries(log.fieldStatus)){if(!STRUCTURED_FIELDS.includes(field)||!FIELD_STATUS_VALUES.includes(status))throw clientError('字段记录状态无效')}
   if(!Array.isArray(log.legacySymptoms)||log.legacySymptoms.length>50)throw clientError('旧症状记录无效');for(const symptom of log.legacySymptoms)assertString(symptom,'旧症状',50,{allowEmpty:false});
+  if(log.modelVersion===3){
+    const required=['menstrual_status','cycle_day','cycle_day_source','cycle_day_anchor_start','flow_level','blood_color','clot_presence','clot_level','spotting_context','period_episode_id'];for(const key of required)if(!(key in log))throw clientError(`每日记录缺少${key}`);
+    assertNullableEnum(log.menstrual_status,'月经状态',DAILY_ENUMS.menstrual_status);
+    assertNullableRating(log.cycle_day,'周期日',1,366);if(!DAILY_ENUMS.cycle_day_source.includes(log.cycle_day_source))throw clientError('周期日来源无效');
+    if(log.cycle_day_anchor_start!==null)assertDate(log.cycle_day_anchor_start,'周期日起点');
+    if(log.cycle_day_source==='not_recorded'&&(log.cycle_day!==null||log.cycle_day_anchor_start!==null))throw clientError('未记录周期日不能包含数值或起点');
+    if(log.cycle_day_source!=='not_recorded'&&log.cycle_day===null)throw clientError('周期日来源与数值不一致');
+    if(['auto_calculated','user_corrected'].includes(log.cycle_day_source)&&log.cycle_day_anchor_start===null)throw clientError('自动或修正周期日必须保留计算起点');
+    assertNullableEnum(log.flow_level,'经量',DAILY_ENUMS.flow_level);assertNullableEnum(log.blood_color,'经血颜色',DAILY_ENUMS.blood_color);
+    if(!DAILY_ENUMS.clot_presence.includes(log.clot_presence))throw clientError('血块记录无效');assertNullableEnum(log.clot_level,'血块程度',DAILY_ENUMS.clot_level);
+    assertNullableEnum(log.spotting_context,'点滴出血上下文',DAILY_ENUMS.spotting_context);if(log.period_episode_id!==null)assertString(log.period_episode_id,'经期记录ID',100,{allowEmpty:false});
+    const bleeding=log.menstrual_status==='on_period'||log.menstrual_status==='spotting_only';
+    if(!bleeding&&(log.flow_level!==null||log.blood_color!==null||log.clot_presence!=='not_recorded'||log.clot_level!==null||log.spotting_context!==null||log.period_episode_id!==null))throw clientError('非经期不能保存出血详情');
+    if(log.menstrual_status==='spotting_only'&&log.spotting_context===null)throw clientError('点滴出血必须选择发生场景');
+    if(log.menstrual_status!=='spotting_only'&&log.spotting_context!==null)throw clientError('仅点滴出血可设置发生场景');
+    if(['period_start_transition','period_end_transition'].includes(log.spotting_context)&&log.period_episode_id===null)throw clientError('经期首尾点滴必须关联所属经期');
+    if(['intermenstrual','uncertain'].includes(log.spotting_context)&&log.period_episode_id!==null)throw clientError('周期中段或未确定点滴不能关联为正式经期');
+    if(log.clot_presence!=='yes'&&log.clot_level!==null)throw clientError('未明确有血块时不能填写血块程度');
+  }
   assertTimestamp(log.updatedAt,'每日记录更新时间');
 }
 function validateTombstones(value){
@@ -161,7 +180,7 @@ function validateTombstones(value){
   for(const [date,at] of Object.entries(value.logs)){assertDate(date,'删除日期');assertTimestamp(at,'删除时间')}
 }
 function validatePayload(payload){
-  assertObject(payload,'同步数据');if(![1,2].includes(payload.schemaVersion))throw clientError('同步版本不支持');assertString(payload.mutationId,'变更ID',100,{allowEmpty:false});assertObject(payload.state,'记录');
+  assertObject(payload,'同步数据');if(![1,2,3].includes(payload.schemaVersion))throw clientError('同步版本不支持');assertString(payload.mutationId,'变更ID',100,{allowEmpty:false});assertObject(payload.state,'记录');
   if(!Array.isArray(payload.state.periods)||payload.state.periods.length>1000)throw clientError('经期记录数量超过限制');
   payload.state.periods.forEach(validatePeriod);
   assertObject(payload.state.logs,'每日记录');if(Object.keys(payload.state.logs).length>10000)throw clientError('每日记录数量超过限制');for(const [date,log] of Object.entries(payload.state.logs))validateLog(date,log);
@@ -184,8 +203,8 @@ function validateJournalPayload(payload){
   for(const [date,entry] of Object.entries(payload.entries))validateJournalEntry(date,entry,payload.month);for(const [date,at] of Object.entries(payload.tombstones)){assertDate(date,'随笔删除日期');if(!date.startsWith(`${payload.month}-`))throw clientError('随笔删除日期与月份不一致');assertTimestamp(at,'随笔删除时间')}
 }
 function daysBetween(a,b){return Math.round((Date.parse(`${b}T12:00:00Z`)-Date.parse(`${a}T12:00:00Z`))/DAY)}
-function emptyState(){return {schemaVersion:2,revision:0,updatedAt:null,periods:[],logs:{},tombstones:{periods:{},logs:{}},settings:{lifeStage:'regular',ownerNotify:true,partnerNotify:true},appliedMutations:[]}}
-function normalizeState(value){const empty=emptyState(),logs=migrateDailyLogs(value?.logs);return {...empty,...value,schemaVersion:2,periods:Array.isArray(value?.periods)?value.periods:[],logs,tombstones:{periods:value?.tombstones?.periods||{},logs:value?.tombstones?.logs||{}},settings:{...empty.settings,...value?.settings},appliedMutations:Array.isArray(value?.appliedMutations)?value.appliedMutations:[]}}
+function emptyState(){return {schemaVersion:3,revision:0,updatedAt:null,periods:[],logs:{},tombstones:{periods:{},logs:{}},settings:{lifeStage:'regular',ownerNotify:true,partnerNotify:true},appliedMutations:[]}}
+function normalizeState(value){const empty=emptyState(),logs=migrateDailyLogs(value?.logs);return {...empty,...value,schemaVersion:3,periods:Array.isArray(value?.periods)?value.periods:[],logs,tombstones:{periods:value?.tombstones?.periods||{},logs:value?.tombstones?.logs||{}},settings:{...empty.settings,...value?.settings},appliedMutations:Array.isArray(value?.appliedMutations)?value.appliedMutations:[]}}
 function periodKey(period){return period.id||`${period.start}|${period.type||'period'}`}
 function newer(a,b){return String(a||'')>=String(b||'')}
 function mergeTombstones(a={},b={}){const out={...a};for(const [key,at] of Object.entries(b))if(!out[key]||newer(at,out[key]))out[key]=at;return out}
@@ -197,7 +216,7 @@ function mergeState(remote,incoming,mutationId){
   for(const [key,period] of periodMap)if(tombstones.periods[key]&&newer(tombstones.periods[key],period.updatedAt))periodMap.delete(key);
   const logs={...base.logs};for(const [date,log] of Object.entries(next.logs)){const old=logs[date];if(!old||newer(log.updatedAt,old.updatedAt))logs[date]=log}
   for(const [date,log] of Object.entries(logs))if(tombstones.logs[date]&&newer(tombstones.logs[date],log.updatedAt))delete logs[date];
-  return {...base,schemaVersion:2,revision:Number(base.revision||0)+1,updatedAt:new Date().toISOString(),periods:[...periodMap.values()].sort((a,b)=>a.start.localeCompare(b.start)),logs,tombstones,settings:{...base.settings,...next.settings},appliedMutations:[...base.appliedMutations.slice(-99),mutationId]};
+  return {...base,schemaVersion:3,revision:Number(base.revision||0)+1,updatedAt:new Date().toISOString(),periods:[...periodMap.values()].sort((a,b)=>a.start.localeCompare(b.start)),logs,tombstones,settings:{...base.settings,...next.settings},appliedMutations:[...base.appliedMutations.slice(-99),mutationId]};
 }
 async function mergeAndWrite(env,payload){
   for(let attempt=0;attempt<3;attempt++){

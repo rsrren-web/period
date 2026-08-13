@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {mergeJournal,mergeState,validateJournalPayload,validatePayload} from '../worker/src/index.js';
+import {migrateDailyLog} from '../daily-record-model.js';
 
 const at='2026-07-19T12:00:00.000Z';
 const period={id:'period-1',start:'2026-07-10',end:'2026-07-15',type:'period',source:'本设备',status:'confirmed',updatedAt:at};
@@ -16,6 +17,12 @@ const v2State={...state,schemaVersion:2,logs:{'2026-07-19':v2Log}};
 assert.doesNotThrow(()=>validatePayload({schemaVersion:2,mutationId:'v2-valid',state:v2State}));
 assert.throws(()=>validatePayload({schemaVersion:2,mutationId:'v2-invalid-boolean',state:{...v2State,logs:{'2026-07-19':{...v2Log,bowelMovement:'没有'}}}}));
 assert.throws(()=>validatePayload({schemaVersion:2,mutationId:'v2-invalid-enum',state:{...v2State,logs:{'2026-07-19':{...v2Log,bedtime:'unknown'}}}}));
+const v3Log=migrateDailyLog(v2Log);
+const v3State={...v2State,schemaVersion:3,logs:{'2026-07-19':v3Log}};
+assert.doesNotThrow(()=>validatePayload({schemaVersion:3,mutationId:'v3-valid',state:v3State}));
+assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-invalid-flow',state:{...v3State,logs:{'2026-07-19':{...v3Log,menstrual_status:'not_on_period',flow_level:'medium'}}}}));
+assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-missing-spotting-context',state:{...v3State,logs:{'2026-07-19':{...v3Log,menstrual_status:'spotting_only',spotting_context:null}}}}));
+assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-invalid-clot-level',state:{...v3State,logs:{'2026-07-19':{...v3Log,menstrual_status:'on_period',clot_presence:'no',clot_level:'large'}}}}));
 
 const deletedAt='2026-07-20T12:00:00.000Z';
 const merged=mergeState({...state,tombstones:{periods:{'period-1':deletedAt},logs:{'2026-07-19':deletedAt}},appliedMutations:[],revision:1},state,'mutation-2');

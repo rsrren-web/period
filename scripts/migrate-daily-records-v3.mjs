@@ -20,6 +20,6 @@ const report = {
   preservedLegacyTags: Object.values(logs).reduce((sum, log) => sum + log.legacySymptoms.length, 0)
 };
 
-const migrated = { ...state, schemaVersion: 2, logs };
+const migrated = { ...state, schemaVersion: 3, logs };
 fs.writeFileSync(dataPath, `${JSON.stringify(migrated, null, 2)}\n`, 'utf8');
 console.log(JSON.stringify(report, null, 2));

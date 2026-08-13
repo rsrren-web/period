@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rsrren-web.github.io/period/schemas/daily-record-v3.schema.json",
+  "title": "Daily health record v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "modelVersion", "mood", "energy", "sleep", "activity", "stress", "pain",
+    "primaryEmotion", "bedtime", "bowelMovement", "exerciseTypes", "socialTypes",
+    "socialIntensity", "socialEffect", "painLocations", "symptomTags", "temperature",
+    "menstrual_status", "cycle_day", "cycle_day_source", "cycle_day_anchor_start",
+    "flow_level", "blood_color", "clot_presence", "clot_level", "spotting_context",
+    "period_episode_id", "fieldStatus", "legacySymptoms", "updatedAt"
+  ],
+  "properties": {
+    "modelVersion": { "const": 3 },
+    "mood": { "$ref": "#/$defs/nullableScore" },
+    "energy": { "$ref": "#/$defs/nullableScore" },
+    "sleep": { "$ref": "#/$defs/nullableScore" },
+    "activity": { "$ref": "#/$defs/nullableScore" },
+    "stress": { "$ref": "#/$defs/nullableScore" },
+    "pain": { "type": ["integer", "null"], "minimum": 0, "maximum": 10 },
+    "primaryEmotion": { "type": ["string", "null"], "enum": ["开心", "满足", "平静", "普通", "疲倦", "焦虑", "低落", "生气", "害怕", null] },
+    "bedtime": { "type": ["string", "null"], "enum": ["before_23", "after_23", null] },
+    "bowelMovement": { "type": ["boolean", "null"] },
+    "exerciseTypes": { "$ref": "#/$defs/nullableUniqueStrings" },
+    "socialTypes": { "$ref": "#/$defs/nullableUniqueStrings" },
+    "socialIntensity": { "$ref": "#/$defs/nullableScore" },
+    "socialEffect": { "type": ["string", "null"], "enum": ["restorative", "neutral", "draining", null] },
+    "painLocations": { "$ref": "#/$defs/nullableUniqueStrings" },
+    "symptomTags": { "$ref": "#/$defs/nullableUniqueStrings" },
+    "temperature": { "type": ["number", "null"], "minimum": 34, "maximum": 42 },
+    "menstrual_status": { "type": ["string", "null"], "enum": ["on_period", "spotting_only", "not_on_period", null] },
+    "cycle_day": { "type": ["integer", "null"], "minimum": 1, "maximum": 366 },
+    "cycle_day_source": { "enum": ["auto_calculated", "user_corrected", "legacy_manual", "not_recorded"] },
+    "cycle_day_anchor_start": { "type": ["string", "null"], "format": "date" },
+    "flow_level": { "type": ["string", "null"], "enum": ["spotting", "light", "medium", "heavy", "very_heavy", null] },
+    "blood_color": { "type": ["string", "null"], "enum": ["bright_red", "dark_red", "brown", "pink", "other", null] },
+    "clot_presence": { "enum": ["yes", "no", "not_recorded"] },
+    "clot_level": { "type": ["string", "null"], "enum": ["small", "medium", "large", null] },
+    "spotting_context": { "type": ["string", "null"], "enum": ["period_start_transition", "period_end_transition", "intermenstrual", "uncertain", null] },
+    "period_episode_id": { "type": ["string", "null"], "maxLength": 100 },
+    "fieldStatus": {
+      "type": "object",
+      "required": [
+        "mood", "energy", "sleep", "activity", "stress", "pain", "primaryEmotion",
+        "bedtime", "bowelMovement", "exerciseTypes", "socialTypes", "socialIntensity",
+        "socialEffect", "painLocations", "symptomTags", "temperature", "menstrual_status",
+        "cycle_day", "flow_level", "blood_color", "clot_presence", "clot_level",
+        "spotting_context", "period_episode_id"
+      ],
+      "propertyNames": {
+        "enum": [
+          "mood", "energy", "sleep", "activity", "stress", "pain", "primaryEmotion",
+          "bedtime", "bowelMovement", "exerciseTypes", "socialTypes", "socialIntensity",
+          "socialEffect", "painLocations", "symptomTags", "temperature", "menstrual_status",
+          "cycle_day", "flow_level", "blood_color", "clot_presence", "clot_level",
+          "spotting_context", "period_episode_id"
+        ]
+      },
+      "additionalProperties": { "enum": ["reported", "not_recorded", "legacy_uncertain", "legacy_inferred", "system_generated", "user_corrected", "legacy_manual"] }
+    },
+    "legacySymptoms": { "type": "array", "maxItems": 50, "items": { "type": "string", "minLength": 1, "maxLength": 50 } },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "menstrual_status": { "enum": ["not_on_period", null] } } },
+      "then": {
+        "properties": {
+          "flow_level": { "const": null }, "blood_color": { "const": null },
+          "clot_presence": { "const": "not_recorded" }, "clot_level": { "const": null },
+          "spotting_context": { "const": null }, "period_episode_id": { "const": null }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "menstrual_status": { "const": "spotting_only" } } },
+      "then": { "properties": { "spotting_context": { "enum": ["period_start_transition", "period_end_transition", "intermenstrual", "uncertain"] } } }
+    },
+    {
+      "if": { "properties": { "spotting_context": { "enum": ["period_start_transition", "period_end_transition"] } } },
+      "then": { "properties": { "period_episode_id": { "type": "string", "minLength": 1, "maxLength": 100 } } }
+    },
+    {
+      "if": { "properties": { "spotting_context": { "enum": ["intermenstrual", "uncertain"] } } },
+      "then": { "properties": { "period_episode_id": { "const": null } } }
+    },
+    {
+      "if": { "properties": { "menstrual_status": { "enum": ["on_period", "not_on_period", null] } } },
+      "then": { "properties": { "spotting_context": { "const": null } } }
+    },
+    {
+      "if": { "properties": { "clot_presence": { "const": "yes" } } },
+      "then": { "properties": { "clot_level": { "enum": ["small", "medium", "large", null] } } },
+      "else": { "properties": { "clot_level": { "const": null } } }
+    },
+    {
+      "if": { "properties": { "cycle_day_source": { "const": "not_recorded" } } },
+      "then": { "properties": { "cycle_day": { "const": null }, "cycle_day_anchor_start": { "const": null } } },
+      "else": { "properties": { "cycle_day": { "type": "integer", "minimum": 1, "maximum": 366 } } }
+    }
+  ],
+  "$defs": {
+    "nullableScore": { "type": ["integer", "null"], "minimum": 1, "maximum": 5 },
+    "nullableUniqueStrings": { "type": ["array", "null"], "uniqueItems": true, "maxItems": 50, "items": { "type": "string", "minLength": 1, "maxLength": 50 } }
+  }
+}
