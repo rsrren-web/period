@@ -1421,7 +1421,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .tcm-reasoning p { margin: 7px 0 0; line-height: 1.7; }
 .tcm-reasoning ul { margin: 12px 0 0; padding-left: 20px; color: rgba(48, 44, 52, .78); }
 .tcm-reasoning li + li { margin-top: 5px; }
-.constitution-hint { margin-top: 12px; border: 0; border-radius: 16px; background: #fbf0d0; }
+.constitution-hint { margin-top: 12px; border: 1px solid var(--soft-line); border-radius: 16px; background: transparent; }
 .constitution-hint summary { display: grid; gap: 4px; padding: 15px 16px; cursor: pointer; }
 .constitution-hint summary span { color: rgba(48, 44, 52, .62); font-size: var(--text-micro); }
 .constitution-hint summary strong { font-size: 15px; }
@@ -1526,7 +1526,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .cycle-observation-card { margin-top: 18px; }
 .cycle-score-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .cycle-score-head h2 { margin: 4px 0 0; }
-.cycle-score-head > strong { color: #527fa7; font-size: 34px; line-height: 1; }
+.cycle-score-head > strong { color: var(--period); font-size: 34px; line-height: 1; }
 .cycle-score-head > strong small { font-size: 13px; }
 .cycle-score-meta { display: flex; flex-wrap: wrap; gap: 7px 14px; margin-top: 10px; color: rgba(48, 44, 52, .64); font-size: 12px; }
 .deduction-list { margin-top: 16px; padding: 15px; border-radius: 16px; background: #fbe3ed; }
@@ -2093,7 +2093,10 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .knowledge-guardrails { display: grid; gap: 7px; margin: 12px 0; padding-left: 20px; color: var(--ink-muted); font-size: var(--font-caption); line-height: 1.55; }
 
 /* v51: concise care cards, explicit cycle scoring and readable phase patterns. */
-.cycle-observation-card { margin: 18px 0 0; }
+.cycle-observation-card { margin: 18px 0 0; background: transparent; box-shadow: none; }
+.history-card { background: transparent; box-shadow: none; }
+.history-card .cycle-chart-wrap { padding: 4px 0 0; border: 0; border-radius: 0; background: transparent; }
+.history-card .cycle-line-chart svg { height: 184px; }
 .deduction-list { display: grid; gap: 8px; }
 .deduction-list > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; padding-top: 8px; border-top: 1px solid rgba(217,87,143,.16); }
 .deduction-list > div:first-of-type { border-top: 0; }
@@ -2138,7 +2141,7 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 /* Final semantic color roles: neutral status, blue interaction, mint care. */
 .status-icon { color: var(--ink); }
 .status-icon-item.attention .status-icon { background: var(--period-soft); color: var(--emphasis); }
-.tcm-reasoning { background: var(--mint-soft); }
+.tcm-reasoning { background: var(--primary-soft); }
 .tcm-reasoning > span,
 .traditional-detail dt { color: var(--ink); }
 

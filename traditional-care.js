@@ -109,10 +109,17 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   const care = choose(CARE_PRACTICES, phase.key, signals, 'period-recent-care-v1');
   const point = choose(ACUPOINTS.filter((item) => !item.signals.includes('none')), phase.key, signals, 'period-recent-point-v1');
   const constitution = constitutionHint(recent), evidence = recentEvidence(recent, signals);
+  const practicalReason = {
+    period: '正在经期，今天优先缓解不适、减少额外消耗。',
+    follicular: '月经刚结束，今天以恢复精力、逐步增加活动为主。',
+    ovulation: '处于排卵估算阶段，今天维持规律作息与正常活动即可。',
+    pms: '接近经期，今天提前照顾睡眠、情绪和腹部舒适。'
+  }[phase.key] || '今天按当前阶段和近7天记录安排调养。';
+  const practicalEvidence = evidence.slice(0, 2);
   document.querySelector('#tcmPhaseTitle').textContent = theory.title;
   document.querySelector('#tcmPhaseDot').className = `phase-dot phase-${phase.key}`;
   root.innerHTML = `
-    <section class="tcm-reasoning"><span>今天为什么这样建议</span><p class="phase-rhythm">${esc(theory.rhythm || '')}</p><p>${esc(theory.theory)}</p>${evidence.length ? `<ul>${evidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : '<p class="muted">近7天记录仍少，今天主要按周期阶段提供低风险建议。</p>'}</section>
+    <section class="tcm-reasoning"><span>今天为什么这样建议</span><p>${esc(practicalReason)}</p>${practicalEvidence.length ? `<ul>${practicalEvidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : ''}</section>
     ${constitution ? `<details class="constitution-hint"><summary><span>体质观察线索</span><strong>${esc(constitution.name)} · ${constitution.total}次线索</strong></summary><div><p>${esc(constitution.explanation)}</p><p><strong>边界：</strong>${esc(constitution.avoid)}</p><small>这里只是近7天的感受倾向，不是体质诊断。</small></div></details>` : ''}
     <div class="traditional-plan">${foodCard(food)}${practiceCard('care', care)}${practiceCard('point', point)}</div>`;
 };
