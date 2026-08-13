@@ -1356,10 +1356,28 @@ main { width: min(1120px,calc(100% - 32px - env(safe-area-inset-left) - env(safe
 .log-section { scroll-margin-top: 16px; margin: 0; padding: 22px 2px; border: 0; border-bottom: 1px solid var(--soft-line); border-radius: 0; background: 0 0; outline: 0 }
 .log-section:nth-of-type(even) { background: 0 0; outline: 0 }
 .log-section:last-of-type { border-bottom: 0 }
+.menstrual-status-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px }
+.menstrual-status-options label,.menstrual-status-options span { width: 100% }
+.cycle-day-editor { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 12px; margin-top: 14px; padding: 14px; border-radius: 16px; background: var(--surface-muted) }
+.cycle-day-editor>div:first-child { display: grid; gap: 3px; min-width: 0 }
+.cycle-day-editor small,.cycle-day-editor span { color: var(--ink-muted); font-size: var(--text-caption); line-height: 1.5 }
+.cycle-day-editor strong { color: var(--ink); font-size: var(--text-heading); line-height: 1.35 }
+.cycle-day-editor>button { min-width: 72px; min-height: 44px }
+.cycle-day-correction { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid rgba(48,44,52,.12) }
+.cycle-day-correction[hidden] { display: none }
+.cycle-day-correction label { display: flex; align-items: center; gap: 7px }
+.cycle-day-correction input { width: 76px; min-height: 44px; text-align: center }
+.bleeding-details { display: grid; gap: 14px; margin-top: 14px }
+.bleeding-details[hidden],.bleeding-details [hidden] { display: none }
+.bleeding-details label { display: grid; gap: 7px; color: var(--ink); font-weight: 600 }
+.bleeding-details select { min-height: 44px; width: 100% }
+.menstrual-detail-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px }
+.menstrual-section .field-hint { margin: 0; color: var(--ink-muted) }
 .sticky-save { border-top: 0; background: linear-gradient(to bottom,rgba(250,249,247,0),rgba(250,249,247,.98) 28%); backdrop-filter: none }
 @media (max-width:620px) {
   .wellness-log-dialog .dialog-head.sticky { margin-inline: -14px; padding-inline: 14px }
   .log-section { padding: 20px 0 }
+  .cycle-day-correction { align-items: flex-start; flex-direction: column }
 }
 .home-date-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 4px 0 20px }
 .home-date-copy { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto }
