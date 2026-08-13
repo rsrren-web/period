@@ -2093,15 +2093,19 @@ main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .knowledge-guardrails { display: grid; gap: 7px; margin: 12px 0; padding-left: 20px; color: var(--ink-muted); font-size: var(--font-caption); line-height: 1.55; }
 
 /* v51: concise care cards, explicit cycle scoring and readable phase patterns. */
-.cycle-observation-card { margin: 18px 0 0; background: transparent; box-shadow: none; }
-.history-card { background: transparent; box-shadow: none; }
-.history-card .cycle-chart-wrap { padding: 4px 0 0; border: 0; border-radius: 0; background: transparent; }
+.cycle-observation-card { margin: 18px 0 0; background: var(--surface); box-shadow: var(--shadow); }
+.history-card { background: var(--surface); box-shadow: var(--shadow); }
+.history-card .cycle-chart-wrap { padding: 4px 0 0; border: 0; border-radius: 0; background: var(--surface); }
 .history-card .cycle-line-chart svg { height: 184px; }
-.deduction-list { display: grid; gap: 8px; }
+.history-card .cycle-line-chart .normal-band { fill: var(--surface-muted); }
+.history-card .cycle-point-detail,
+.history-card .history-analysis > div { background: var(--surface-muted); border-color: var(--soft-line); }
+.deduction-list { display: grid; gap: 8px; background: transparent; border: 1px solid var(--soft-line); }
 .deduction-list > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; padding-top: 8px; border-top: 1px solid rgba(217,87,143,.16); }
 .deduction-list > div:first-of-type { border-top: 0; }
 .deduction-list p { margin: 0; line-height: 1.55; }
 .deduction-list b { color: var(--emphasis); font-size: var(--font-caption); white-space: nowrap; }
+.score-steady { background: transparent; border: 1px solid var(--soft-line); }
 .cycle-score-action ol { display: grid; gap: 8px; margin: 9px 0 0; padding-left: 20px; }
 .cycle-score-action li { padding-left: 3px; line-height: 1.55; }
 .phase-pattern-intro { margin: -4px 0 14px; color: var(--ink-muted); font-size: var(--font-caption); line-height: 1.5; }
