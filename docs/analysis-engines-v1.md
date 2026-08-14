@@ -30,3 +30,11 @@ Every quality result includes `valid_days`, `total_days`, `completion_rate`, `qu
 Six metrics are supported: energy, stress, activity level, social intensity, sleep quality, and maximum pain. Each snapshot contains rolling 30-day, rolling 90-day, recent-cycle, and current-phase baselines. Available and unavailable baseline records both preserve the required metadata.
 
 Snapshots are append-only in `period-baseline-snapshots-v1`. A deterministic input fingerprint prevents duplicate snapshots from the same input while changed data creates a new version. JSON backup export/import includes the complete snapshot history.
+
+## Structured health events
+
+`HealthEventEngine` creates only `deviation`, `persistence`, and `recently_first_recorded` objects. Deviation requires an available `usable` or `good` baseline. Persistence requires consecutive explicitly recorded values; a missing day breaks the sequence. Recently-first-recorded requires the configured 30-day lookback coverage before it may return an event. No event contains advice, medical interpretation, or causal wording.
+
+## Structured patterns
+
+`PatternEngine` supports cycle-window comparisons, co-occurrence, and same-day/next-day/previous-day temporal associations. Cycle patterns require at least two complete cycles and compare the target window with the remaining cycle days. Association outputs preserve both conditional probabilities and their difference. Every result contains sample size, covered cycles, effect size, confidence, status, and its metric-specific data-quality evidence. Co-occurrence and temporal ordering are not treated as causation.
