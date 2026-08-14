@@ -39,11 +39,18 @@ function action(item, actions) {
   return actions.find((entry) => entry.id === id)?.instruction || '';
 }
 
+function observedTogether(item) {
+  const data = item.observation.supportingData || {};
+  if (data.constituentFeatures?.length) return data.constituentFeatures.slice(0, 4).map((part) => part.label);
+  if (data.metricALabel && data.metricBLabel) return [data.metricALabel, data.metricBLabel];
+  return [];
+}
+
 function card(item, actions, showNext = true) {
   const next = item.timing?.nextExpectedWindow;
   const instruction = action(item, actions);
-  const parts = item.observation.supportingData?.constituentFeatures;
-  return `<article class="insight-v1-card"><div class="insight-v1-head"><span>${level(item)}</span><small>${item.observation.cyclesCovered} 个周期 · ${item.observation.sampleSize} 条有效记录</small></div><h3>${esc(item.title)}</h3><div class="insight-evidence"><small>数据依据</small><p>${esc(evidence(item))}</p></div>${parts?.length ? `<div class="insight-constituents"><small>主要组成</small><p>${parts.slice(0, 4).map((part) => esc(part.label)).join(' · ')}</p></div>` : ''}${showNext && next ? `<div class="insight-next"><small>下一次值得观察</small><strong>${dateText(next.startDate)}–${dateText(next.endDate)}</strong>${next.confidence === 'low' ? '<p>日期仅供参考，以实际月经开始时间为准。</p>' : ''}</div>` : ''}${instruction ? `<div class="insight-action"><small>下一步</small><p>${esc(instruction)}</p></div>` : ''}<details><summary>查看计算信息</summary><p>规律价值 ${Math.round(item.ranking.insightValue * 100)}/100 · 效应 ${Math.round(item.ranking.effectScore * 100)}/100 · 可信度 ${Math.round(item.ranking.confidenceScore * 100)}/100。它是产品排序，不是医学风险评分。</p></details></article>`;
+  const parts = observedTogether(item);
+  return `<article class="insight-v1-card"><div class="insight-v1-head"><span>${level(item)}</span><small>${item.observation.cyclesCovered} 个周期 · ${item.observation.sampleSize} 条有效记录</small></div><h3>${esc(item.title)}</h3>${parts.length ? `<div class="insight-constituents"><small>同时记录到</small><p>${parts.map(esc).join(' · ')}</p></div>` : ''}<p class="insight-evidence"><small>依据：${esc(evidence(item))}</small></p>${showNext && next ? `<div class="insight-next"><small>下一次值得观察</small><strong>${dateText(next.startDate)}–${dateText(next.endDate)}</strong>${next.confidence === 'low' ? '<p>日期仅供参考，以实际月经开始时间为准。</p>' : ''}</div>` : ''}${instruction ? `<div class="insight-action"><small>下一步</small><p>${esc(instruction)}</p></div>` : ''}<details><summary>查看计算信息</summary><p>规律价值 ${Math.round(item.ranking.insightValue * 100)}/100 · 效应 ${Math.round(item.ranking.effectScore * 100)}/100 · 可信度 ${Math.round(item.ranking.confidenceScore * 100)}/100。它是产品排序，不是医学风险评分。</p></details></article>`;
 }
 
 function renderTop(data, actions) {
@@ -68,7 +75,7 @@ function renderProfiles(data) {
 function renderAssociations(data, actions) {
   const root = document.querySelector('#insightsAssociations');
   if (!root) return;
-  const groups = [['sameDay', '同日共现'], ['previousToToday', '前一天 → 今天'], ['todayToNextDay', '今天 → 第二天']];
+  const groups = [['sameDay', '哪些状态常在同一天出现？'], ['previousToToday', '昨天的状态与今天有什么关系？'], ['todayToNextDay', '今天的状态与明天有什么关系？']];
   root.innerHTML = groups.map(([key, title]) => `<section class="association-group"><h3>${title}</h3>${data.associations[key].length ? data.associations[key].map((item) => card(item, actions, false)).join('') : '<p class="muted">目前没有足够数据支持稳定关系。</p>'}</section>`).join('');
 }
 function renderInterventions(data) {
