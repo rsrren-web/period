@@ -5,7 +5,7 @@ const USAGE_KEY = 'period-intervention-usage-v1';
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
 const dateText = (value) => value ? new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' }).format(new Date(`${value}T12:00:00`)) : '';
 const pct = (value) => `${Math.round(Number(value || 0) * 100)}%`;
-const labels = { mood: '情绪', energy: '精力', sleep: '睡眠', bowel: '排便', pain: '疼痛', activity: '活动', stress: '压力', sleep_quality: '睡眠', pain_max: '疼痛', activity_level: '活动', social_intensity: '社交强度', bloating_level: '腹胀' };
+const labels = { mood: '情绪', energy: '精力', sleep: '睡眠', bowel: '排便', pain: '疼痛', activity: '活动', stress: '压力', sleep_quality: '睡眠', pain_max: '疼痛', activity_level: '活动', social_intensity: '社交强度', bloating: '腹胀' };
 const confidence = { exploratory: '初步观察', moderate: '值得注意', stable: '较明确规律' };
 let resourcePromise;
 let renderToken = 0;
