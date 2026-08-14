@@ -44,3 +44,10 @@ Snapshots are append-only in `period-baseline-snapshots-v1`. A deterministic inp
 The versioned intervention library is stored at `knowledge/interventions.v1.json`. `InterventionEngine` validates the library and supports every declared condition operator. A missing value never becomes `false`, `0`, or a negative match; only the explicit `not_exists` operator matches absence.
 
 Evaluation order is fixed: active/ready and safety override, explicit exclusions, all hard requirements, weighted scoring and minimum score, current-state/personal-pattern requirements, cooldown and daily-use limits. Eligible candidates are then sorted deterministically by matching score, adjusted recommendation priority, personal helpful rate, cooldown age, and intervention ID. Repeated unhelpful outcomes lower effective priority but do not rewrite the library score. The result retains every condition check and exclusion reason for auditing.
+
+## Evidence-gated recommendations
+
+`RecommendationGate` permits matching only when at least one traceable source exists: a valid deviation/persistence event, an active supported cycle window, a supported/stable temporal association, or an explicitly recorded discomfort that the library can address. Pattern objects now have deterministic `pattern_id` values. `medium` and `high` confidence are supported; `high` confidence across at least three cycles is stable.
+
+`RecommendationContextAdapter` maps only explicitly recorded daily fields to intervention fields. Missing values remain missing. `RecommendationEngine` links every candidate back to its primary and supporting evidence, applies the intervention matcher and exclusions, returns at most two non-duplicate targets, and never backfills. A no-evidence or no-safe-match result is a structured `NO_RECOMMENDATION`. The homepage traditional-care plan now renders this result instead of selecting a random phase item.
+
