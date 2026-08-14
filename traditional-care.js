@@ -8,6 +8,9 @@ import {
   STATUS_SIGNAL_RULES
 } from './knowledge/wellness-knowledge.js';
 import { compatibilityTags } from './daily-record-model.js';
+import { loadInterventionLibrary } from './analysis/intervention-engine.js';
+import { generateRecommendations } from './analysis/recommendation-engine.js';
+import { buildRecommendationEvidence } from './analysis/recommendation-pipeline.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const addDays = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
@@ -16,6 +19,8 @@ const normalizePain = (value) => { const pain = Number(value); if (!Number.isFin
 const memoryStore = new Map();
 const storageGet = (key) => { try { return globalThis.localStorage?.getItem(key) ?? memoryStore.get(key) ?? null; } catch { return memoryStore.get(key) ?? null; } };
 const storageSet = (key, value) => { try { globalThis.localStorage?.setItem(key, value); } catch { memoryStore.set(key, value); } };
+const interventionLibraryPromise = loadInterventionLibrary();
+let recommendationRenderToken = 0;
 
 function tags(log = {}) {
   return compatibilityTags(log);
@@ -88,6 +93,59 @@ function practiceCard(kind, item) {
   return `<details class="traditional-card traditional-${kind}"><summary><div class="traditional-card-head"><span aria-hidden="true">${point ? '按' : '养'}</span><div><small>${point ? '今日穴位' : '今日调护'}</small><h3>${esc(title)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail">${point ? `<dl><div><dt>位置</dt><dd>${esc(item.location)}</dd></div><div><dt>方法</dt><dd>${esc(item.method)}</dd></div>` : `<dl><div><dt>方法</dt><dd>${esc(item.steps)}</dd></div>`}<div><dt>为什么推荐</dt><dd>${esc(item.why)}</dd></div><div><dt>先跳过</dt><dd>${esc(item.skip)}</dd></div></dl></div></details>`;
 }
 
+const CATEGORY_META = Object.freeze({
+  tea: ['饮', '茶饮'], food: ['食', '食养'], acupressure: ['按', '穴位轻按'],
+  acupressure_combo: ['按', '穴位组合'], meridian_massage: ['养', '经络按摩'], baduanjin: ['动', '八段锦']
+});
+const METRIC_NAMES = Object.freeze({
+  stress: '压力', energy: '精力', sleep_quality: '睡眠', activity_level: '活动', social_intensity: '社交强度', pain_max: '疼痛',
+  'pain.head': '头部疼痛', breast_tenderness: '乳房不适', 'pain.neck_shoulder': '肩颈不适', stomach_discomfort: '胃部不适',
+  'pain.lower_abdomen': '小腹不适', 'pain.lower_back': '腰背不适', 'pain.legs': '腿部不适', 'pain.feet': '足部不适', body_stiffness: '身体僵硬'
+});
+
+function recommendationReason(recommendation) {
+  const metric = METRIC_NAMES[recommendation.reason.metric] || recommendation.reason.metric;
+  if (recommendation.reason.code === 'CURRENT_DISCOMFORT') return `今天明确记录了${metric}，这项内容与该记录直接对应。`;
+  if (recommendation.reason.code === 'HEALTH_EVENT') return `${metric}出现了达到门槛的偏离或连续状态，因此列为今天的优先候选。`;
+  if (recommendation.reason.code === 'PERSONAL_PATTERN') return `个人历史中，${metric}出现了有数据支持的时间关联；这里只用于安排观察，不代表因果。`;
+  if (recommendation.reason.code === 'CYCLE_PATTERN') return `目前进入了${metric}在个人历史中较常变化的周期窗口。`;
+  return '这项内容通过了今天的数据门控、匹配和安全排除。';
+}
+
+function interventionMethod(item) {
+  const execution = item.execution || {}, rows = [];
+  if (execution.ingredients?.length) rows.push(`<div><dt>用料</dt><dd>${execution.ingredients.map((part) => `${esc(part.name)} ${esc(part.amount)}${esc(part.unit)}`).join('；')}</dd></div>`);
+  if (item.point?.location) rows.push(`<div><dt>位置</dt><dd>${esc(item.point.location)}</dd></div>`);
+  if (item.points?.length) rows.push(`<div><dt>位置</dt><dd>${item.points.map((point) => `${esc(point.name)}：${esc(point.location)}`).join('；')}</dd></div>`);
+  if (item.route) rows.push(`<div><dt>路线</dt><dd>${esc(item.route)}</dd></div>`);
+  if (execution.steps?.length) rows.push(`<div><dt>做法</dt><dd>${execution.steps.map((step, index) => `${index + 1}. ${esc(step)}`).join('<br>')}</dd></div>`);
+  if (execution.instruction) rows.push(`<div><dt>方法</dt><dd>${esc(execution.instruction)}</dd></div>`);
+  if (execution.pressure) rows.push(`<div><dt>力度</dt><dd>${esc(execution.pressure)}</dd></div>`);
+  const duration = execution.estimated_minutes ? `约${execution.estimated_minutes}分钟` : execution.duration_minutes_each_side ? `每侧约${execution.duration_minutes_each_side}分钟` : execution.duration_seconds_per_side ? `每侧约${execution.duration_seconds_per_side}秒` : null;
+  if (duration) rows.push(`<div><dt>时长</dt><dd>${duration}</dd></div>`);
+  return rows.join('');
+}
+
+function interventionCard(recommendation) {
+  const item = recommendation.intervention, [icon, label] = CATEGORY_META[item.category] || ['养', '今日建议'];
+  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么今天出现</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl></div></details>`;
+}
+
+async function renderEngineRecommendations({ root, token, phase, log, logs }) {
+  try {
+    const library = await interventionLibraryPromise;
+    if (token !== recommendationRenderToken || !root.isConnected) return;
+    const evidence = buildRecommendationEvidence({ logs, periods: phase.ps || [], phase, record_date: phase.date || todayIso() });
+    const result = generateRecommendations({ today_record: log, record_date: phase.date || todayIso(), health_events: evidence.health_events, patterns: evidence.patterns, intervention_library: library, phase });
+    if (token !== recommendationRenderToken) return;
+    root.innerHTML = result.status === 'RECOMMENDATIONS'
+      ? result.recommendations.map(interventionCard).join('')
+      : `<div class="traditional-no-recommendation"><strong>今天没有需要额外匹配的调养项目</strong><p>当前没有达到门槛的偏离、连续状态、个人规律或明确不适，因此不为填满页面随机推荐。</p></div>`;
+  } catch {
+    if (token === recommendationRenderToken) root.innerHTML = `<div class="traditional-no-recommendation"><strong>暂时无法生成数据建议</strong><p>知识库或分析数据尚未载入；不会使用随机内容替代。</p></div>`;
+  }
+}
+
 function recentEvidence(recent, signals) {
   const lines = [];
   const late = recent.counts.get('入睡：23:00后') || recent.counts.get('23点后入睡') || 0;
@@ -106,9 +164,6 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   const root = document.querySelector('#tcmAdvice');
   if (!root) return;
   const recent = recentContext(logs), signals = signalsFor(log, recent), theory = PHASE_THEORY[phase.key] || PHASE_THEORY.follicular;
-  const food = choose(FOOD_RECIPES, phase.key, signals, 'period-recent-food-v1');
-  const care = choose(CARE_PRACTICES, phase.key, signals, 'period-recent-care-v1');
-  const point = choose(ACUPOINTS.filter((item) => !item.signals.includes('none')), phase.key, signals, 'period-recent-point-v1');
   const constitution = constitutionHint(recent), evidence = recentEvidence(recent, signals);
   const practicalReason = {
     period: '正在经期，今天优先缓解不适、减少额外消耗。',
@@ -119,9 +174,13 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   const practicalEvidence = evidence.slice(0, 2);
   document.querySelector('#tcmPhaseTitle').textContent = theory.title;
   document.querySelector('#tcmPhaseDot').className = `phase-dot phase-${phase.key}`;
+  const token = ++recommendationRenderToken;
   root.innerHTML = `
     <section class="tcm-reasoning"><span>今天为什么这样建议</span><p>${esc(practicalReason)}</p>${practicalEvidence.length ? `<ul>${practicalEvidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : ''}</section>
     ${constitution ? `<details class="constitution-hint"><summary><span>体质观察线索</span><strong>${esc(constitution.name)} · ${constitution.total}次线索</strong></summary><div><p>${esc(constitution.explanation)}</p><p><strong>边界：</strong>${esc(constitution.avoid)}</p><small>这里只是近7天的感受倾向，不是体质诊断。</small></div></details>` : ''}
-    <div class="traditional-plan">${foodCard(food)}${practiceCard('care', care)}${practiceCard('point', point)}</div>`;
+    <div class="traditional-plan" data-recommendation-plan><div class="traditional-no-recommendation"><strong>正在核对今天的数据</strong><p>只有达到门槛并通过排除规则后才会显示建议。</p></div></div>`;
+  const planRoot = typeof root.querySelector === 'function' ? root.querySelector('[data-recommendation-plan]') : null;
+  if (planRoot) renderEngineRecommendations({ root: planRoot, token, phase, log, logs });
 };
+
 
