@@ -4,6 +4,7 @@ import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
 const detail=fs.readFileSync(new URL('../daily-insights.js',import.meta.url),'utf8');
+const wellness=fs.readFileSync(new URL('../wellness-engine.js',import.meta.url),'utf8');
 
 for(const [name,values] of Object.entries({
   menstrualStatus:['on_period','spotting_only','not_on_period','__not_recorded'],
@@ -22,5 +23,6 @@ assert.match(app,/transition&&!periodEpisodeId/,'经期首尾点滴必须关联�
 assert.match(app,/correctCycleDay\(next,value,anchor\)/,'手动周期日必须使用结构化修正函数');
 assert.match(app,/form\.dataset\.cycleMode==='auto'/,'自动周期日与手动周期日必须分流');
 assert.match(detail,/MENSTRUAL_LABELS/,'日历详情必须展示结构化月经字段');
+assert.match(wellness,/menstrualStatus \? statusIcon\('月经'/,'首页最终状态卡必须展示已记录的月经状态');
 
 console.log('Menstrual UI linkage tests passed.');
