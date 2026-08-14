@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 43,
-  "updatedAt": "2026-08-14T05:48:44.032Z",
+  "revision": 44,
+  "updatedAt": "2026-08-14T06:21:07.108Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -1699,8 +1699,9 @@
       ],
       "symptomTags": [
         "tcm:cold_sensation:no",
-        "tcm:cold_hands_feet:no",
         "tcm:warmth_relief:no",
+        "tcm:nausea:yes",
+        "tcm:diarrhea:no",
         "tcm:bloating_level:1",
         "tcm:appetite_level:2",
         "tcm:body_heaviness:no"
@@ -1753,7 +1754,7 @@
         "疼痛部位：腿部",
         "疼痛部位：足部"
       ],
-      "updatedAt": "2026-08-14T05:48:36.257Z"
+      "updatedAt": "2026-08-14T06:20:59.269Z"
     }
   },
   "tombstones": {
@@ -1815,6 +1816,7 @@
     "9b52bbd2-79c5-422b-80e9-316daf3a7972",
     "248254b6-b98c-4f8e-8dcf-45a0affc593a",
     "29e66db1-2698-4c76-be81-cafab5971515",
-    "4810d467-c8ed-413e-8190-3a564a92d783"
+    "4810d467-c8ed-413e-8190-3a564a92d783",
+    "326737eb-cb11-4155-a5aa-454833dde7f3"
   ]
 }
