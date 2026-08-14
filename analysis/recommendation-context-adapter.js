@@ -69,18 +69,19 @@ export function adaptRecommendationContext({ today_record: log = {}, record_date
   if (numeric(log, 'sleep') !== null && log.sleep <= 2) discomforts.push(discomfort('sleep_quality', log.sleep, 'sleep', record_date));
   if (numeric(log, 'energy') !== null && log.energy <= 2) discomforts.push(discomfort('energy', log.energy, 'energy', record_date));
 
-  const presenceFields = ['cold_sensation', 'nausea', 'diarrhea', 'body_heaviness', 'warmth_relief'];
+  const presenceFields = ['cold_sensation', 'nausea', 'diarrhea', 'body_heaviness', 'warmth_relief', 'bloating', 'poor_appetite'];
   for (const field of presenceFields) {
     if (bodySense[field] === null) continue;
     context[field] = bodySense[field] === 'yes';
     context.current_state_available = true;
   }
-  if (Number.isFinite(bodySense.bloating_level)) { context.bloating = bodySense.bloating_level; context.current_state_available = true; }
-  if (Number.isFinite(bodySense.appetite_level)) { context.appetite_level = bodySense.appetite_level; context.appetite_low = bodySense.appetite_level <= 2; context.current_state_available = true; }
+  context.appetite_low = bodySense.poor_appetite === 'yes';
   if (bodySense.diarrhea === 'yes') context.contraindication.diarrhea = true;
   if (bodySense.nausea === 'yes') discomforts.push(discomfort('nausea', true, 'tcm:nausea', record_date));
   if (bodySense.cold_sensation === 'yes') discomforts.push(discomfort('cold_sensation', true, 'tcm:cold_sensation', record_date));
-  if (Number.isFinite(bodySense.bloating_level) && bodySense.bloating_level >= 3) discomforts.push(discomfort('bloating', bodySense.bloating_level, 'tcm:bloating_level', record_date));
+  if (bodySense.bloating === 'yes') discomforts.push(discomfort('bloating', true, 'tcm:bloating', record_date));
+  if (bodySense.body_heaviness === 'yes') discomforts.push(discomfort('body_heaviness', true, 'tcm:body_heaviness', record_date));
+  if (bodySense.poor_appetite === 'yes') discomforts.push(discomfort('appetite_low', true, 'tcm:poor_appetite', record_date));
 
   for (const event of health_events || []) {
     const difference = event?.supporting_data?.signed_difference;
