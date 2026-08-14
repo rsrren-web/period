@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "minimum_cycles": 3,
+  "minimum_feature_completion": 0.60,
+  "minimum_constituent_features": 2,
+  "rules": [
+    {
+      "id": "cold_stasis_like",
+      "display_name": "寒象 + 瘀滞样组合",
+      "hard_requirements": [{ "field": "menstrual_context", "operator": "==", "value": true }],
+      "weighted_features": [
+        { "field": "cold_sensation", "operator": "==", "value": "yes", "weight": 3, "label": "明显怕冷" },
+        { "field": "cold_hands_feet", "operator": "==", "value": "yes", "weight": 2, "label": "手脚发冷" },
+        { "field": "lower_abdomen_pain", "operator": "==", "value": true, "weight": 3, "label": "小腹/盆腔疼痛" },
+        { "field": "warmth_relief", "operator": "==", "value": "yes", "weight": 2, "label": "热敷后缓解" },
+        { "field": "clot_presence", "operator": "==", "value": "yes", "weight": 2, "label": "有血块" },
+        { "field": "blood_color", "operator": "in", "value": ["dark_red", "brown"], "weight": 1, "label": "经血暗红或棕色" }
+      ],
+      "minimum_score": 6,
+      "intervention_tags": ["warmth", "gentle_movement", "food_level"]
+    },
+    {
+      "id": "qi_constraint_like",
+      "display_name": "压力 + 气机郁滞样组合",
+      "hard_requirements": [],
+      "weighted_features": [
+        { "field": "stress", "operator": ">=", "value": 4, "weight": 3, "label": "压力偏高" },
+        { "field": "emotion", "operator": "in", "value": ["焦虑", "生气"], "weight": 2, "label": "焦虑或生气" },
+        { "field": "breast_chest_pain", "operator": "==", "value": true, "weight": 2, "label": "乳房/胸部不适" },
+        { "field": "neck_shoulder_pain", "operator": "==", "value": true, "weight": 1, "label": "肩颈不适" },
+        { "field": "bloating_level", "operator": ">=", "value": 3, "weight": 2, "label": "腹胀明显" },
+        { "field": "social_effect", "operator": "==", "value": "draining", "weight": 1, "label": "社交后消耗" }
+      ],
+      "minimum_score": 5,
+      "intervention_tags": ["breathing", "gentle_movement", "acupressure"]
+    },
+    {
+      "id": "digestive_heaviness_like",
+      "display_name": "消化负担 + 沉重样组合",
+      "hard_requirements": [],
+      "weighted_features": [
+        { "field": "bloating_level", "operator": ">=", "value": 3, "weight": 3, "label": "腹胀明显" },
+        { "field": "appetite_level", "operator": "<=", "value": 2, "weight": 2, "label": "食欲偏低" },
+        { "field": "body_heaviness", "operator": "==", "value": "yes", "weight": 2, "label": "身体沉重" },
+        { "field": "energy", "operator": "<=", "value": 2, "weight": 1, "label": "精力偏低" },
+        { "field": "bowel_movement", "operator": "==", "value": false, "weight": 2, "label": "没有排便" },
+        { "field": "upper_abdomen_pain", "operator": "==", "value": true, "weight": 1, "label": "胃/上腹不适" }
+      ],
+      "minimum_score": 5,
+      "intervention_tags": ["food_level", "walking", "gentle_movement"]
+    },
+    {
+      "id": "post_menstrual_deficiency_like",
+      "display_name": "经后恢复不足样组合",
+      "hard_requirements": [{ "field": "post_menstrual_window", "operator": "==", "value": true }],
+      "weighted_features": [
+        { "field": "energy", "operator": "<=", "value": 2, "weight": 3, "label": "精力偏低" },
+        { "field": "emotion", "operator": "==", "value": "疲倦", "weight": 2, "label": "明显疲倦" },
+        { "field": "activity", "operator": "<=", "value": 2, "weight": 1, "label": "活动偏少" },
+        { "field": "sleep", "operator": "<=", "value": 2, "weight": 2, "label": "睡眠偏低" },
+        { "field": "appetite_level", "operator": "<=", "value": 2, "weight": 1, "label": "食欲偏低" }
+      ],
+      "minimum_score": 5,
+      "intervention_tags": ["food_level", "rest", "gentle_movement"]
+    },
+    {
+      "id": "sleep_tension_like",
+      "display_name": "睡眠 + 紧张样组合",
+      "hard_requirements": [],
+      "weighted_features": [
+        { "field": "sleep", "operator": "<=", "value": 2, "weight": 3, "label": "睡眠偏低" },
+        { "field": "bedtime", "operator": "==", "value": "after_23", "weight": 1, "label": "23点后入睡" },
+        { "field": "stress", "operator": ">=", "value": 4, "weight": 2, "label": "压力偏高" },
+        { "field": "emotion", "operator": "in", "value": ["焦虑", "生气"], "weight": 2, "label": "焦虑或生气" },
+        { "field": "head_neck_pain", "operator": "==", "value": true, "weight": 1, "label": "头部或肩颈不适" },
+        { "field": "energy", "operator": "<=", "value": 2, "weight": 1, "label": "精力偏低" }
+      ],
+      "minimum_score": 5,
+      "intervention_tags": ["sleep", "breathing", "acupressure"]
+    }
+  ]
+}
