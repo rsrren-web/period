@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "minimum_cycles": 3,
+  "version": 2,
+  "minimum_cycles": 2,
   "minimum_feature_completion": 0.60,
   "minimum_constituent_features": 2,
   "rules": [
@@ -10,7 +10,6 @@
       "hard_requirements": [{ "field": "menstrual_context", "operator": "==", "value": true }],
       "weighted_features": [
         { "field": "cold_sensation", "operator": "==", "value": "yes", "weight": 3, "label": "明显怕冷" },
-        { "field": "cold_hands_feet", "operator": "==", "value": "yes", "weight": 2, "label": "手脚发冷" },
         { "field": "lower_abdomen_pain", "operator": "==", "value": true, "weight": 3, "label": "小腹/盆腔疼痛" },
         { "field": "warmth_relief", "operator": "==", "value": "yes", "weight": 2, "label": "热敷后缓解" },
         { "field": "clot_presence", "operator": "==", "value": "yes", "weight": 2, "label": "有血块" },
@@ -42,6 +41,8 @@
         { "field": "bloating_level", "operator": ">=", "value": 3, "weight": 3, "label": "腹胀明显" },
         { "field": "appetite_level", "operator": "<=", "value": 2, "weight": 2, "label": "食欲偏低" },
         { "field": "body_heaviness", "operator": "==", "value": "yes", "weight": 2, "label": "身体沉重" },
+        { "field": "nausea", "operator": "==", "value": "yes", "weight": 2, "label": "恶心" },
+        { "field": "diarrhea", "operator": "==", "value": "yes", "weight": 2, "label": "腹泻" },
         { "field": "energy", "operator": "<=", "value": 2, "weight": 1, "label": "精力偏低" },
         { "field": "bowel_movement", "operator": "==", "value": false, "weight": 2, "label": "没有排便" },
         { "field": "upper_abdomen_pain", "operator": "==", "value": true, "weight": 1, "label": "胃/上腹不适" }
