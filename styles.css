@@ -944,6 +944,12 @@ summary strong { font-size: var(--font-body); line-height: 1.45 }
 .constitution-hint summary strong { font-size: 15px }
 .constitution-hint>div { padding: 0 16px 16px; line-height: 1.65 }
 .traditional-plan { display: grid; margin-top: 14px }
+.traditional-layer { display: grid; gap: 7px }
+.traditional-layer+.traditional-layer { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--soft-line) }
+.traditional-layer-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 2px }
+.traditional-layer-heading strong { color: var(--ink); font-size: var(--text-body); line-height: 1.4 }
+.traditional-layer-heading span,.traditional-layer-note { color: var(--ink-muted); font-size: var(--text-caption); line-height: 1.5 }
+.traditional-layer-note { margin: 0 2px }
 .traditional-no-recommendation { padding: 16px; border-radius: 16px; background: var(--surface-muted) }
 .traditional-no-recommendation strong { display: block; font-size: var(--text-body); color: var(--ink) }
 .traditional-no-recommendation p { margin: 6px 0 0; color: var(--ink-muted); font-size: var(--text-caption); line-height: 1.6 }
@@ -1479,4 +1485,3 @@ body { min-width: 320px; line-height: 1.6 }
   .sticky-save { padding-bottom: max(12px,env(safe-area-inset-bottom)) }
 }
 .compact-menstrual-status{display:flex;align-items:center;gap:8px;margin:0;color:var(--ink);font-size:var(--text-label);font-weight:600}
-
