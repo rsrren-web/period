@@ -1,4 +1,4 @@
-export const TCM_OBSERVATION_VERSION = 1;
+export const TCM_OBSERVATION_VERSION = 2;
 
 export const TCM_OBSERVATION_ENUMS = Object.freeze({
   presence: Object.freeze(['yes', 'no']),
@@ -7,8 +7,9 @@ export const TCM_OBSERVATION_ENUMS = Object.freeze({
 
 export const TCM_OBSERVATION_FIELDS = Object.freeze({
   cold_sensation: Object.freeze({ type: 'presence', label: '明显怕冷' }),
-  cold_hands_feet: Object.freeze({ type: 'presence', label: '手脚发冷' }),
   warmth_relief: Object.freeze({ type: 'presence', label: '热敷后缓解' }),
+  nausea: Object.freeze({ type: 'presence', label: '恶心' }),
+  diarrhea: Object.freeze({ type: 'presence', label: '腹泻' }),
   bloating_level: Object.freeze({ type: 'level', label: '腹胀程度' }),
   appetite_level: Object.freeze({ type: 'level', label: '食欲情况' }),
   body_heaviness: Object.freeze({ type: 'presence', label: '身体沉重' })
