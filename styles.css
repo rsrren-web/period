@@ -1477,3 +1477,4 @@ body { min-width: 320px; line-height: 1.6 }
   .wellness-log-dialog { padding-bottom: max(18px,env(safe-area-inset-bottom)) }
   .sticky-save { padding-bottom: max(12px,env(safe-area-inset-bottom)) }
 }
+.compact-menstrual-status{display:flex;align-items:center;gap:8px;margin:0;color:var(--ink);font-size:var(--text-label);font-weight:600}

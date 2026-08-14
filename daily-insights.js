@@ -41,8 +41,8 @@ function renderHomeStatus(logs) {
   if (!log) detail.innerHTML = '<span class="muted">今天还没有记录身体状态。</span>';
   else {
     detail.type = 'button'; detail.dataset.openLog = '';
-    const ratings = [['情绪', log.mood, 5], ['精力', log.energy, 5], ['睡眠', log.sleep, 5], ['压力', log.stress, 5], ['疼痛', painFive(log), 5]].filter(([, value]) => value !== '' && value !== undefined && value !== null), symptoms = [...visibleSymptoms(log), ...painParts(log).map((part) => `疼痛·${part}`)], bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：');
-    detail.innerHTML = `<div class="compact-status-head"><strong>今日状态</strong><span>点击编辑</span></div><div class="compact-ratings">${ratings.map(([label, value, max]) => `<span><small>${label}</small><strong>${escapeDaily(value)}/${max}</strong></span>`).join('')}</div>${symptoms.length ? `<p>${symptoms.map(escapeDaily).join(' · ')}</p>` : ''}${bedtime || bowel ? `<small>${bedtime ? `入睡 ${escapeDaily(bedtime)}` : ''}${bedtime && bowel ? ' · ' : ''}${bowel ? escapeDaily(bowel) : ''}</small>` : ''}`;
+    const ratings = [['情绪', log.mood, 5], ['精力', log.energy, 5], ['睡眠', log.sleep, 5], ['压力', log.stress, 5], ['疼痛', painFive(log), 5]].filter(([, value]) => value !== '' && value !== undefined && value !== null), symptoms = [...visibleSymptoms(log), ...painParts(log).map((part) => `疼痛·${part}`)], bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：'), menstrual = menstrualSummary(log);
+    detail.innerHTML = `<div class="compact-status-head"><strong>今日状态</strong><span>点击编辑</span></div>${menstrual ? `<p class="compact-menstrual-status"><span aria-hidden="true">🩸</span>${escapeDaily(menstrual)}</p>` : ''}<div class="compact-ratings">${ratings.map(([label, value, max]) => `<span><small>${label}</small><strong>${escapeDaily(value)}/${max}</strong></span>`).join('')}</div>${symptoms.length ? `<p>${symptoms.map(escapeDaily).join(' · ')}</p>` : ''}${bedtime || bowel ? `<small>${bedtime ? `入睡 ${escapeDaily(bedtime)}` : ''}${bedtime && bowel ? ' · ' : ''}${bowel ? escapeDaily(bowel) : ''}</small>` : ''}`;
   }
   grid.insertAdjacentElement('afterend', detail);
 }
@@ -56,6 +56,17 @@ const MENSTRUAL_LABELS = {
   clot_level: { small: '小', medium: '中', large: '大' },
   spotting_context: { period_start_transition: '本次月经开始过渡', period_end_transition: '本次月经结束过渡', intermenstrual: '周期中段点滴', uncertain: '暂不确定' }
 };
+function menstrualSummary(log = {}) {
+  const status = MENSTRUAL_LABELS.menstrual_status[log.menstrual_status];
+  if (!status) return '';
+  const parts = [status];
+  if (Number.isInteger(log.cycle_day)) parts.push(`第 ${log.cycle_day} 天`);
+  if (log.menstrual_status === 'on_period' || log.menstrual_status === 'spotting_only') {
+    const flow = MENSTRUAL_LABELS.flow_level[log.flow_level];
+    if (flow) parts.push(`经量 ${flow}`);
+  }
+  return parts.join(' · ');
+}
 function menstrualRows(log) { const status=MENSTRUAL_LABELS.menstrual_status[log.menstrual_status]||'未记录',source=MENSTRUAL_LABELS.cycle_day_source[log.cycle_day_source]||'未记录',rows=[['月经状态',status],['周期日',log.cycle_day===null||log.cycle_day===undefined?source:`第 ${log.cycle_day} 天 · ${source}`]],bleeding=log.menstrual_status==='on_period'||log.menstrual_status==='spotting_only';if(bleeding){rows.push(['出血量',MENSTRUAL_LABELS.flow_level[log.flow_level]||'未记录'],['颜色',MENSTRUAL_LABELS.blood_color[log.blood_color]||'未记录'],['血块',log.clot_presence==='yes'?`有 · ${MENSTRUAL_LABELS.clot_level[log.clot_level]||'大小未记录'}`:(MENSTRUAL_LABELS.clot_presence[log.clot_presence]||'未记录')]);if(log.menstrual_status==='spotting_only')rows.push(['点滴类型',MENSTRUAL_LABELS.spotting_context[log.spotting_context]||'未记录'])}return rows}
 function statusCard(date, log) { if (!log) return '<section class="day-status-card empty"><strong>身体状态</strong><p>这一天还没有记录身体状态。</p></section>'; const ratings = [['情绪', tagged(log, '情绪：') || DAILY_LABELS[Number(log.mood) - 1] || '—'], ['精力', `${log.energy || '—'}/5`], ['睡眠', `${log.sleep || '—'}/5`], ['活动', `${log.activity || '—'}/5`], ['压力', `${log.stress || '—'}/5`], ['疼痛', `${painFive(log) ?? '—'}/5`]], locations = painParts(log), symptoms = visibleSymptoms(log).filter((item) => !item.startsWith('情绪：') && !item.startsWith('运动：') && !item.startsWith('社交：') && !item.startsWith('社交强度：') && !item.startsWith('社交影响：')), bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：'), menstrual=menstrualRows(log); return `<section class="day-status-card"><div class="day-status-heading"><strong>身体状态记录</strong><span>${escapeDaily(date)}</span></div><div class="day-status-ratings">${ratings.map(([label, value]) => `<div><small>${label}</small><strong>${escapeDaily(value)}</strong></div>`).join('')}</div>${menstrual.map(([label,value])=>`<div class="day-status-row"><strong>${escapeDaily(label)}</strong><span>${escapeDaily(value)}</span></div>`).join('')}${bedtime ? `<div class="day-status-row"><strong>入睡时间</strong><span>${escapeDaily(bedtime)}入睡</span></div>` : ''}${bowel ? `<div class="day-status-row"><strong>排便</strong><span>${escapeDaily(bowel)}</span></div>` : ''}${locations.length ? `<div class="day-status-row"><strong>疼痛部位</strong><span>${locations.map(escapeDaily).join('、')}</span></div>` : ''}${symptoms.length ? `<div class="day-status-row"><strong>其他感受</strong><span>${symptoms.map(escapeDaily).join('、')}</span></div>` : ''}</section>`; }
 
