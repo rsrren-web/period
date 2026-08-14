@@ -129,7 +129,8 @@ function interventionMethod(item) {
 
 function interventionCard(recommendation) {
   const item = recommendation.intervention, [icon, label] = CATEGORY_META[item.category] || ['养', '今日建议'];
-  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么今天出现</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl></div></details>`;
+  const target = recommendation.reason?.metric || item.targets?.[0] || 'general';
+  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么今天出现</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}">记录这次效果</button></div></details>`;
 }
 
 async function renderEngineRecommendations({ root, token, phase, log, logs }) {
