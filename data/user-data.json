@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 40,
-  "updatedAt": "2026-08-14T00:22:11.196Z",
+  "revision": 41,
+  "updatedAt": "2026-08-14T04:52:29.781Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -1684,7 +1684,7 @@
       "pain": 1,
       "primaryEmotion": "开心",
       "bedtime": "after_23",
-      "bowelMovement": null,
+      "bowelMovement": true,
       "exerciseTypes": null,
       "socialTypes": [
         "日常"
@@ -1718,7 +1718,7 @@
         "pain": "reported",
         "primaryEmotion": "reported",
         "bedtime": "reported",
-        "bowelMovement": "not_recorded",
+        "bowelMovement": "reported",
         "exerciseTypes": "not_recorded",
         "socialTypes": "reported",
         "socialIntensity": "reported",
@@ -1746,7 +1746,7 @@
         "疼痛部位：腿部",
         "疼痛部位：足部"
       ],
-      "updatedAt": "2026-08-14T00:22:09.969Z"
+      "updatedAt": "2026-08-14T04:52:28.764Z"
     }
   },
   "tombstones": {
@@ -1805,6 +1805,7 @@
     "245dde39-b489-4fb1-a999-c057891ee9b1",
     "e3dd71ab-b3f6-4374-bd98-01d2efa4816b",
     "139fa18d-1084-4257-a502-0aff38703da9",
-    "9b52bbd2-79c5-422b-80e9-316daf3a7972"
+    "9b52bbd2-79c5-422b-80e9-316daf3a7972",
+    "248254b6-b98c-4f8e-8dcf-45a0affc593a"
   ]
 }
