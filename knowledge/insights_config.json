@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "ranking": {
     "weights": { "effect": 0.35, "confidence": 0.25, "cycles": 0.15, "recency": 0.10, "actionability": 0.15 },
     "top_insight_min": 0.58,
@@ -30,7 +30,9 @@
     { "metric_a": "stress_high", "metric_b": "pain_present", "relation": "same_day" },
     { "metric_a": "activity_low", "metric_b": "energy_low", "relation": "same_day" },
     { "metric_a": "pain_present", "metric_b": "sleep_low", "relation": "same_day" },
-    { "metric_a": "bowel_no", "metric_b": "bloating_high", "relation": "same_day" }
+    { "metric_a": "bowel_no", "metric_b": "bloating_high", "relation": "same_day" },
+    { "metric_a": "stress_high", "metric_b": "nausea_present", "relation": "same_day" },
+    { "metric_a": "diarrhea_present", "metric_b": "bloating_high", "relation": "same_day" }
   ],
   "metrics": ["energy", "stress", "sleep_quality", "pain_max", "activity_level", "social_intensity", "mood", "bloating_level"]
 }
