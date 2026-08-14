@@ -774,6 +774,17 @@ summary strong { font-size: var(--font-body); line-height: 1.45 }
   .snapshot-icon { width: 32px; height: 32px; font-size: 16px }
 }
 #dailyForm { padding-bottom: 4px }
+.body-sense-icon-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px }
+.body-sense-icon-grid label { min-width: 0; cursor: pointer }
+.body-sense-icon-grid input { position: absolute; opacity: 0; pointer-events: none }
+.body-sense-icon-grid label>span { min-height: 68px; display: grid; place-items: center; border: 1px solid var(--soft-line); border-radius: var(--radius-inner) var(--radius-inner) 0 0; background: var(--surface); font-size: 28px }
+.body-sense-icon-grid label>small { min-height: 36px; display: grid; place-items: center; padding: 5px; border: 1px solid var(--soft-line); border-top: 0; border-radius: 0 0 var(--radius-inner) var(--radius-inner); color: var(--ink); background: var(--surface); font-size: var(--font-caption); text-align: center }
+.body-sense-icon-grid input:checked~span,.body-sense-icon-grid input:checked~small { border-color: var(--primary); background: var(--primary-soft) }
+.body-sense-icon-grid input:focus-visible~span { outline: 3px solid color-mix(in srgb,var(--primary) 30%,transparent); outline-offset: 2px }
+@media (max-width:430px) {
+  .body-sense-icon-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px }
+  .body-sense-icon-grid label>span { min-height: 62px; font-size: 26px }
+}
 .daily-log-hint,.log-date-field { color: var(--ink-muted); font-size: var(--font-caption) }
 .daily-log-hint { margin: 0 0 12px; line-height: 1.55 }
 .log-date-field { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px }
