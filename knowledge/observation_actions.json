@@ -2,6 +2,6 @@
   { "id": "OBS_PAIN_WINDOW", "metrics": ["pain_max"], "instruction": "下一次进入这个窗口时，优先记录疼痛分数和疼痛部位。" },
   { "id": "OBS_SLEEP_ENERGY_NEXT_DAY", "metrics": ["sleep_quality", "energy", "bedtime_late"], "instruction": "出现23点后入睡时，第二天优先记录睡眠和精力。" },
   { "id": "OBS_STRESS_SLEEP", "metrics": ["stress", "sleep_quality"], "instruction": "压力偏高的当天和第二天都记录睡眠，继续确认是否重复。" },
-  { "id": "OBS_BOWEL_BLOATING", "metrics": ["bowel", "bloating_level"], "instruction": "没有排便时，同时记录当天腹胀程度。" },
+  { "id": "OBS_BOWEL_BLOATING", "metrics": ["bowel", "bloating"], "instruction": "没有排便时，同时记录当天是否腹胀。" },
   { "id": "OBS_PHASE_METRIC", "metrics": ["energy", "stress", "activity_level", "social_intensity", "mood"], "instruction": "进入相同周期阶段时继续记录该指标，确认差异是否在新周期重复。" }
 ]
