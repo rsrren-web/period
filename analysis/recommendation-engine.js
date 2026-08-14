@@ -1,0 +1,130 @@
+import { ANALYSIS_CONFIG } from './analysis-config.js';
+import { rankInterventions } from './intervention-engine.js';
+import { adaptRecommendationContext } from './recommendation-context-adapter.js';
+
+const supportedConfidence = (pattern) => ANALYSIS_CONFIG.recommendations.supported_confidence.includes(pattern?.confidence_level);
+const activeInterventions = (library) => (library?.interventions || []).filter((item) => item.status === 'active' && item.availability === 'ready');
+const interventionFields = (item) => new Set([
+  ...(item.matching?.hard_requirements || []).map((condition) => condition.field),
+  ...(item.matching?.scoring_features || []).map((feature) => feature.condition?.field),
+  ...(item.observation?.primary_metrics || [])
+].filter(Boolean));
+
+function librarySupportsMetric(library, metric) {
+  return activeInterventions(library).some((item) => {
+    const fields = interventionFields(item);
+    if (fields.has(metric)) return true;
+    return metric === 'pain_max' && [...fields].some((field) => field.startsWith('pain.'));
+  });
+}
+
+function validEvent(event) {
+  return event?.event_id && ['deviation', 'persistence'].includes(event.event_type) && event.confidence_level !== 'insufficient';
+}
+
+function cycleWindowActive(pattern, cycleDay) {
+  return pattern?.pattern_type === 'cycle_pattern' && pattern.status === 'detected' && supportedConfidence(pattern) &&
+    Number.isInteger(cycleDay) && cycleDay >= pattern.target_window?.start_day && cycleDay <= pattern.target_window?.end_day;
+}
+
+function supportedTemporal(pattern) {
+  return pattern?.pattern_type === 'temporal_association' && pattern.status === 'detected' && supportedConfidence(pattern);
+}
+
+export function evaluateRecommendationGate({ today_record, health_events = [], patterns = [], intervention_library, current_discomforts = [], cycle_day } = {}) {
+  const triggers = [];
+  for (const event of health_events.filter(validEvent)) triggers.push({
+    trigger_type: 'health_event', source_event_id: event.event_id, source_pattern_id: null,
+    metric: event.metric, source_priority: ANALYSIS_CONFIG.recommendations.source_priority.health_event, evidence: event
+  });
+  for (const pattern of patterns.filter(supportedTemporal)) triggers.push({
+    trigger_type: 'personal_pattern', source_event_id: null, source_pattern_id: pattern.pattern_id,
+    metric: pattern.metric_b, related_metrics: [pattern.metric_a, pattern.metric_b], source_priority: ANALYSIS_CONFIG.recommendations.source_priority.personal_pattern, evidence: pattern,
+    stability: pattern.confidence_level === ANALYSIS_CONFIG.recommendations.stable_confidence && pattern.cycles_covered >= ANALYSIS_CONFIG.recommendations.stable_min_cycles ? 'stable' : 'supported'
+  });
+  for (const pattern of patterns.filter((item) => cycleWindowActive(item, cycle_day))) triggers.push({
+    trigger_type: 'cycle_pattern', source_event_id: null, source_pattern_id: pattern.pattern_id,
+    metric: pattern.metric, source_priority: ANALYSIS_CONFIG.recommendations.source_priority.cycle_pattern, evidence: pattern
+  });
+  for (const item of current_discomforts) if (librarySupportsMetric(intervention_library, item.metric)) triggers.push({
+    trigger_type: 'current_discomfort', source_event_id: null, source_pattern_id: null,
+    metric: item.metric, source_priority: ANALYSIS_CONFIG.recommendations.source_priority.current_discomfort, evidence: item
+  });
+  const unique = [...new Map(triggers.map((trigger) => [`${trigger.trigger_type}:${trigger.source_event_id || trigger.source_pattern_id || trigger.metric}`, trigger])).values()];
+  return {
+    passed: unique.length > 0,
+    status: unique.length ? 'PASSED' : 'NO_RECOMMENDATION',
+    triggers: unique,
+    reasons: unique.length ? [] : [
+      'NO_VALID_DEVIATION_OR_PERSISTENCE',
+      'NO_ACTIVE_SUPPORTED_PATTERN',
+      'NO_EXPLICIT_MAPPED_DISCOMFORT'
+    ],
+    record_present: Boolean(today_record)
+  };
+}
+
+function triggerMatchesCandidate(trigger, candidate) {
+  const fields = new Set(candidate.matched_features.map((feature) => feature.condition.field));
+  if (fields.has(trigger.metric)) return true;
+  if (trigger.related_metrics?.some((metric) => fields.has(metric))) return true;
+  if (trigger.metric === 'pain_max' && [...fields].some((field) => field.startsWith('pain.'))) return true;
+  if (trigger.trigger_type === 'cycle_pattern' && fields.has('cycle_phase')) return true;
+  return false;
+}
+
+function evidenceRank(candidate, triggers) {
+  const matches = triggers.filter((trigger) => triggerMatchesCandidate(trigger, candidate)).sort((a, b) => b.source_priority - a.source_priority ||
+    String(a.source_event_id || a.source_pattern_id || a.metric).localeCompare(String(b.source_event_id || b.source_pattern_id || b.metric)));
+  return matches;
+}
+
+function recommendationId(date, interventionId, trigger) {
+  const source = trigger.source_event_id || trigger.source_pattern_id || `${trigger.trigger_type}:${trigger.metric}`;
+  return `recommendation:${date}:${interventionId}:${source}`;
+}
+
+function noRecommendation(gate, date, evaluatedAt, extraReasons = []) {
+  return Object.freeze({ status: 'NO_RECOMMENDATION', recommendations: [], gate, reasons: [...gate.reasons, ...extraReasons], valid_for_date: date, evaluated_at: evaluatedAt });
+}
+
+export function generateRecommendations({ today_record, record_date, health_events = [], patterns = [], intervention_library, phase = {}, safety, contraindication, medication, intervention_history = [], now = new Date().toISOString() } = {}) {
+  if (!intervention_library) throw new TypeError('intervention_library is required');
+  const adapted = adaptRecommendationContext({ today_record, record_date, phase, health_events, patterns, safety, contraindication, medication, intervention_history });
+  const cycleDay = adapted.context.cycle_day;
+  const gate = evaluateRecommendationGate({ today_record, health_events, patterns, intervention_library, current_discomforts: adapted.current_discomforts, cycle_day: cycleDay });
+  if (!gate.passed) return noRecommendation(gate, record_date, now);
+  const ranking = rankInterventions(intervention_library, adapted.context, { now, history: intervention_history, currentStateAvailable: adapted.context.current_state_available, personalPatternAvailable: gate.triggers.some((trigger) => trigger.trigger_type === 'personal_pattern') });
+  const linked = ranking.candidates.map((candidate) => ({ candidate, evidence: evidenceRank(candidate, gate.triggers) })).filter((item) => item.evidence.length);
+  linked.sort((left, right) => right.evidence[0].source_priority - left.evidence[0].source_priority ||
+    right.candidate.score - left.candidate.score || right.candidate.effective_priority - left.candidate.effective_priority ||
+    (right.candidate.personally_helpful_rate ?? -1) - (left.candidate.personally_helpful_rate ?? -1) || left.candidate.intervention_id.localeCompare(right.candidate.intervention_id));
+  const selected = [];
+  const targetKeys = new Set();
+  for (const item of linked) {
+    const targetKey = (item.candidate.intervention.observation?.primary_metrics || []).slice().sort().join('|') || item.candidate.intervention_id;
+    if (targetKeys.has(targetKey)) continue;
+    const primary = item.evidence[0];
+    const priority = primary.source_priority * 10_000 + item.candidate.score * 100 + item.candidate.effective_priority;
+    selected.push(Object.freeze({
+      recommendation_id: recommendationId(record_date, item.candidate.intervention_id, primary),
+      source_event_id: primary.source_event_id,
+      source_pattern_id: primary.source_pattern_id,
+      intervention_id: item.candidate.intervention_id,
+      reason: Object.freeze({ code: primary.trigger_type.toUpperCase(), metric: primary.metric, evidence_type: primary.trigger_type, observed_value: primary.evidence?.value ?? null }),
+      priority,
+      supporting_evidence: item.evidence.map((evidence) => ({ type: evidence.trigger_type, id: evidence.source_event_id || evidence.source_pattern_id || null, metric: evidence.metric })),
+      match_score: item.candidate.score,
+      intervention: item.candidate.intervention
+    }));
+    targetKeys.add(targetKey);
+    if (selected.length >= ANALYSIS_CONFIG.recommendations.max_items) break;
+  }
+  if (!selected.length) return noRecommendation(gate, record_date, now, ['NO_INTERVENTION_PASSED_MATCHING_AND_EXCLUSIONS']);
+  return Object.freeze({ status: 'RECOMMENDATIONS', recommendations: selected, gate, reasons: [], valid_for_date: record_date, evaluated_at: now });
+}
+
+export const RecommendationGate = Object.freeze({ evaluate: evaluateRecommendationGate });
+export const RecommendationEngine = Object.freeze({ generate: generateRecommendations });
+
+
