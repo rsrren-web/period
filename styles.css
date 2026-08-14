@@ -915,11 +915,9 @@ summary strong { font-size: var(--font-body); line-height: 1.45 }
 .empty-today-state small { margin-top: 4px; color: rgba(48,44,52,.64) }
 .readable-today-card { padding: 20px }
 .readable-today-card:focus-visible,.readable-today-card:hover { border-color: #e7e3e8; background: #fff; color: #302c34 }
-.today-emotion { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid #e7e3e8 }
-.status-icon-item small,.today-emotion small { display: block; color: rgba(48,44,52,.62); font-size: 12px }
-.today-emotion strong { display: block; margin-top: 2px; font-size: 20px }
-.today-status-icons { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px 10px; padding-top: 16px }
-.status-icon-item { min-width: 0; display: grid; grid-template-columns: 30px minmax(0,1fr); align-items: center; gap: 7px }
+.status-icon-item small { display: block; color: rgba(48,44,52,.62); font-size: 12px }
+.today-status-icons { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); grid-auto-rows: 82px; gap: 12px }
+.status-icon-item { min-width: 0; height: 100%; display: grid; grid-template-columns: 30px minmax(0,1fr); align-items: center; gap: 8px; padding: 10px; border-radius: 14px; background: #f4f2f5 }
 .status-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: #f4f2f5; color: #527fa7; font-size: 19px }
 .status-icon-item.attention .status-icon { background: #fbe3ed; color: #d9578f }
 .status-icon-item em,.status-icon-item strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }

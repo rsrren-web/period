@@ -75,12 +75,12 @@ function renderReadableToday(logs) {
     root.innerHTML = `<button class="empty-today-state" type="button" data-open-log><span class="emoji-icon">➕</span><div><strong>记录今天的状态</strong><small>情绪、运动、社交、睡眠、排便和疼痛</small></div></button>`;
     return;
   }
-  const emotion = tagged(log, '情绪：') || Object.keys(EMOTIONS).find((name) => tags(log).includes(name)) || '普通';
-  const emotionInfo = EMOTIONS[emotion] || EMOTIONS.普通, bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：'), exercise = tags(log).filter((tag) => tag.startsWith('运动：')).map((tag) => tag.slice(3)), social = tags(log).filter((tag) => tag.startsWith('社交：')).map((tag) => tag.slice(3)), socialEffect = tagged(log, '社交影响：'), pain = normalizedPain(log), parts = painParts(log), menstrualNames = { on_period: '月经中', spotting_only: '点滴出血', not_on_period: '不在经期' }, flowNames = { spotting: '点滴', light: '少量', medium: '中等', heavy: '较多', very_heavy: '很多' }, menstrualStatus = menstrualNames[log.menstrual_status] || '', menstrualDetail = [Number.isInteger(log.cycle_day) ? `第${log.cycle_day}天` : '', flowNames[log.flow_level] ? `经量${flowNames[log.flow_level]}` : ''].filter(Boolean).join(' · ');
+  const emotion = tagged(log, '情绪：') || Object.keys(EMOTIONS).find((name) => tags(log).includes(name)) || '';
+  const emotionInfo = EMOTIONS[emotion] || { icon: '🙂', className: 'neutral' }, bedtime = tagged(log, '入睡：'), bowel = tagged(log, '排便：'), exercise = tags(log).filter((tag) => tag.startsWith('运动：')).map((tag) => tag.slice(3)), social = tags(log).filter((tag) => tag.startsWith('社交：')).map((tag) => tag.slice(3)), socialEffect = tagged(log, '社交影响：'), pain = normalizedPain(log), parts = painParts(log), menstrualNames = { on_period: '月经中', spotting_only: '点滴出血', not_on_period: '不在经期' }, flowNames = { spotting: '点滴', light: '少量', medium: '中等', heavy: '较多', very_heavy: '很多' }, menstrualStatus = menstrualNames[log.menstrual_status] || '未记录', menstrualDetail = [Number.isInteger(log.cycle_day) ? `第${log.cycle_day}天` : '', flowNames[log.flow_level] ? `经量${flowNames[log.flow_level]}` : ''].filter(Boolean).join(' · ');
   root.innerHTML = `<button class="readable-today-card" type="button" data-open-log aria-label="编辑今日状态">
-    <div class="today-emotion"><span class="emotion-blob emoji-icon emotion-${emotionInfo.className}" aria-hidden="true">${emotionInfo.icon}</span><div><small>主要情绪</small><strong>${escapeWellness(emotion)}</strong></div></div>
     <div class="today-status-icons">
-      ${menstrualStatus ? statusIcon('月经', menstrualStatus, menstrualDetail, '🩸') : ''}
+      ${statusIcon('情绪', emotion || '未记录', '', emotionInfo.icon)}
+      ${statusIcon('月经', menstrualStatus, menstrualDetail, '🩸')}
       ${statusIcon('精力', `${log.energy || '—'}/5`, Number(log.energy) <= 2 ? '偏低' : '', '⚡️', Number(log.energy) <= 2 ? 'attention' : '')}
       ${statusIcon('睡眠', `${log.sleep || '—'}/5`, bedtime || '', '🌙')}
       ${statusIcon('运动', `${log.activity || '—'}/5`, exercise.slice(0, 2).join('、'), '🏃‍♀️')}
