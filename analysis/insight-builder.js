@@ -5,7 +5,7 @@ const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amo
 const datesBetween = (start, end) => { const dates = []; for (let date = start; date <= end; date = addDays(date, 1)) dates.push(date); return dates; };
 const mean = (values) => values.length ? values.reduce((sum, value) => sum + Number(value), 0) / values.length : null;
 const round = (value) => value === null ? null : Math.round(value * 1000) / 1000;
-const metricLabels = Object.freeze({ energy: '精力', stress: '压力', sleep_quality: '睡眠', pain_max: '疼痛', activity_level: '活动', social_intensity: '社交强度', mood: '情绪', bloating_level: '腹胀' });
+const metricLabels = Object.freeze({ energy: '精力', stress: '压力', sleep_quality: '睡眠', pain_max: '疼痛', activity_level: '活动', social_intensity: '社交强度', mood: '情绪', bloating: '腹胀' });
 
 function fingerprint(value) { let hash = 2166136261; for (const character of JSON.stringify(value)) { hash ^= character.charCodeAt(0); hash = Math.imul(hash, 16777619); } return (hash >>> 0).toString(16).padStart(8, '0'); }
 function completedCycles(periods, asOf) {
@@ -22,7 +22,7 @@ function valueFor(log, metric) {
   if (metric === 'activity_level') return Number.isFinite(Number(log.activity)) && log.activity !== null ? Number(log.activity) : null;
   if (metric === 'social_intensity') return Number.isFinite(Number(log.socialIntensity)) && log.socialIntensity !== null ? Number(log.socialIntensity) : null;
   if (metric === 'mood') return Number.isFinite(Number(log.mood)) && log.mood !== null ? Number(log.mood) : null;
-  if (metric === 'bloating_level') return readTcmObservations(log.symptomTags).bloating_level;
+  if (metric === 'bloating') { const value = readTcmObservations(log.symptomTags).bloating; return value === null ? null : value === 'yes' ? 1 : 0; }
   return null;
 }
 
@@ -35,7 +35,7 @@ function binaryFor(log, metric) {
   if (metric === 'pain_present') return log.pain === null || log.pain === undefined ? null : Number(log.pain) > 0;
   if (metric === 'activity_low') return log.activity === null || log.activity === undefined ? null : Number(log.activity) <= 2;
   if (metric === 'bowel_no') return typeof log.bowelMovement === 'boolean' ? !log.bowelMovement : null;
-  if (metric === 'bloating_high') { const value = readTcmObservations(log.symptomTags).bloating_level; return value === null ? null : value >= 3; }
+  if (metric === 'bloating_high') { const value = readTcmObservations(log.symptomTags).bloating; return value === null ? null : value === 'yes'; }
   if (metric === 'nausea_present') { const value = readTcmObservations(log.symptomTags).nausea; return value === null ? null : value === 'yes'; }
   if (metric === 'diarrhea_present') { const value = readTcmObservations(log.symptomTags).diarrhea; return value === null ? null : value === 'yes'; }
   return null;
