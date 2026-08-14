@@ -9,9 +9,30 @@ export const ANALYSIS_CONFIG = Object.freeze({
     rolling_90d: Object.freeze({ total_days: 90, min_valid_days: 30, min_completion_rate: 0 }),
     cycle_phase: Object.freeze({ min_valid_days: 1, min_completion_rate: 0.60, min_complete_cycles: 3 }),
     recent_cycles: Object.freeze({ min_valid_days: 14, min_completion_rate: 0, min_complete_cycles: 3, cycle_count: 3 }),
-    comparison_segment: Object.freeze({ min_valid_days: 7, min_completion_rate: 0.60 })
+    comparison_segment: Object.freeze({ min_valid_days: 7, min_completion_rate: 0.60 }),
+    event_current: Object.freeze({ min_valid_days: 1, min_completion_rate: 1 }),
+    event_persistence: Object.freeze({ min_valid_days: 3, min_completion_rate: 1 }),
+    event_recent_30d: Object.freeze({ min_valid_days: 14, min_completion_rate: 0 }),
+    pattern_window: Object.freeze({ min_valid_days: 4, min_completion_rate: 0.60, min_complete_cycles: 2 }),
+    association: Object.freeze({ min_valid_days: 14, min_completion_rate: 0.60 })
   }),
-  baseline: Object.freeze({ aggregation: 'median' })
+  baseline: Object.freeze({ aggregation: 'median' }),
+  events: Object.freeze({
+    deviation_min_absolute_difference: 1,
+    persistence_min_days: 3,
+    recently_first_recorded_lookback_days: 30,
+    states: Object.freeze({
+      sleep_quality: Object.freeze({ operator: 'lte', value: 2 }),
+      stress: Object.freeze({ operator: 'gte', value: 4 }),
+      pain_max: Object.freeze({ operator: 'gt', value: 0 }),
+      bowel: Object.freeze({ operator: 'eq', value: false })
+    })
+  }),
+  patterns: Object.freeze({
+    cycle_pattern_min_complete_cycles: 2,
+    association_min_pairs: 14,
+    detected_effect_size: 0.20
+  })
 });
 
 export const METRIC_DEFINITIONS = Object.freeze({
