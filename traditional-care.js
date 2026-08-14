@@ -181,7 +181,15 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
     ? '<section class="body-sense-care"><strong>今天记录了腹泻</strong><p>先少量多次补水，选择清淡、少量食物；今天暂停油腻辛辣和高强度运动。</p></section>'
     : bodySense.nausea === 'yes'
       ? '<section class="body-sense-care"><strong>今天记录了恶心</strong><p>少量分次进食，饭后保持坐直；今天先避开油腻、浓味和一次吃得过饱。</p></section>'
-      : '';
+      : bodySense.bloating === 'yes'
+        ? '<section class="body-sense-care"><strong>今天记录了腹胀</strong><p>把正餐分成较小份，放慢进食速度；餐后舒缓走动约10分钟。</p></section>'
+        : bodySense.poor_appetite === 'yes'
+          ? '<section class="body-sense-care"><strong>今天记录了食欲差</strong><p>优先选择少量、熟软且容易接受的食物，分次吃，不要求一次完成正常份量。</p></section>'
+          : bodySense.body_heaviness === 'yes'
+            ? '<section class="body-sense-care"><strong>今天记录了沉重困倦</strong><p>先做5–10分钟轻柔走动或伸展；若活动后更疲惫，就改为休息并优先保证今晚睡眠。</p></section>'
+            : bodySense.cold_sensation === 'yes'
+              ? `<section class="body-sense-care"><strong>今天记录了明显怕冷</strong><p>${bodySense.warmth_relief === 'yes' ? '既然温热后感觉缓解，可继续隔衣温热敷15–20分钟，并注意保暖。' : '先增加衣物和温热正餐；如尝试热敷，以隔衣、不烫、15–20分钟为限。'}</p></section>`
+              : '';
   document.querySelector('#tcmPhaseTitle').textContent = theory.title;
   document.querySelector('#tcmPhaseDot').className = `phase-dot phase-${phase.key}`;
   const token = ++recommendationRenderToken;
