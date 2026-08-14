@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 39,
-  "updatedAt": "2026-08-13T21:24:38.168Z",
+  "revision": 40,
+  "updatedAt": "2026-08-14T00:22:11.196Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -1699,23 +1699,23 @@
       ],
       "symptomTags": null,
       "temperature": null,
-      "menstrual_status": null,
-      "cycle_day": null,
-      "cycle_day_source": "not_recorded",
-      "cycle_day_anchor_start": null,
-      "flow_level": null,
-      "blood_color": null,
-      "clot_presence": "not_recorded",
+      "menstrual_status": "on_period",
+      "cycle_day": 5,
+      "cycle_day_source": "auto_calculated",
+      "cycle_day_anchor_start": "2026-08-09",
+      "flow_level": "light",
+      "blood_color": "brown",
+      "clot_presence": "no",
       "clot_level": null,
       "spotting_context": null,
-      "period_episode_id": null,
+      "period_episode_id": "ee0bd4b7-94f2-4b0d-90f7-18f9d5526020",
       "fieldStatus": {
-        "mood": "legacy_uncertain",
-        "energy": "legacy_uncertain",
-        "sleep": "legacy_uncertain",
-        "activity": "legacy_uncertain",
-        "stress": "legacy_uncertain",
-        "pain": "legacy_uncertain",
+        "mood": "reported",
+        "energy": "reported",
+        "sleep": "reported",
+        "activity": "reported",
+        "stress": "reported",
+        "pain": "reported",
         "primaryEmotion": "reported",
         "bedtime": "reported",
         "bowelMovement": "not_recorded",
@@ -1726,14 +1726,14 @@
         "painLocations": "reported",
         "symptomTags": "not_recorded",
         "temperature": "not_recorded",
-        "menstrual_status": "not_recorded",
-        "cycle_day": "not_recorded",
-        "flow_level": "not_recorded",
-        "blood_color": "not_recorded",
-        "clot_presence": "not_recorded",
+        "menstrual_status": "reported",
+        "cycle_day": "system_generated",
+        "flow_level": "reported",
+        "blood_color": "reported",
+        "clot_presence": "reported",
         "clot_level": "not_recorded",
         "spotting_context": "not_recorded",
-        "period_episode_id": "not_recorded"
+        "period_episode_id": "system_generated"
       },
       "legacySymptoms": [
         "情绪：开心",
@@ -1746,7 +1746,7 @@
         "疼痛部位：腿部",
         "疼痛部位：足部"
       ],
-      "updatedAt": "2026-08-13T21:24:36.711Z"
+      "updatedAt": "2026-08-14T00:22:09.969Z"
     }
   },
   "tombstones": {
@@ -1804,6 +1804,7 @@
     "e9fb3b9d-06e1-45bc-82eb-0b9cd9170d6f",
     "245dde39-b489-4fb1-a999-c057891ee9b1",
     "e3dd71ab-b3f6-4374-bd98-01d2efa4816b",
-    "139fa18d-1084-4257-a502-0aff38703da9"
+    "139fa18d-1084-4257-a502-0aff38703da9",
+    "9b52bbd2-79c5-422b-80e9-316daf3a7972"
   ]
 }
