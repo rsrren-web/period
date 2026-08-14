@@ -1,19 +1,13 @@
-﻿globalThis.document = { querySelector(selector) { if (selector === '#tcmAdvice') return globalThis.out; return { textContent: '', className: '' }; } };
-globalThis.out = { innerHTML: '' };
-await import('../traditional-care.js');
-const cases = [
-  [{key:'follicular'}, {energy:2}, '无糖黑豆浆'],
-  [{key:'follicular'}, {energy:4}, '黑豆煮水'],
-  [{key:'pms'}, {stress:4}, '玫瑰陈皮饮'],
-  [{key:'period'}, {symptoms:['怕冷']}, '淡姜枣饮'],
-  [{key:'period'}, {}, '小米山药粥'],
-  [{key:'ovulation'}, {}, '雪梨百合饮']
-];
-for (const [phase, log, expected] of cases) {
-  globalThis.renderTraditionalAdvice(phase, log);
-  if (!globalThis.out.innerHTML.includes(expected)) throw new Error(`未触发 ${expected}`);
-  for (const label of ['食材','做法','为什么今天推荐','先换一个']) {
-    if (!globalThis.out.innerHTML.includes(label)) throw new Error(`缺少 ${label}`);
-  }
-  console.log(`${phase.key}: ${expected}`);
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+const library = JSON.parse(fs.readFileSync(new URL('../knowledge/interventions.v1.json', import.meta.url), 'utf8'));
+const edible = library.interventions.filter((item) => ['tea', 'food'].includes(item.category));
+assert.equal(edible.length, 48);
+for (const item of edible) {
+  assert.ok(item.execution?.ingredients?.length, `${item.id} 缺少具体用料`);
+  assert.ok(item.execution?.steps?.length, `${item.id} 缺少具体步骤`);
+  assert.ok(item.execution.ingredients.some((part) => part.name !== '水'), `${item.id} 不能把水作为唯一食养内容`);
 }
+console.log(`食养干预库：${edible.length}项均包含具体用料和步骤。`);
+
