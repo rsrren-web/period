@@ -18,7 +18,7 @@
   <link rel="apple-touch-icon" href="public/icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="https://fontsapi.zeoseven.com/184/main/result.css">
-  <link rel="stylesheet" href="styles.css?v=85">
+  <link rel="stylesheet" href="styles.css?v=86">
   <title>周期生活助手</title>
 </head>
 <body>
@@ -82,16 +82,17 @@
     </section>
 
     <section id="insights" class="view">
-      <div class="page-heading"><p class="eyebrow">趋势</p><h1>认识自己的重复模式</h1><p>只描述个人记录中的相关变化，不代表因果或诊断。</p></div>
-      <nav class="insight-question-nav" aria-label="按问题查看趋势"><button class="active" type="button" data-question-target="rhythm">周期节律</button><button type="button" data-question-target="factors">影响因素</button><button type="button" data-question-target="pms">经前规律</button></nav>
-      <section id="rhythmPanel" data-question-panel="rhythm">
-        <section id="trendHighlights" class="trend-highlights" aria-label="近期重要观察"></section>
-        <article id="weeklyPatternPanel" class="panel"></article>
-        <article id="phasePatternPanel" class="panel"></article>
+      <div class="page-heading"><p class="eyebrow">趋势</p><h1>我的个人规律</h1><p>只显示有对照、有足够记录支持的个人观察；相关不等于因果或诊断。</p></div>
+      <section class="insights-v1-stack" aria-live="polite">
+        <section><div class="insights-section-heading"><div><p class="eyebrow">优先阅读</p><h2>最值得知道</h2></div><span id="insightsGeneratedAt" class="muted"></span></div><div id="insightsTop" class="insight-card-list"></div></section>
+        <section><div class="insights-section-heading"><div><p class="eyebrow">提前观察</p><h2>下一周期值得注意</h2></div></div><div id="insightsNextCycle" class="insight-card-list compact"></div></section>
+        <section><div class="insights-section-heading"><div><p class="eyebrow">阶段对照</p><h2>我的周期画像</h2></div></div><div id="insightsPhaseProfiles" class="phase-profile-grid"></div></section>
+        <section><div class="insights-section-heading"><div><p class="eyebrow">相关 ≠ 因果</p><h2>影响因素</h2></div></div><p class="insights-method-note">这些关系表示经常一起出现或先后出现，不代表前一项导致后一项。</p><div id="insightsAssociations"></div></section>
+        <section><div class="insights-section-heading"><div><p class="eyebrow">个人反馈</p><h2>对我有效的调理</h2></div></div><div id="insightsInterventions"></div></section>
+        <section id="insightsTcmSection"><div class="insights-section-heading"><div><p class="eyebrow">结构化体感</p><h2>中医状态组合观察</h2></div></div><div id="insightsTcmClusters" class="insight-card-list"></div></section>
+        <details class="insights-quality"><summary>查看数据完整度</summary><div id="insightsDataQuality"></div></details>
       </section>
-      <article id="questionFactors" data-question-panel="factors" hidden class="panel personal-factor-panel"><div class="section-title"><div><p class="eyebrow">影响因素</p><h2>哪些记录经常一起变化？</h2></div><span class="observation-badge">相关≠因果</span></div><div id="personalFactorInsight"></div></article>
-      <article id="questionPms" data-question-panel="pms" hidden class="panel pms-observation-panel"><div class="section-title"><div><p class="eyebrow">经前规律</p><h2>经前一周重复出现了什么？</h2></div><strong id="pmsBurden" class="burden-badge">待记录</strong></div><div id="pmsInsight"></div></article>
-      <div class="legacy-insight-targets" hidden aria-hidden="true"><article id="cyclePatternSummary"></article><div id="summaryStats"></div><div id="dailyTrendControls"></div><div id="dailyTrendChart"></div><div id="dailyTrendSummary"></div><strong id="quarterScore"></strong><div id="quarterMetrics"></div><div id="quarterGuidance"></div><div id="cycleChart"></div><div id="moodInsight"></div><div id="lifestyleInsight"></div><div id="qualityInsight"></div><div id="dailyAdvice"></div></div>
+      <div class="legacy-insight-targets" hidden aria-hidden="true"><section id="trendHighlights"></section><article id="weeklyPatternPanel"></article><article id="phasePatternPanel"></article><article id="cyclePatternSummary"></article><article id="questionFactors"><div id="personalFactorInsight"></div></article><article id="questionPms"><strong id="pmsBurden"></strong><div id="pmsInsight"></div></article><div id="summaryStats"></div><div id="dailyTrendControls"></div><div id="dailyTrendChart"></div><div id="dailyTrendSummary"></div><strong id="quarterScore"></strong><div id="quarterMetrics"></div><div id="quarterGuidance"></div><div id="cycleChart"></div><div id="moodInsight"></div><div id="lifestyleInsight"></div><div id="qualityInsight"></div><div id="dailyAdvice"></div></div>
     </section>
 
     <section id="more" class="view">
@@ -133,7 +134,7 @@
   <dialog id="logDialog" class="sheet-dialog wellness-log-dialog"><form id="dailyForm">
     <div class="dialog-head sticky"><div><p class="eyebrow">每日记录</p><h2 id="logDialogTitle">今天感觉怎么样？</h2></div><button type="button" class="close-dialog round-button emoji-icon" aria-label="关闭">✖️</button></div>
     <label class="log-date-field"><span>记录日期</span><input id="logDate" name="date" type="date" required></label>
-    <nav class="log-section-nav" aria-label="记录项目"><a href="#logMenstrual">月经</a><a href="#logMood">情绪</a><a href="#logExercise">运动</a><a href="#logSocial">社交</a><a href="#logSleep">睡眠</a><a href="#logBowel">排便</a><a href="#logPain">疼痛</a></nav>
+    <nav class="log-section-nav" aria-label="记录项目"><a href="#logMenstrual">月经</a><a href="#logMood">情绪</a><a href="#logExercise">运动</a><a href="#logSocial">社交</a><a href="#logSleep">睡眠</a><a href="#logBowel">排便</a><a href="#logPain">疼痛</a><a href="#logBodySense">体感</a></nav>
 
     <section id="logMenstrual" class="log-section menstrual-section"><div class="log-section-title"><span>01</span><div><h3>今天的月经状态</h3><p>“不在经期”是明确记录；“暂不记录”会保留为未记录。</p></div></div>
       <fieldset class="choice-field menstrual-status-field"><legend>月经状态</legend><div class="choice-pills menstrual-status-options"><label><input type="radio" name="menstrualStatus" value="on_period"><span>月经中</span></label><label><input type="radio" name="menstrualStatus" value="spotting_only"><span>仅点滴出血</span></label><label><input type="radio" name="menstrualStatus" value="not_on_period"><span>不在经期</span></label><label><input type="radio" name="menstrualStatus" value="__not_recorded"><span>暂不记录</span></label></div></fieldset>
@@ -186,13 +187,28 @@
       <div class="body-map-grid"><label><input type="checkbox" name="painLocation" value="头部"><span class="emoji-icon">🤕</span><small>头部</small></label><label><input type="checkbox" name="painLocation" value="乳房/胸部"><span class="emoji-icon">🫁</span><small>乳房/胸部</small></label><label><input type="checkbox" name="painLocation" value="肩颈"><span class="emoji-icon">💆‍♀️</span><small>肩颈</small></label><label><input type="checkbox" name="painLocation" value="胃/上腹"><span class="emoji-icon">🤢</span><small>胃/上腹</small></label><label><input type="checkbox" name="painLocation" value="小腹/盆腔"><span class="emoji-icon">🩸</span><small>小腹/盆腔</small></label><label><input type="checkbox" name="painLocation" value="腰背"><span class="emoji-icon">🧍‍♀️</span><small>腰背</small></label><label><input type="checkbox" name="painLocation" value="臀髋"><span class="emoji-icon">🦴</span><small>臀髋</small></label><label><input type="checkbox" name="painLocation" value="腿部"><span class="emoji-icon">🦵</span><small>腿部</small></label><label><input type="checkbox" name="painLocation" value="足部"><span class="emoji-icon">🦶</span><small>足部</small></label><label><input type="checkbox" name="painLocation" value="肌肉/关节"><span class="emoji-icon">💪</span><small>肌肉/关节</small></label></div>
       <div class="core-score" data-score-labels="无痛|轻微|较轻|中等|明显|很强"><span class="core-score-label">最高疼痛值</span><div class="score-picker six-point" aria-label="疼痛评分"><label><input name="pain" type="radio" value="0" checked><span>0</span></label><label><input name="pain" type="radio" value="1"><span>1</span></label><label><input name="pain" type="radio" value="2"><span>2</span></label><label><input name="pain" type="radio" value="3"><span>3</span></label><label><input name="pain" type="radio" value="4"><span>4</span></label><label><input name="pain" type="radio" value="5"><span>5</span></label></div><output data-score-output="pain">无痛</output></div>
     </section>
+
+    <section id="logBodySense" class="log-section body-sense-section"><div class="log-section-title"><span>08</span><div><h3>体感观察</h3><p>这些是自我观察，不用于诊断；不选择会保留为“未记录”。</p></div></div>
+      <div class="body-sense-grid">
+        <fieldset class="choice-field"><legend>今天是否明显怕冷？</legend><div class="choice-pills"><label><input type="radio" name="coldSensation" value="yes"><span>是</span></label><label><input type="radio" name="coldSensation" value="no"><span>否</span></label></div></fieldset>
+        <fieldset class="choice-field"><legend>今天是否手脚发冷？</legend><div class="choice-pills"><label><input type="radio" name="coldHandsFeet" value="yes"><span>是</span></label><label><input type="radio" name="coldHandsFeet" value="no"><span>否</span></label></div></fieldset>
+        <fieldset class="choice-field"><legend>不适是否因热敷而缓解？</legend><div class="choice-pills"><label><input type="radio" name="warmthRelief" value="yes"><span>是</span></label><label><input type="radio" name="warmthRelief" value="no"><span>否</span></label></div></fieldset>
+        <fieldset class="choice-field"><legend>今天是否身体沉重、困倦不爽？</legend><div class="choice-pills"><label><input type="radio" name="bodyHeaviness" value="yes"><span>是</span></label><label><input type="radio" name="bodyHeaviness" value="no"><span>否</span></label></div></fieldset>
+      </div>
+      <div class="compact-score-grid">
+        <div class="core-score" data-score-labels="没有|轻微|一般|明显|很明显"><span class="core-score-label">腹胀程度</span><div class="score-picker" aria-label="腹胀程度"><label><input name="bloatingLevel" type="radio" value="1"><span>1</span></label><label><input name="bloatingLevel" type="radio" value="2"><span>2</span></label><label><input name="bloatingLevel" type="radio" value="3"><span>3</span></label><label><input name="bloatingLevel" type="radio" value="4"><span>4</span></label><label><input name="bloatingLevel" type="radio" value="5"><span>5</span></label></div><output data-score-output="bloatingLevel">未记录</output></div>
+        <div class="core-score" data-score-labels="很差|偏差|一般|较好|很好"><span class="core-score-label">食欲情况</span><div class="score-picker" aria-label="食欲情况"><label><input name="appetiteLevel" type="radio" value="1"><span>1</span></label><label><input name="appetiteLevel" type="radio" value="2"><span>2</span></label><label><input name="appetiteLevel" type="radio" value="3"><span>3</span></label><label><input name="appetiteLevel" type="radio" value="4"><span>4</span></label><label><input name="appetiteLevel" type="radio" value="5"><span>5</span></label></div><output data-score-output="appetiteLevel">未记录</output></div>
+      </div>
+    </section>
     <div class="dialog-actions sticky-save"><button type="submit" class="primary">保存今日记录</button></div>
   </form></dialog>
 
   <dialog id="periodDialog"><form method="dialog" id="periodForm"><input name="id" type="hidden"><input name="originalStart" type="hidden"><input name="mode" type="hidden"><div class="dialog-head"><div><p class="eyebrow">月经记录</p><h2 id="periodDialogTitle">修改本次月经</h2></div><button value="cancel" class="round-button emoji-icon" aria-label="关闭">✖️</button></div><p id="periodDialogHint" class="muted"></p><label>第一天<input name="start" type="date" required></label><label>最后一个月经日<input name="end" type="date"></label><label hidden>类型<select name="type"><option value="period">正式月经</option></select></label><div class="dialog-actions"><button id="deletePeriodBtn" type="button" class="danger" hidden>删除整次经期</button><button value="cancel" class="soft">取消</button><button value="default" class="primary">保存修改</button></div></form></dialog>
   <dialog id="dayDialog" class="day-dialog"><div class="dialog-head"><div><p class="eyebrow">当天详情</p><h2 id="dayDialogTitle"></h2></div><button class="close-dialog round-button emoji-icon" aria-label="关闭">✖️</button></div><div id="dayDialogBody"></div><div class="day-primary-actions"><button id="daySetPeriodBtn" class="primary">标记为月经日</button><button id="dayCancelPeriodBtn" class="danger" hidden>取消当天经期</button><button id="dayEditPeriodBtn" class="soft" hidden>修改本次开始/结束日期</button></div><button id="dayEditLog" class="text-button day-log-action">记录身体状态</button></dialog>
 
+  <dialog id="interventionFeedbackDialog" class="feedback-dialog"><form id="interventionFeedbackForm" method="dialog"><input name="interventionId" type="hidden"><input name="interventionName" type="hidden"><input name="target" type="hidden"><div class="dialog-head"><div><p class="eyebrow">调养反馈</p><h2>这次对你有帮助吗？</h2></div><button value="cancel" class="round-button emoji-icon" aria-label="关闭">✖️</button></div><p id="interventionFeedbackName" class="muted"></p><fieldset class="choice-field"><legend>你的感受</legend><div class="choice-pills"><label><input name="helpful" type="radio" value="yes" required><span>有帮助</span></label><label><input name="helpful" type="radio" value="no"><span>没明显帮助</span></label></div></fieldset><div class="feedback-score-grid"><label>使用前不适程度<input name="before" type="number" min="0" max="5" step="1" inputmode="numeric" placeholder="0–5"></label><label>使用后不适程度<input name="after" type="number" min="0" max="5" step="1" inputmode="numeric" placeholder="0–5"></label></div><p class="field-hint">分数可不填；同一方案至少记录3次后才开始汇总，5次前会标记“数据仍少”。</p><div class="dialog-actions"><button value="cancel" class="soft">取消</button><button value="default" class="primary">保存反馈</button></div></form></dialog>
+
   <div id="toast" class="toast" role="status"></div>
-  <script src="sync-config.js"></script><script type="module" src="traditional-care.js?v=85"></script><script type="module" src="daily-insights.js?v=85"></script><script type="module" src="personal-insights.js?v=85"></script><script type="module" src="wellness-engine.js?v=85"></script><script type="module" src="app.js?v=85"></script>
+  <script src="sync-config.js"></script><script type="module" src="traditional-care.js?v=86"></script><script type="module" src="daily-insights.js?v=86"></script><script type="module" src="personal-insights.js?v=86"></script><script type="module" src="wellness-engine.js?v=86"></script><script type="module" src="insights-page.js?v=86"></script><script type="module" src="app.js?v=86"></script>
 </body>
 </html>
