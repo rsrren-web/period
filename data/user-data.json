@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 41,
-  "updatedAt": "2026-08-14T04:52:29.781Z",
+  "revision": 42,
+  "updatedAt": "2026-08-14T05:48:29.243Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -1697,7 +1697,14 @@
         "腿部",
         "足部"
       ],
-      "symptomTags": null,
+      "symptomTags": [
+        "tcm:cold_sensation:no",
+        "tcm:cold_hands_feet:no",
+        "tcm:warmth_relief:no",
+        "tcm:bloating_level:1",
+        "tcm:appetite_level:2",
+        "tcm:body_heaviness:no"
+      ],
       "temperature": null,
       "menstrual_status": "on_period",
       "cycle_day": 5,
@@ -1724,7 +1731,7 @@
         "socialIntensity": "reported",
         "socialEffect": "reported",
         "painLocations": "reported",
-        "symptomTags": "not_recorded",
+        "symptomTags": "reported",
         "temperature": "not_recorded",
         "menstrual_status": "reported",
         "cycle_day": "system_generated",
@@ -1746,7 +1753,7 @@
         "疼痛部位：腿部",
         "疼痛部位：足部"
       ],
-      "updatedAt": "2026-08-14T04:52:28.764Z"
+      "updatedAt": "2026-08-14T05:48:21.422Z"
     }
   },
   "tombstones": {
@@ -1806,6 +1813,7 @@
     "e3dd71ab-b3f6-4374-bd98-01d2efa4816b",
     "139fa18d-1084-4257-a502-0aff38703da9",
     "9b52bbd2-79c5-422b-80e9-316daf3a7972",
-    "248254b6-b98c-4f8e-8dcf-45a0affc593a"
+    "248254b6-b98c-4f8e-8dcf-45a0affc593a",
+    "29e66db1-2698-4c76-be81-cafab5971515"
   ]
 }
