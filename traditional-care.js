@@ -12,6 +12,7 @@ import { loadInterventionLibrary } from './analysis/intervention-engine.js';
 import { generateRecommendations } from './analysis/recommendation-engine.js';
 import { buildRecommendationEvidence } from './analysis/recommendation-pipeline.js';
 import { selectDailyNourishment } from './analysis/daily-nourishment.js';
+import { readTcmObservations } from './tcm-observation-model.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const addDays = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
@@ -101,7 +102,8 @@ const CATEGORY_META = Object.freeze({
 const METRIC_NAMES = Object.freeze({
   stress: '压力', energy: '精力', sleep_quality: '睡眠', activity_level: '活动', social_intensity: '社交强度', pain_max: '疼痛',
   'pain.head': '头部疼痛', breast_tenderness: '乳房不适', 'pain.neck_shoulder': '肩颈不适', stomach_discomfort: '胃部不适',
-  'pain.lower_abdomen': '小腹不适', 'pain.lower_back': '腰背不适', 'pain.legs': '腿部不适', 'pain.feet': '足部不适', body_stiffness: '身体僵硬'
+  'pain.lower_abdomen': '小腹不适', 'pain.lower_back': '腰背不适', 'pain.legs': '腿部不适', 'pain.feet': '足部不适', body_stiffness: '身体僵硬',
+  nausea: '恶心', diarrhea: '腹泻', cold_sensation: '明显怕冷', bloating: '腹胀'
 });
 
 function recommendationReason(recommendation) {
@@ -165,7 +167,7 @@ function recentEvidence(recent, signals) {
 globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   const root = document.querySelector('#tcmAdvice');
   if (!root) return;
-  const recent = recentContext(logs), signals = signalsFor(log, recent), theory = PHASE_THEORY[phase.key] || PHASE_THEORY.follicular;
+  const recent = recentContext(logs), signals = signalsFor(log, recent), theory = PHASE_THEORY[phase.key] || PHASE_THEORY.follicular, bodySense = readTcmObservations(log.symptomTags);
   const nourishment = selectDailyNourishment({ recipes: FOOD_RECIPES, phase_key: phase.key, record_date: phase.date || todayIso(), signals });
   const constitution = constitutionHint(recent), evidence = recentEvidence(recent, signals);
   const practicalReason = {
@@ -175,17 +177,22 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
     pms: '接近经期，今天提前照顾睡眠、情绪和腹部舒适。'
   }[phase.key] || '今天按当前阶段和近7天记录安排调养。';
   const practicalEvidence = evidence.slice(0, 2);
+  const bodySenseAction = bodySense.diarrhea === 'yes'
+    ? '<section class="body-sense-care"><strong>今天记录了腹泻</strong><p>先少量多次补水，选择清淡、少量食物；今天暂停油腻辛辣和高强度运动。</p></section>'
+    : bodySense.nausea === 'yes'
+      ? '<section class="body-sense-care"><strong>今天记录了恶心</strong><p>少量分次进食，饭后保持坐直；今天先避开油腻、浓味和一次吃得过饱。</p></section>'
+      : '';
   document.querySelector('#tcmPhaseTitle').textContent = theory.title;
   document.querySelector('#tcmPhaseDot').className = `phase-dot phase-${phase.key}`;
   const token = ++recommendationRenderToken;
   root.innerHTML = `
     <section class="tcm-reasoning"><span>今天为什么这样建议</span><p>${esc(practicalReason)}</p>${practicalEvidence.length ? `<ul>${practicalEvidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : ''}</section>
+    ${bodySenseAction}
     ${constitution ? `<details class="constitution-hint"><summary><span>体质观察线索</span><strong>${esc(constitution.name)} · ${constitution.total}次线索</strong></summary><div><p>${esc(constitution.explanation)}</p><p><strong>边界：</strong>${esc(constitution.avoid)}</p><small>这里只是近7天的感受倾向，不是体质诊断。</small></div></details>` : ''}
     <div class="traditional-plan">
       <section class="traditional-layer" aria-label="每日阶段食养">
         <header class="traditional-layer-heading"><strong>每日阶段食养</strong><span>固定1项 · 茶饮或食谱</span></header>
         ${nourishment ? foodCard(nourishment) : '<div class="traditional-no-recommendation"><strong>今天暂时没有阶段食谱</strong><p>不会用温水或随机内容占位。</p></div>'}
-        <p class="traditional-layer-note">按当前周期阶段和已记录的饮食相关状态选择，与下方的数据触发建议分开。</p>
       </section>
       <section class="traditional-layer" aria-label="针对性调养">
         <header class="traditional-layer-heading"><strong>针对性调养</strong><span>有证据才显示 · 最多2项</span></header>
