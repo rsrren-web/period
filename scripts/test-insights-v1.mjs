@@ -3,15 +3,21 @@ import fs from 'node:fs';
 import { readTcmObservations, writeTcmObservations } from '../tcm-observation-model.js';
 import { aggregateInterventionResponses } from '../analysis/intervention-response-aggregator.js';
 import { analyzeTcmClusters } from '../analysis/tcm-cluster-engine.js';
+import { adaptRecommendationContext } from '../analysis/recommendation-context-adapter.js';
 
 const empty = readTcmObservations([]);
 assert.equal(empty.cold_sensation, null, '未记录必须保持 null');
-const tags = writeTcmObservations(['普通标签'], { cold_sensation: 'no', cold_hands_feet: 'yes', warmth_relief: null, bloating_level: 4, appetite_level: null, body_heaviness: 'no' });
+const tags = writeTcmObservations(['普通标签'], { cold_sensation: 'no', nausea: 'yes', diarrhea: 'no', warmth_relief: null, bloating_level: 4, appetite_level: null, body_heaviness: 'no' });
 const restored = readTcmObservations(tags);
 assert.equal(restored.cold_sensation, 'no', '明确否不能变成未记录');
-assert.equal(restored.cold_hands_feet, 'yes');
+assert.equal(restored.nausea, 'yes');
+assert.equal(restored.diarrhea, 'no');
 assert.equal(restored.warmth_relief, null);
 assert.equal(restored.bloating_level, 4);
+const adapted = adaptRecommendationContext({ today_record: { symptomTags: tags, fieldStatus: {} }, record_date: '2026-08-13' });
+assert.equal(adapted.context.nausea, true, '恶心必须进入干预匹配上下文');
+assert.equal(adapted.context.diarrhea, false, '明确无腹泻必须区别于未记录');
+assert.ok(adapted.current_discomforts.some((item) => item.metric === 'nausea'), '恶心必须能触发当前不适门控');
 
 const feedback = Array.from({ length: 3 }, (_, index) => ({ intervention_id: 'tea_1', intervention_name: '测试茶饮', target: 'sleep_quality', used_at: `2026-08-0${index + 1}T12:00:00Z`, helpful: index !== 2, before: 4, after: 2 }));
 const response = aggregateInterventionResponses(feedback);
@@ -26,6 +32,10 @@ assert.equal(noTcm.filter((item) => item.status === 'active').length, 0, '无新
 assert.ok(noTcm.every((item) => item.status === 'insufficient'), '数据不足状态必须保留，供质量审计使用');
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-for (const name of ['coldSensation', 'coldHandsFeet', 'warmthRelief', 'bloatingLevel', 'appetiteLevel', 'bodyHeaviness']) assert.match(html, new RegExp(`name="${name}"`));
-assert.match(html, /insights-page\.js\?v=86/);
+const app = fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+for (const name of ['coldSensation', 'warmthRelief', 'nausea', 'diarrhea', 'bloatingLevel', 'appetiteLevel', 'bodyHeaviness']) assert.match(html, new RegExp(`name="${name}"`));
+assert.doesNotMatch(html, /name="coldHandsFeet"/);
+assert.match(app, /showToast\('已保存 ✓'\)/);
+assert.equal(tcmRules.minimum_cycles, 2);
+assert.match(html, /insights-page\.js\?v=87/);
 console.log('Insights v1 与 TCM 体感模型检查通过');
