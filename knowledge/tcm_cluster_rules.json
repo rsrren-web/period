@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "minimum_cycles": 2,
   "minimum_feature_completion": 0.60,
   "minimum_constituent_features": 2,
@@ -27,7 +27,7 @@
         { "field": "emotion", "operator": "in", "value": ["焦虑", "生气"], "weight": 2, "label": "焦虑或生气" },
         { "field": "breast_chest_pain", "operator": "==", "value": true, "weight": 2, "label": "乳房/胸部不适" },
         { "field": "neck_shoulder_pain", "operator": "==", "value": true, "weight": 1, "label": "肩颈不适" },
-        { "field": "bloating_level", "operator": ">=", "value": 3, "weight": 2, "label": "腹胀明显" },
+        { "field": "bloating", "operator": "==", "value": "yes", "weight": 2, "label": "腹胀" },
         { "field": "social_effect", "operator": "==", "value": "draining", "weight": 1, "label": "社交后消耗" }
       ],
       "minimum_score": 5,
@@ -38,8 +38,8 @@
       "display_name": "消化负担 + 沉重样组合",
       "hard_requirements": [],
       "weighted_features": [
-        { "field": "bloating_level", "operator": ">=", "value": 3, "weight": 3, "label": "腹胀明显" },
-        { "field": "appetite_level", "operator": "<=", "value": 2, "weight": 2, "label": "食欲偏低" },
+        { "field": "bloating", "operator": "==", "value": "yes", "weight": 3, "label": "腹胀" },
+        { "field": "poor_appetite", "operator": "==", "value": "yes", "weight": 2, "label": "食欲差" },
         { "field": "body_heaviness", "operator": "==", "value": "yes", "weight": 2, "label": "身体沉重" },
         { "field": "nausea", "operator": "==", "value": "yes", "weight": 2, "label": "恶心" },
         { "field": "diarrhea", "operator": "==", "value": "yes", "weight": 2, "label": "腹泻" },
@@ -59,7 +59,7 @@
         { "field": "emotion", "operator": "==", "value": "疲倦", "weight": 2, "label": "明显疲倦" },
         { "field": "activity", "operator": "<=", "value": 2, "weight": 1, "label": "活动偏少" },
         { "field": "sleep", "operator": "<=", "value": 2, "weight": 2, "label": "睡眠偏低" },
-        { "field": "appetite_level", "operator": "<=", "value": 2, "weight": 1, "label": "食欲偏低" }
+        { "field": "poor_appetite", "operator": "==", "value": "yes", "weight": 1, "label": "食欲差" }
       ],
       "minimum_score": 5,
       "intervention_tags": ["food_level", "rest", "gentle_movement"]
