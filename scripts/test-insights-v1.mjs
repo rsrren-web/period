@@ -7,13 +7,14 @@ import { adaptRecommendationContext } from '../analysis/recommendation-context-a
 
 const empty = readTcmObservations([]);
 assert.equal(empty.cold_sensation, null, '未记录必须保持 null');
-const tags = writeTcmObservations(['普通标签'], { cold_sensation: 'no', nausea: 'yes', diarrhea: 'no', warmth_relief: null, bloating_level: 4, appetite_level: null, body_heaviness: 'no' });
+const tags = writeTcmObservations(['普通标签'], { cold_sensation: 'no', nausea: 'yes', diarrhea: 'no', warmth_relief: 'no', bloating: 'yes', poor_appetite: 'no', body_heaviness: 'no' });
 const restored = readTcmObservations(tags);
 assert.equal(restored.cold_sensation, 'no', '明确否不能变成未记录');
 assert.equal(restored.nausea, 'yes');
 assert.equal(restored.diarrhea, 'no');
-assert.equal(restored.warmth_relief, null);
-assert.equal(restored.bloating_level, 4);
+assert.equal(restored.warmth_relief, 'no');
+assert.equal(restored.bloating, 'yes');
+assert.equal(restored.poor_appetite, 'no');
 const adapted = adaptRecommendationContext({ today_record: { symptomTags: tags, fieldStatus: {} }, record_date: '2026-08-13' });
 assert.equal(adapted.context.nausea, true, '恶心必须进入干预匹配上下文');
 assert.equal(adapted.context.diarrhea, false, '明确无腹泻必须区别于未记录');
@@ -33,9 +34,11 @@ assert.ok(noTcm.every((item) => item.status === 'insufficient'), '数据不足�
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const app = fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8');
-for (const name of ['coldSensation', 'warmthRelief', 'nausea', 'diarrhea', 'bloatingLevel', 'appetiteLevel', 'bodyHeaviness']) assert.match(html, new RegExp(`name="${name}"`));
+for (const name of ['coldSensation', 'warmthRelief', 'nausea', 'diarrhea', 'bloating', 'poorAppetite', 'bodyHeaviness']) assert.match(html, new RegExp(`name="${name}"`));
+assert.doesNotMatch(html, /name="bloatingLevel"|name="appetiteLevel"/);
 assert.doesNotMatch(html, /name="coldHandsFeet"/);
 assert.match(app, /showToast\('已保存 ✓'\)/);
+assert.match(app, /deferHeavy:true/);
 assert.equal(tcmRules.minimum_cycles, 2);
-assert.match(html, /insights-page\.js\?v=87/);
+assert.match(html, /insights-page\.js\?v=88/);
 console.log('Insights v1 与 TCM 体感模型检查通过');
