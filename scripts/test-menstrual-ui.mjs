@@ -23,6 +23,6 @@ assert.match(app,/transition&&!periodEpisodeId/,'经期首尾点滴必须关联�
 assert.match(app,/correctCycleDay\(next,value,anchor\)/,'手动周期日必须使用结构化修正函数');
 assert.match(app,/form\.dataset\.cycleMode==='auto'/,'自动周期日与手动周期日必须分流');
 assert.match(detail,/MENSTRUAL_LABELS/,'日历详情必须展示结构化月经字段');
-assert.match(wellness,/menstrualStatus \? statusIcon\('月经'/,'首页最终状态卡必须展示已记录的月经状态');
+assert.match(wellness,/statusIcon\('月经', menstrualStatus/,'首页最终状态卡必须展示月经状态或明确未记录');
 
 console.log('Menstrual UI linkage tests passed.');
