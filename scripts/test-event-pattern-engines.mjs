@@ -38,6 +38,7 @@ assert.equal(detectRecentlyFirstRecorded({ logs: sparse, metric: 'pain_max', dat
 
 const cyclePattern = analyzeCyclePattern({ logs, periods, metric: 'energy', as_of: '2026-07-29', target_window: { start_day: 1, end_day: 5 } });
 assert.equal(cyclePattern.status, 'detected');
+assert.match(cyclePattern.pattern_id, /^pattern:cycle_pattern:/);
 assert.equal(cyclePattern.cycles_covered, 3);
 assert.ok(cyclePattern.effect_size > 0);
 
@@ -51,6 +52,7 @@ assert.ok('p_b_given_a' in coOccurrence && 'p_b_given_not_a' in coOccurrence);
 
 const temporal = analyzeTemporalAssociation({ logs, periods, metric_a: 'stress', metric_b: 'sleep_quality', start: '2026-04-01', end: '2026-07-29', relation: 'next_day', condition_a: { operator: 'gte', value: 4 }, condition_b: { operator: 'lte', value: 2 } });
 assert.equal(temporal.pattern_type, 'temporal_association');
+assert.match(temporal.pattern_id, /^pattern:temporal_association:/);
 assert.equal(temporal.relation, 'next_day');
 assert.ok(temporal.p_b_given_a > temporal.p_b_given_not_a);
 
@@ -59,3 +61,4 @@ assert.equal(JSON.stringify([deviation, persistentSleep, firstPain, cyclePattern
 assert.equal(JSON.stringify([deviation, persistentSleep, firstPain, cyclePattern, coOccurrence, temporal]).includes('diagnosis'), false);
 
 console.log('health event and pattern engine tests passed');
+
