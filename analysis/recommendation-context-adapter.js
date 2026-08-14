@@ -1,3 +1,5 @@
+import { readTcmObservations } from '../tcm-observation-model.js';
+
 const RECORDED = new Set(['reported', 'user_corrected', 'system_generated']);
 
 const recorded = (log, field) => RECORDED.has(log?.fieldStatus?.[field]);
@@ -28,6 +30,7 @@ function discomfort(metric, value, sourceField, recordDate) {
 }
 
 export function adaptRecommendationContext({ today_record: log = {}, record_date, phase = {}, health_events = [], patterns = [], safety = {}, contraindication = {}, medication = {}, intervention_history = [] } = {}) {
+  const bodySense = readTcmObservations(log.symptomTags);
   const context = {
     current_state_available: false,
     safety_event: { active: safety.active === true },
@@ -66,6 +69,19 @@ export function adaptRecommendationContext({ today_record: log = {}, record_date
   if (numeric(log, 'sleep') !== null && log.sleep <= 2) discomforts.push(discomfort('sleep_quality', log.sleep, 'sleep', record_date));
   if (numeric(log, 'energy') !== null && log.energy <= 2) discomforts.push(discomfort('energy', log.energy, 'energy', record_date));
 
+  const presenceFields = ['cold_sensation', 'nausea', 'diarrhea', 'body_heaviness', 'warmth_relief'];
+  for (const field of presenceFields) {
+    if (bodySense[field] === null) continue;
+    context[field] = bodySense[field] === 'yes';
+    context.current_state_available = true;
+  }
+  if (Number.isFinite(bodySense.bloating_level)) { context.bloating = bodySense.bloating_level; context.current_state_available = true; }
+  if (Number.isFinite(bodySense.appetite_level)) { context.appetite_level = bodySense.appetite_level; context.appetite_low = bodySense.appetite_level <= 2; context.current_state_available = true; }
+  if (bodySense.diarrhea === 'yes') context.contraindication.diarrhea = true;
+  if (bodySense.nausea === 'yes') discomforts.push(discomfort('nausea', true, 'tcm:nausea', record_date));
+  if (bodySense.cold_sensation === 'yes') discomforts.push(discomfort('cold_sensation', true, 'tcm:cold_sensation', record_date));
+  if (Number.isFinite(bodySense.bloating_level) && bodySense.bloating_level >= 3) discomforts.push(discomfort('bloating', bodySense.bloating_level, 'tcm:bloating_level', record_date));
+
   for (const event of health_events || []) {
     const difference = event?.supporting_data?.signed_difference;
     if (event?.metric && Number.isFinite(difference)) context.deviations[event.metric] = difference;
@@ -74,4 +90,3 @@ export function adaptRecommendationContext({ today_record: log = {}, record_date
 }
 
 export const RecommendationContextAdapter = Object.freeze({ adaptRecommendationContext });
-
