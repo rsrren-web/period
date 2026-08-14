@@ -38,3 +38,9 @@ Snapshots are append-only in `period-baseline-snapshots-v1`. A deterministic inp
 ## Structured patterns
 
 `PatternEngine` supports cycle-window comparisons, co-occurrence, and same-day/next-day/previous-day temporal associations. Cycle patterns require at least two complete cycles and compare the target window with the remaining cycle days. Association outputs preserve both conditional probabilities and their difference. Every result contains sample size, covered cycles, effect size, confidence, status, and its metric-specific data-quality evidence. Co-occurrence and temporal ordering are not treated as causation.
+
+## Intervention matching and ranking
+
+The versioned intervention library is stored at `knowledge/interventions.v1.json`. `InterventionEngine` validates the library and supports every declared condition operator. A missing value never becomes `false`, `0`, or a negative match; only the explicit `not_exists` operator matches absence.
+
+Evaluation order is fixed: active/ready and safety override, explicit exclusions, all hard requirements, weighted scoring and minimum score, current-state/personal-pattern requirements, cooldown and daily-use limits. Eligible candidates are then sorted deterministically by matching score, adjusted recommendation priority, personal helpful rate, cooldown age, and intervention ID. Repeated unhelpful outcomes lower effective priority but do not rewrite the library score. The result retains every condition check and exclusion reason for auditing.
