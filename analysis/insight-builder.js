@@ -36,6 +36,8 @@ function binaryFor(log, metric) {
   if (metric === 'activity_low') return log.activity === null || log.activity === undefined ? null : Number(log.activity) <= 2;
   if (metric === 'bowel_no') return typeof log.bowelMovement === 'boolean' ? !log.bowelMovement : null;
   if (metric === 'bloating_high') { const value = readTcmObservations(log.symptomTags).bloating_level; return value === null ? null : value >= 3; }
+  if (metric === 'nausea_present') { const value = readTcmObservations(log.symptomTags).nausea; return value === null ? null : value === 'yes'; }
+  if (metric === 'diarrhea_present') { const value = readTcmObservations(log.symptomTags).diarrhea; return value === null ? null : value === 'yes'; }
   return null;
 }
 
@@ -108,7 +110,7 @@ function buildCycleInsights({ logs, periods, asOf, nextStart, predictionConfiden
 }
 
 function buildAssociationInsights({ logs, periods, asOf, config, actions }) {
-  const start = addDays(asOf, -89), dates = datesBetween(start, asOf), cycles = completedCycles(periods, asOf).filter((cycle) => cycle.end >= start).length, offset = { same_day: 0, next_day: 1, previous_day: -1 }, labels = { bedtime_late: '23点后入睡', energy_low: '低精力', stress_high: '高压力', sleep_low: '低睡眠', pain_present: '疼痛', activity_low: '低活动', bowel_no: '没有排便', bloating_high: '腹胀明显' };
+  const start = addDays(asOf, -89), dates = datesBetween(start, asOf), cycles = completedCycles(periods, asOf).filter((cycle) => cycle.end >= start).length, offset = { same_day: 0, next_day: 1, previous_day: -1 }, labels = { bedtime_late: '23点后入睡', energy_low: '低精力', stress_high: '高压力', sleep_low: '低睡眠', pain_present: '疼痛', activity_low: '低活动', bowel_no: '没有排便', bloating_high: '腹胀明显', nausea_present: '恶心', diarrhea_present: '腹泻' };
   return config.associations.flatMap((candidate) => {
     const pairs = dates.map((date) => [binaryFor(logs[date], candidate.metric_a), binaryFor(logs[addDays(date, offset[candidate.relation])], candidate.metric_b), date]).filter(([a, b]) => a !== null && b !== null);
     if (pairs.length < config.pattern.association_min_pairs) return [];
@@ -117,7 +119,7 @@ function buildAssociationInsights({ logs, periods, asOf, config, actions }) {
     if (Math.abs(effect) < config.pattern.binary_effect_min) return [];
     const relationText = candidate.relation === 'same_day' ? '同日更常同时出现' : candidate.relation === 'next_day' ? '之后一天更常出现' : '前一天更常出现';
     const level = confidence(cycles, Math.min(1, pairs.length / 30), config);
-    return [{ id: `insight:temporal_association:${fingerprint(candidate)}`, type: candidate.relation === 'same_day' ? 'co_occurrence' : 'temporal_association', title: `${labels[candidate.metric_a]}与${labels[candidate.metric_b]}${relationText}`, observation: { metric: candidate.metric_b, sampleSize: pairs.length, validDays: pairs.length, cyclesCovered: cycles, exposedRate: round(pExposed), unexposedRate: round(pUnexposed), effectSizeRaw: round(effect), effectSizeType: 'proportion_difference', supportingData: { relation: candidate.relation, metricA: candidate.metric_a, metricB: candidate.metric_b, exposedDays: exposed.length, unexposedDays: unexposed.length, lastSupportedDate: pairs.filter(([a, b]) => a && b).map((pair) => pair[2]).at(-1) || null } }, confidenceLevel: level, action: observationAction(candidate.metric_b, actions), status: 'active', generatedAt: new Date().toISOString(), lastRecomputedAt: new Date().toISOString() }];
+    return [{ id: `insight:temporal_association:${fingerprint(candidate)}`, type: candidate.relation === 'same_day' ? 'co_occurrence' : 'temporal_association', title: `${labels[candidate.metric_a]}与${labels[candidate.metric_b]}${relationText}`, observation: { metric: candidate.metric_b, sampleSize: pairs.length, validDays: pairs.length, cyclesCovered: cycles, exposedRate: round(pExposed), unexposedRate: round(pUnexposed), effectSizeRaw: round(effect), effectSizeType: 'proportion_difference', supportingData: { relation: candidate.relation, metricA: candidate.metric_a, metricB: candidate.metric_b, metricALabel: labels[candidate.metric_a], metricBLabel: labels[candidate.metric_b], exposedDays: exposed.length, unexposedDays: unexposed.length, lastSupportedDate: pairs.filter(([a, b]) => a && b).map((pair) => pair[2]).at(-1) || null } }, confidenceLevel: level, action: observationAction(candidate.metric_b, actions), status: 'active', generatedAt: new Date().toISOString(), lastRecomputedAt: new Date().toISOString() }];
   });
 }
 
