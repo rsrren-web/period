@@ -11,6 +11,7 @@ import { compatibilityTags } from './daily-record-model.js';
 import { loadInterventionLibrary } from './analysis/intervention-engine.js';
 import { generateRecommendations } from './analysis/recommendation-engine.js';
 import { buildRecommendationEvidence } from './analysis/recommendation-pipeline.js';
+import { selectDailyNourishment } from './analysis/daily-nourishment.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const addDays = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
@@ -164,6 +165,7 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   const root = document.querySelector('#tcmAdvice');
   if (!root) return;
   const recent = recentContext(logs), signals = signalsFor(log, recent), theory = PHASE_THEORY[phase.key] || PHASE_THEORY.follicular;
+  const nourishment = selectDailyNourishment({ recipes: FOOD_RECIPES, phase_key: phase.key, record_date: phase.date || todayIso(), signals });
   const constitution = constitutionHint(recent), evidence = recentEvidence(recent, signals);
   const practicalReason = {
     period: '正在经期，今天优先缓解不适、减少额外消耗。',
@@ -178,9 +180,18 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   root.innerHTML = `
     <section class="tcm-reasoning"><span>今天为什么这样建议</span><p>${esc(practicalReason)}</p>${practicalEvidence.length ? `<ul>${practicalEvidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : ''}</section>
     ${constitution ? `<details class="constitution-hint"><summary><span>体质观察线索</span><strong>${esc(constitution.name)} · ${constitution.total}次线索</strong></summary><div><p>${esc(constitution.explanation)}</p><p><strong>边界：</strong>${esc(constitution.avoid)}</p><small>这里只是近7天的感受倾向，不是体质诊断。</small></div></details>` : ''}
-    <div class="traditional-plan" data-recommendation-plan><div class="traditional-no-recommendation"><strong>正在核对今天的数据</strong><p>只有达到门槛并通过排除规则后才会显示建议。</p></div></div>`;
+    <div class="traditional-plan">
+      <section class="traditional-layer" aria-label="每日阶段食养">
+        <header class="traditional-layer-heading"><strong>每日阶段食养</strong><span>固定1项 · 茶饮或食谱</span></header>
+        ${nourishment ? foodCard(nourishment) : '<div class="traditional-no-recommendation"><strong>今天暂时没有阶段食谱</strong><p>不会用温水或随机内容占位。</p></div>'}
+        <p class="traditional-layer-note">按当前周期阶段和已记录的饮食相关状态选择，与下方的数据触发建议分开。</p>
+      </section>
+      <section class="traditional-layer" aria-label="针对性调养">
+        <header class="traditional-layer-heading"><strong>针对性调养</strong><span>有证据才显示 · 最多2项</span></header>
+        <div data-recommendation-plan><div class="traditional-no-recommendation"><strong>正在核对今天的数据</strong><p>只有达到门槛并通过排除规则后才会显示建议。</p></div></div>
+      </section>
+    </div>`;
   const planRoot = typeof root.querySelector === 'function' ? root.querySelector('[data-recommendation-plan]') : null;
   if (planRoot) renderEngineRecommendations({ root: planRoot, token, phase, log, logs });
 };
-
 
