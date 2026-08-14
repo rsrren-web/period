@@ -4,11 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "check": "node scripts/validate-data.mjs && node scripts/test-daily-model.mjs && node scripts/test-menstrual-ui.mjs && node scripts/test-analysis-engines.mjs && node scripts/test-event-pattern-engines.mjs && node scripts/test-intervention-engine.mjs && node scripts/test-recommendation-engine.mjs && node scripts/test-sync.mjs && node scripts/check-dom.mjs && node scripts/test-reminders.mjs && node scripts/test-food-recipes.mjs && node scripts/test-wellness-knowledge.mjs",
+    "check": "node scripts/validate-data.mjs && node scripts/test-daily-model.mjs && node scripts/test-menstrual-ui.mjs && node scripts/test-analysis-engines.mjs && node scripts/test-event-pattern-engines.mjs && node scripts/test-intervention-engine.mjs && node scripts/test-recommendation-engine.mjs && node scripts/test-insights-v1.mjs && node scripts/test-sync.mjs && node scripts/check-dom.mjs && node scripts/test-reminders.mjs && node scripts/test-food-recipes.mjs && node scripts/test-wellness-knowledge.mjs",
     "remind": "node scripts/send-reminders.mjs"
   },
   "dependencies": {
     "nodemailer": "9.0.3"
   }
 }
-
