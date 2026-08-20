@@ -1,6 +1,5 @@
 import { compatibilityTags } from './daily-record-model.js';
 
-const previousDailyEnhancements = globalThis.renderDailyEnhancements;
 const escapeWellness = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const isoToday = () => { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
 const shiftDate = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
@@ -229,14 +228,10 @@ function renderCycleObservation(logs, context) {
   root.innerHTML = `<div class="cycle-score-head"><div><p class="eyebrow">最近完整周期</p><h2>本周期观察分</h2></div><strong>${finalScore}<small>/100</small></strong></div><div class="cycle-score-meta"><span>${period.start}–${period.end}</span><span>数据可信度：${confidence}</span></div>${deductions.length ? `<div class="deduction-list"><strong>主要扣分与数据</strong>${deductions.slice(0, 3).map((item) => `<div><p>${escapeWellness(item.text)}</p><b>−${item.points}分</b></div>`).join('')}</div>` : '<p class="score-steady">现有数据未发现明显扣分项。</p>'}<p class="fineprint">这是个人记录观察分，不是医学健康评分；数据完整度只影响可信度，不直接扣分。</p>`;
 }
 
-globalThis.renderDailyEnhancements = (context) => {
-  previousDailyEnhancements?.(context);
+export function renderWellnessEnhancements(context, view = 'today') {
   const logs = context?.logs || {};
+  if (view === 'calendar') { renderCycleObservation(logs, context || {}); return; }
+  if (view !== 'today') return;
   renderReadableToday(logs);
   renderUsefulDecision(logs, context || {});
-  renderWeeklyPatterns(logs);
-  renderPhasePatterns(logs, context || {});
-  renderFactors(logs);
-  renderPms(logs, context || {});
-  renderCycleObservation(logs, context || {});
-};
+}
