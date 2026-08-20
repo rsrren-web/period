@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 55,
-  "updatedAt": "2026-08-19T19:55:46.744Z",
+  "revision": 56,
+  "updatedAt": "2026-08-20T00:32:25.830Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -2133,7 +2133,7 @@
         "tcm:cold_sensation:no",
         "tcm:warmth_relief:no",
         "tcm:nausea:no",
-        "tcm:diarrhea:no",
+        "tcm:diarrhea:yes",
         "tcm:bloating:no",
         "tcm:poor_appetite:no",
         "tcm:body_heaviness:no"
@@ -2176,7 +2176,7 @@
         "period_episode_id": "not_recorded"
       },
       "legacySymptoms": [],
-      "updatedAt": "2026-08-19T19:55:37.955Z"
+      "updatedAt": "2026-08-20T00:32:16.956Z"
     }
   },
   "tombstones": {
@@ -2251,6 +2251,7 @@
     "270caf92-cc24-4711-bda8-2cc8653b61c7",
     "6891a364-657f-4891-a076-cae761146adb",
     "b3e7f166-27f2-4aad-8ec8-30435045add9",
-    "6d89a868-447c-45c1-9c6d-aa1550c49703"
+    "6d89a868-447c-45c1-9c6d-aa1550c49703",
+    "8b961cda-7c13-44e3-8182-4ab44ed8f7df"
   ]
 }
