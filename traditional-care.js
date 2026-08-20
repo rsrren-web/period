@@ -9,8 +9,7 @@ import {
 } from './knowledge/wellness-knowledge.js';
 import { compatibilityTags } from './daily-record-model.js';
 import { loadInterventionLibrary } from './analysis/intervention-engine.js';
-import { generateRecommendations } from './analysis/recommendation-engine.js';
-import { buildRecommendationEvidence } from './analysis/recommendation-pipeline.js';
+import { runAnalysis } from './analysis/analysis-orchestrator.js';
 import { selectDailyNourishment } from './analysis/daily-nourishment.js';
 import { readTcmObservations } from './tcm-observation-model.js';
 
@@ -21,8 +20,16 @@ const normalizePain = (value) => { const pain = Number(value); if (!Number.isFin
 const memoryStore = new Map();
 const storageGet = (key) => { try { return globalThis.localStorage?.getItem(key) ?? memoryStore.get(key) ?? null; } catch { return memoryStore.get(key) ?? null; } };
 const storageSet = (key, value) => { try { globalThis.localStorage?.setItem(key, value); } catch { memoryStore.set(key, value); } };
-const interventionLibraryPromise = loadInterventionLibrary();
+const analysisResourcesPromise = Promise.all([
+  loadInterventionLibrary(),
+  fetch('./knowledge/insights_config.json').then((response) => response.json()),
+  fetch('./knowledge/tcm_cluster_rules.json').then((response) => response.json()),
+  fetch('./knowledge/observation_actions.json').then((response) => response.json())
+]).then(([library, config, tcmRules, observationActions]) => ({ library, config, tcmRules, observationActions }));
 let recommendationRenderToken = 0;
+let latestAnalysisSnapshot = null;
+const INTERVENTION_USAGE_KEY = 'period-intervention-usage-v1';
+const readInterventionHistory = () => { try { const value = JSON.parse(storageGet(INTERVENTION_USAGE_KEY) || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } };
 
 function tags(log = {}) {
   return compatibilityTags(log);
@@ -132,15 +139,16 @@ function interventionMethod(item) {
 function interventionCard(recommendation) {
   const item = recommendation.intervention, [icon, label] = CATEGORY_META[item.category] || ['养', '今日建议'];
   const target = recommendation.reason?.metric || item.targets?.[0] || 'general';
-  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么今天出现</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}">记录这次效果</button></div></details>`;
+  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么今天出现</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}">记录这次效果</button></div></details>`;
 }
 
 async function renderEngineRecommendations({ root, token, phase, log, logs }) {
   try {
-    const library = await interventionLibraryPromise;
+    const { library, config, tcmRules, observationActions } = await analysisResourcesPromise;
     if (token !== recommendationRenderToken || !root.isConnected) return;
-    const evidence = buildRecommendationEvidence({ logs, periods: phase.ps || [], phase, record_date: phase.date || todayIso() });
-    const result = generateRecommendations({ today_record: log, record_date: phase.date || todayIso(), health_events: evidence.health_events, patterns: evidence.patterns, intervention_library: library, phase });
+    const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: readInterventionHistory(), intervention_library: library, phase }, { previous_snapshot: latestAnalysisSnapshot });
+    latestAnalysisSnapshot = analysis;
+    const result = analysis.recommendations;
     if (token !== recommendationRenderToken) return;
     root.innerHTML = result.status === 'RECOMMENDATIONS'
       ? result.recommendations.map(interventionCard).join('')

@@ -1,5 +1,7 @@
 import {addDays,days,median} from './period-core.mjs';
 
+const PERIOD_END_CATCHUP_DATE='2026-08-20';
+
 export function zonedDate(value=new Date(),timeZone='America/Vancouver'){
   return new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).format(value);
 }
@@ -11,10 +13,13 @@ function updatedDate(period){
 }
 
 function periodEndSendDate(period){
-  if(!period?.end||updatedDate(period)!==period.end)return '';
+  if(!period?.end||!period?.updatedAt)return '';
+  const actionDate=updatedDate(period);
+  if(!actionDate)return '';
   const updatedAt=new Date(period.updatedAt);
-  const scheduledCutoff=new Date(`${period.end}T17:17:00Z`);
-  return updatedAt<=scheduledCutoff?period.end:addDays(period.end,1);
+  const scheduledCutoff=new Date(`${actionDate}T17:17:00Z`);
+  const scheduledDate=updatedAt<=scheduledCutoff?actionDate:addDays(actionDate,1);
+  return scheduledDate<PERIOD_END_CATCHUP_DATE&&days(scheduledDate,PERIOD_END_CATCHUP_DATE)<=7?PERIOD_END_CATCHUP_DATE:scheduledDate;
 }
 
 function hash(value){let result=2166136261;for(const character of value){result^=character.charCodeAt(0);result=Math.imul(result,16777619)}return result>>>0}

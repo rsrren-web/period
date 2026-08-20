@@ -34,11 +34,19 @@ assert.ok(noTcm.every((item) => item.status === 'insufficient'), '数据不足�
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const app = fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+const traditional = fs.readFileSync(new URL('../traditional-care.js', import.meta.url), 'utf8');
+const serviceWorker = fs.readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
 for (const name of ['coldSensation', 'warmthRelief', 'nausea', 'diarrhea', 'bloating', 'poorAppetite', 'bodyHeaviness']) assert.match(html, new RegExp(`name="${name}"`));
 assert.doesNotMatch(html, /name="bloatingLevel"|name="appetiteLevel"/);
 assert.doesNotMatch(html, /name="coldHandsFeet"/);
 assert.match(app, /showToast\('已保存 ✓'\)/);
-assert.match(app, /deferHeavy:true/);
+assert.match(app, /requestIdleCallback/);
+assert.match(app, /renderCurrentView\(\{heavy:false\}\)/);
+assert.match(traditional, /runAnalysis\(/, '首页针对性调养必须走统一分析调度器');
+assert.doesNotMatch(traditional, /buildRecommendationEvidence\(/, '首页不得保留独立的重复分析入口');
 assert.equal(tcmRules.minimum_cycles, 2);
-assert.match(html, /insights-page\.js\?v=88/);
+assert.match(html, /insights-page\.js\?v=90/);
+assert.match(serviceWorker, /period-helper-v90/);
+assert.match(serviceWorker, /analysis\/analysis-orchestrator\.js/);
+assert.match(serviceWorker, /analysis\/explanation-object\.js/);
 console.log('Insights v1 与 TCM 体感模型检查通过');

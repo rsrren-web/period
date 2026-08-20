@@ -46,4 +46,7 @@ const endedBeforeBatch={periods:[{id:'p2',start:'2026-07-11',end:'2026-07-17',ty
 assert.deepEqual(buildReminderEvents({date:'2026-07-17',prediction,periods,userData:endedBeforeBatch}).map(event=>event.type),['period-ended']);
 assert.equal(buildReminderEvents({date:'2026-07-18',prediction,periods,userData:endedBeforeBatch}).length,0);
 
+const endedWithEarlierLastDay={periods:[{id:'p3',start:'2026-08-09',end:'2026-08-15',type:'period',status:'confirmed',updatedAt:'2026-08-16T18:39:29.764Z'}]};
+assert.deepEqual(buildReminderEvents({date:'2026-08-20',prediction,periods,userData:endedWithEarlierLastDay}).map(event=>event.type),['period-ended']);
+
 console.log('邮件事件检查通过：阶段、经期每日、结束补发与去重均正常');

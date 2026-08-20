@@ -1,3 +1,5 @@
+import { ANALYSIS_CONFIG } from './analysis-config.js';
+
 const MISSING = Symbol('missing');
 
 const finite = (value) => typeof value === 'number' && Number.isFinite(value);
@@ -96,6 +98,10 @@ function historyStats(intervention, history, now) {
     value === true || value === false || value === 'helpful' || value === 'unhelpful');
   const helpful = outcomes.filter((value) => value === true || value === 'helpful').length;
   const unhelpful = outcomes.filter((value) => value === false || value === 'unhelpful').length;
+  const paired = entries.filter((entry) => finite(Number(entry.before)) && finite(Number(entry.after)));
+  const improvements = paired.map((entry) => Number(entry.before) - Number(entry.after));
+  const meanImprovement = improvements.length ? improvements.reduce((sum, value) => sum + value, 0) / improvements.length : null;
+  const responseUsable = outcomes.length >= ANALYSIS_CONFIG.feedback.minimum_uses;
   const cooldownHours = Math.max(0, Number(intervention.recommendation_policy?.cooldown_hours) || 0);
   const elapsedHours = lastUsedAt === null ? Number.POSITIVE_INFINITY : Math.max(0, (now - lastUsedAt) / 3600000);
   return {
@@ -103,7 +109,10 @@ function historyStats(intervention, history, now) {
     daily_uses: dailyUses,
     helpful_uses: helpful,
     unhelpful_uses: unhelpful,
-    helpful_rate: outcomes.length ? helpful / outcomes.length : null,
+    helpful_rate: responseUsable ? helpful / outcomes.length : null,
+    response_sample_size: outcomes.length,
+    response_quality: outcomes.length >= ANALYSIS_CONFIG.feedback.stable_uses ? 'stable' : responseUsable ? 'usable' : 'insufficient',
+    mean_discomfort_improvement: meanImprovement,
     last_used_at: lastUsedAt === null ? null : new Date(lastUsedAt).toISOString(),
     cooldown_hours: cooldownHours,
     cooldown_remaining_hours: Number.isFinite(elapsedHours) ? Math.max(0, cooldownHours - elapsedHours) : 0,
@@ -159,6 +168,7 @@ export function evaluateIntervention(intervention, context = {}, options = {}) {
   const deprioritizeAfter = Number(policy.deprioritize_after_unhelpful_uses);
   const deprioritized = finite(deprioritizeAfter) && deprioritizeAfter > 0 && history.unhelpful_uses >= deprioritizeAfter;
   const priority = Number(policy.recommendation_priority) || 0;
+  const feedbackAdjustment = history.response_quality === 'insufficient' ? 0 : history.helpful_rate >= ANALYSIS_CONFIG.feedback.helpful_rate_preference ? 12 : history.helpful_rate < 0.40 ? -12 : 0;
   return {
     intervention_id: intervention?.id || null,
     intervention,
@@ -171,8 +181,9 @@ export function evaluateIntervention(intervention, context = {}, options = {}) {
     exclusion_checks: exclusionChecks,
     exclusion_reasons: blocked,
     recommendation_priority: priority,
-    effective_priority: priority - (deprioritized ? 100 : 0),
+    effective_priority: priority + feedbackAdjustment - (deprioritized ? 100 : 0),
     personally_helpful_rate: history.helpful_rate,
+    feedback_adjustment: feedbackAdjustment,
     deprioritized,
     history,
     evaluated_at: new Date(now).toISOString()
@@ -224,4 +235,3 @@ export async function loadInterventionLibrary(url = './knowledge/interventions.v
   if (!validation.valid) throw new Error(`Intervention library validation failed: ${validation.errors.join(', ')}`);
   return library;
 }
-

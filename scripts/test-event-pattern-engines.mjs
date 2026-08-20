@@ -61,4 +61,3 @@ assert.equal(JSON.stringify([deviation, persistentSleep, firstPain, cyclePattern
 assert.equal(JSON.stringify([deviation, persistentSleep, firstPain, cyclePattern, coOccurrence, temporal]).includes('diagnosis'), false);
 
 console.log('health event and pattern engine tests passed');
-

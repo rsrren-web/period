@@ -1,6 +1,6 @@
 import { ANALYSIS_CONFIG, BASELINE_METRICS } from './analysis-config.js';
 import { calculateMetricBaselines } from './baseline-engine.js';
-import { detectDeviation, detectPersistence } from './health-event-engine.js';
+import { detectDeviation, detectPersistence, detectRecentlyFirstRecorded } from './health-event-engine.js';
 import { analyzeCyclePattern, analyzeTemporalAssociation } from './pattern-engine.js';
 
 const DAY = 86_400_000;
@@ -14,17 +14,18 @@ function currentWindow(phase = {}) {
   return { start_day: Math.max(1, start), end_day: Math.max(Math.max(1, start), end) };
 }
 
-export function buildRecommendationEvidence({ logs = {}, periods = [], phase = {}, record_date } = {}) {
+export function buildRecommendationEvidence({ logs = {}, periods = [], phase = {}, record_date, baseline_snapshot, prior_events = [], phase_for_date } = {}) {
   const previous = addDays(record_date, -1), healthEvents = [];
   for (const metric of BASELINE_METRICS) {
     try {
-      const baseline = calculateMetricBaselines({ logs, periods, metric, as_of: previous }).rolling_30d;
-      const event = detectDeviation({ logs, metric, date: record_date, baseline });
+      const baseline = baseline_snapshot?.baselines?.[metric]?.rolling_30d || calculateMetricBaselines({ logs, periods, metric, as_of: previous }).rolling_30d;
+      const event = detectDeviation({ logs, metric, date: record_date, baseline, prior_events });
       if (event) healthEvents.push(event);
     } catch { /* An unavailable metric must not block the remaining evidence. */ }
   }
   for (const metric of ['sleep_quality', 'stress', 'pain_max', 'bowel']) {
     try { const event = detectPersistence({ logs, metric, date: record_date }); if (event) healthEvents.push(event); } catch { /* no configured/recorded evidence */ }
+    try { const event = detectRecentlyFirstRecorded({ logs, metric, date: record_date }); if (event) healthEvents.push(event); } catch { /* no configured/recorded evidence */ }
   }
 
   const patterns = [], window = currentWindow(phase);
@@ -39,11 +40,9 @@ export function buildRecommendationEvidence({ logs = {}, periods = [], phase = {
     ['pain_max', 'sleep_quality', 'same_day', { operator: 'gt', value: 0 }, { operator: 'lte', value: 2 }]
   ];
   for (const [metric_a, metric_b, relation, condition_a, condition_b] of specs) {
-    try { patterns.push(analyzeTemporalAssociation({ logs, periods, metric_a, metric_b, start, end: record_date, relation, condition_a, condition_b })); } catch { /* insufficient/invalid source */ }
+    try { patterns.push(analyzeTemporalAssociation({ logs, periods, metric_a, metric_b, start, end: record_date, relation, condition_a, condition_b, phase_for_date })); } catch { /* insufficient/invalid source */ }
   }
   return { health_events: healthEvents, patterns, target_window: window };
 }
 
 export const RecommendationPipeline = Object.freeze({ buildRecommendationEvidence });
-
-

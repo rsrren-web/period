@@ -3,6 +3,7 @@ import { evaluateMetricQuality, metricValue } from './data-quality-engine.js';
 
 const DAY = 86_400_000;
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
+const dayDistance = (start, end) => Math.round((Date.parse(`${end}T12:00:00Z`) - Date.parse(`${start}T12:00:00Z`)) / DAY);
 
 function matches(value, condition) {
   if (value === null || !condition) return false;
@@ -33,7 +34,7 @@ function confidence(qualityLevel, sampleSize) {
 }
 
 function eventObject({ type, metric, value, baselineValue = null, start, end, supportingData, sampleSize, qualityLevel, createdAt }) {
-  const identity = { type, metric, value, baselineValue, start, end, supportingData };
+  const identity = type === 'persistence' ? { type, metric, start, condition: supportingData?.condition } : { type, metric, value, baselineValue, start, end, supportingData };
   return Object.freeze({
     event_id: `event:${type}:${fingerprint(identity)}`,
     event_type: type,
@@ -42,21 +43,45 @@ function eventObject({ type, metric, value, baselineValue = null, start, end, su
     baseline_value: baselineValue,
     date_range: { start, end },
     supporting_data: supportingData,
+    episode_id: type === 'persistence' ? `episode:${metric}:${start}` : null,
     sample_size: sampleSize,
     confidence_level: confidence(qualityLevel, sampleSize),
     created_at: createdAt
   });
 }
 
-export function detectDeviation({ logs = {}, metric, date, baseline, created_at = new Date().toISOString() } = {}) {
+function deviationDetails(metric, value, baseline) {
+  const difference = Number(value) - Number(baseline.value);
+  const rule = ANALYSIS_CONFIG.events.metric_rules[metric] || { concerning_direction: 'either', minimum_difference: ANALYSIS_CONFIG.events.deviation_min_absolute_difference };
+  const mad = Number(baseline.distribution?.mad);
+  const robustZ = Number.isFinite(mad) && mad > 0 ? difference / (1.4826 * mad) : null;
+  const direction = difference > 0 ? 'higher' : difference < 0 ? 'lower' : 'neutral';
+  const attention = rule.concerning_direction === 'either' || rule.concerning_direction === direction;
+  const magnitude = Math.abs(difference);
+  const passesMagnitude = magnitude >= Math.max(ANALYSIS_CONFIG.events.deviation_min_absolute_difference, Number(rule.minimum_difference) || 0);
+  const passesDispersion = robustZ === null ? passesMagnitude : Math.abs(robustZ) >= ANALYSIS_CONFIG.events.deviation_robust_z_threshold;
+  const severity = magnitude >= 2 || Math.abs(robustZ || 0) >= 3 ? 'high' : magnitude >= 1.5 || Math.abs(robustZ || 0) >= 2 ? 'moderate' : 'low';
+  return { difference, direction, attention, passes: passesMagnitude && passesDispersion, robust_z: robustZ === null ? null : Math.round(robustZ * 1000) / 1000, severity };
+}
+
+function suppressedByCooldown(priorEvents, metric, date, severity) {
+  const ranks = { low: 1, moderate: 2, high: 3 };
+  const previous = (priorEvents || []).filter((event) => event?.event_type === 'deviation' && event.metric === metric && event.date_range?.end < date).sort((a, b) => b.date_range.end.localeCompare(a.date_range.end))[0];
+  if (!previous || dayDistance(previous.date_range.end, date) > ANALYSIS_CONFIG.events.deviation_cooldown_days) return null;
+  return ranks[severity] > ranks[previous.supporting_data?.severity || 'low'] ? null : previous;
+}
+
+export function detectDeviation({ logs = {}, metric, date, baseline, prior_events = [], created_at = new Date().toISOString() } = {}) {
   if (!baseline || baseline.status !== 'available' || !['usable', 'good'].includes(baseline.quality_level)) return null;
   const quality = evaluateMetricQuality({ logs, metric, dates: [date], context: 'event_current' });
   if (quality.quality_level === 'insufficient') return null;
-  const value = metricValue(logs[date], metric), difference = Number(value) - Number(baseline.value);
-  if (!Number.isFinite(difference) || Math.abs(difference) < ANALYSIS_CONFIG.events.deviation_min_absolute_difference) return null;
+  const value = metricValue(logs[date], metric), details = deviationDetails(metric, value, baseline);
+  if (!Number.isFinite(details.difference) || !details.passes) return null;
+  const suppressed = suppressedByCooldown(prior_events, metric, date, details.severity);
+  if (suppressed) return null;
   return eventObject({
     type: 'deviation', metric, value, baselineValue: baseline.value, start: date, end: date,
-    supportingData: { absolute_difference: Math.abs(difference), signed_difference: difference, baseline_date_range: baseline.date_range, data_quality: quality },
+    supportingData: { absolute_difference: Math.abs(details.difference), signed_difference: details.difference, direction: details.direction, attention: details.attention, robust_z: details.robust_z, severity: details.severity, baseline_distribution: baseline.distribution || null, baseline_date_range: baseline.date_range, data_quality: quality },
     sampleSize: baseline.sample_size, qualityLevel: baseline.quality_level, createdAt: created_at
   });
 }

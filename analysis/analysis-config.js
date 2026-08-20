@@ -19,8 +19,18 @@ export const ANALYSIS_CONFIG = Object.freeze({
   baseline: Object.freeze({ aggregation: 'median' }),
   events: Object.freeze({
     deviation_min_absolute_difference: 1,
+    deviation_robust_z_threshold: 1.5,
+    deviation_cooldown_days: 3,
     persistence_min_days: 3,
     recently_first_recorded_lookback_days: 30,
+    metric_rules: Object.freeze({
+      energy: Object.freeze({ concerning_direction: 'lower', minimum_difference: 1 }),
+      stress: Object.freeze({ concerning_direction: 'higher', minimum_difference: 1 }),
+      activity_level: Object.freeze({ concerning_direction: 'lower', minimum_difference: 1 }),
+      social_intensity: Object.freeze({ concerning_direction: 'either', minimum_difference: 1 }),
+      sleep_quality: Object.freeze({ concerning_direction: 'lower', minimum_difference: 1 }),
+      pain_max: Object.freeze({ concerning_direction: 'higher', minimum_difference: 1 })
+    }),
     states: Object.freeze({
       sleep_quality: Object.freeze({ operator: 'lte', value: 2 }),
       stress: Object.freeze({ operator: 'gte', value: 4 }),
@@ -31,8 +41,14 @@ export const ANALYSIS_CONFIG = Object.freeze({
   patterns: Object.freeze({
     cycle_pattern_min_complete_cycles: 2,
     association_min_pairs: 14,
-    detected_effect_size: 0.20
+    detected_effect_size: 0.20,
+    minimum_exposed_days: 5,
+    minimum_unexposed_days: 5,
+    phase_stratum_min_pairs: 4
   }),
+  tcm: Object.freeze({ observed_min_cycles: 2, stable_min_cycles: 3, stable_support_rate: 0.60 }),
+  feedback: Object.freeze({ minimum_uses: 3, stable_uses: 5, helpful_rate_preference: 0.60 }),
+  incremental: Object.freeze({ schema_version: 2, max_event_history: 120 }),
   recommendations: Object.freeze({
     max_items: 2,
     supported_confidence: Object.freeze(['medium', 'high']),
@@ -65,4 +81,3 @@ export const METRIC_DEFINITIONS = Object.freeze({
 export const BASELINE_METRICS = Object.freeze([
   'energy', 'stress', 'activity_level', 'social_intensity', 'sleep_quality', 'pain_max'
 ]);
-

@@ -51,3 +51,16 @@ Evaluation order is fixed: active/ready and safety override, explicit exclusions
 
 `RecommendationContextAdapter` maps only explicitly recorded daily fields to intervention fields. Missing values remain missing. `RecommendationEngine` links every candidate back to its primary and supporting evidence, applies the intervention matcher and exclusions, returns at most two non-duplicate targets, and never backfills. A no-evidence or no-safe-match result is a structured `NO_RECOMMENDATION`. The homepage traditional-care plan now renders this result instead of selecting a random phase item.
 
+## Unified orchestration and incremental snapshots
+
+`AnalysisOrchestrator` is the single execution order for the homepage and trends page: metric quality, personal baselines, health events, patterns, TCM observation clusters, recommendations, and feedback summaries. The baseline cutoff is the day before the current observation, so today's value is never included in its own comparison baseline. Each section has a deterministic content fingerprint; unchanged core data is reused, feedback-only changes recompute only feedback and recommendations, and editing any historical record invalidates the relevant core snapshot.
+
+Every event, pattern, TCM cluster, insight, and recommendation can be traced through a versioned `ExplanationObject`. It stores the calculation scope, evidence, quality, confidence, reasons, and source IDs without embedding medical conclusions.
+
+Deviation events now preserve direction, absolute difference, robust deviation from the personal distribution, severity, and whether the direction needs attention. A configurable cooldown suppresses repeated same-level deviation alerts, while escalation is still allowed. Persistence uses a stable episode ID from its first day.
+
+Temporal associations preserve lag direction, exposed and comparison counts, missing or excluded pairs, relative risk, absolute rate difference, cycle coverage, and phase-stratified results. Cross-cycle next/previous-day pairs are excluded by default. `causal_interpretation_allowed` is always false.
+
+TCM clusters keep the two-cycle observation threshold and add maturity states: `collecting`, `observed_cluster`, and `stable_cluster`. Stable requires at least three supporting cycles and the configured support rate. These are observation combinations, not fixed constitution diagnoses.
+
+Intervention feedback remains append-only. At least three uses are required before it affects ranking; five uses produce a stable comparison label. Explicit helpfulness and optional before/after discomfort scores are retained together with recommendation, event, and pattern source IDs.

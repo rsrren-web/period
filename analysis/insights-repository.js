@@ -1,9 +1,9 @@
-const CACHE_KEY = 'period-insights-cache-v1';
+import { analysisFingerprint } from './analysis-orchestrator.js';
+
+const CACHE_KEY = 'period-insights-cache-v2';
 
 function signature(input, configVersion) {
-  const logEntries = Object.entries(input.logs || {}), lastLog = logEntries.sort(([a], [b]) => a.localeCompare(b)).at(-1);
-  const periods = input.periods || [], lastPeriod = periods.at(-1);
-  return JSON.stringify({ configVersion, logCount: logEntries.length, lastLog: lastLog ? [lastLog[0], lastLog[1]?.updatedAt] : null, periodCount: periods.length, lastPeriod: lastPeriod ? [lastPeriod.start, lastPeriod.end, lastPeriod.updatedAt] : null, asOf: input.as_of });
+  return analysisFingerprint({ configVersion, logs: input.logs || {}, periods: input.periods || [], asOf: input.as_of, nextStart: input.next_start || null, predictionConfidence: input.prediction_confidence || null, interventionUsage: input.intervention_usage || [] });
 }
 
 export function readInsightsSnapshot(input, configVersion, storage = globalThis.localStorage) {
@@ -15,4 +15,8 @@ export function writeInsightsSnapshot(input, configVersion, data, storage = glob
   return data;
 }
 
-export const InsightsRepository = Object.freeze({ read: readInsightsSnapshot, write: writeInsightsSnapshot });
+export function readLatestInsightsSnapshot(storage = globalThis.localStorage) {
+  try { const value = JSON.parse(storage.getItem(CACHE_KEY) || 'null'); return value?.data || null; } catch { return null; }
+}
+
+export const InsightsRepository = Object.freeze({ read: readInsightsSnapshot, readLatest: readLatestInsightsSnapshot, write: writeInsightsSnapshot });

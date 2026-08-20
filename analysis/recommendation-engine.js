@@ -1,6 +1,7 @@
 import { ANALYSIS_CONFIG } from './analysis-config.js';
 import { rankInterventions } from './intervention-engine.js';
 import { adaptRecommendationContext } from './recommendation-context-adapter.js';
+import { createExplanation } from './explanation-object.js';
 
 const supportedConfidence = (pattern) => ANALYSIS_CONFIG.recommendations.supported_confidence.includes(pattern?.confidence_level);
 const activeInterventions = (library) => (library?.interventions || []).filter((item) => item.status === 'active' && item.availability === 'ready');
@@ -85,7 +86,8 @@ function recommendationId(date, interventionId, trigger) {
 }
 
 function noRecommendation(gate, date, evaluatedAt, extraReasons = []) {
-  return Object.freeze({ status: 'NO_RECOMMENDATION', recommendations: [], gate, reasons: [...gate.reasons, ...extraReasons], valid_for_date: date, evaluated_at: evaluatedAt });
+  const reasons = [...gate.reasons, ...extraReasons];
+  return Object.freeze({ status: 'NO_RECOMMENDATION', recommendations: [], gate, reasons, explanations: [createExplanation({ id: `recommendation:none:${date}`, kind: 'recommendation.gate', scope: { date }, quality_level: 'limited', confidence_level: 'low', reasons, calculated_at: evaluatedAt })], valid_for_date: date, evaluated_at: evaluatedAt });
 }
 
 export function generateRecommendations({ today_record, record_date, health_events = [], patterns = [], intervention_library, phase = {}, safety, contraindication, medication, intervention_history = [], now = new Date().toISOString() } = {}) {
@@ -121,10 +123,9 @@ export function generateRecommendations({ today_record, record_date, health_even
     if (selected.length >= ANALYSIS_CONFIG.recommendations.max_items) break;
   }
   if (!selected.length) return noRecommendation(gate, record_date, now, ['NO_INTERVENTION_PASSED_MATCHING_AND_EXCLUSIONS']);
-  return Object.freeze({ status: 'RECOMMENDATIONS', recommendations: selected, gate, reasons: [], valid_for_date: record_date, evaluated_at: now });
+  const explanations = selected.map((item) => createExplanation({ id: item.recommendation_id, kind: 'recommendation.match', metric: item.reason.metric, scope: { date: record_date }, evidence: item.supporting_evidence, quality_level: 'usable', confidence_level: item.source_pattern_id ? 'medium' : 'low', source_ids: [item.source_event_id, item.source_pattern_id, item.intervention_id], calculated_at: now }));
+  return Object.freeze({ status: 'RECOMMENDATIONS', recommendations: selected, gate, reasons: [], explanations, valid_for_date: record_date, evaluated_at: now });
 }
 
 export const RecommendationGate = Object.freeze({ evaluate: evaluateRecommendationGate });
 export const RecommendationEngine = Object.freeze({ generate: generateRecommendations });
-
-

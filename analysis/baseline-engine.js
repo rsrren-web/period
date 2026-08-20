@@ -5,6 +5,7 @@ const DAY = 86_400_000;
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
 const datesBetween = (start, end) => { const dates = []; for (let date = start; date <= end; date = addDays(date, 1)) dates.push(date); return dates; };
 const median = values => { const sorted = [...values].sort((a, b) => a - b), middle = Math.floor(sorted.length / 2); return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2; };
+const quantile = (values, q) => { const sorted = [...values].sort((a, b) => a - b); if (!sorted.length) return null; const position = (sorted.length - 1) * q, lower = Math.floor(position), upper = Math.ceil(position); return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower); };
 
 function completedCycles(periods, asOf) {
   const starts = [...new Set(periods.filter(period => period?.type === 'period' && period.status !== 'deleted' && period.start <= asOf).map(period => period.start))].sort();
@@ -20,7 +21,8 @@ function calculateBaseline({ logs, metric, dates, context, completeCycles, calcu
   const quality = evaluateMetricQuality({ logs, metric, dates: ordered, context, complete_cycles: completeCycles });
   if (quality.quality_level === 'insufficient') return unavailable(quality, dateRange, calculatedAt);
   const values = ordered.map(date => metricValue(logs[date], metric)).filter(value => value !== null).map(Number);
-  return { status: 'available', value: median(values), sample_size: values.length, valid_days: quality.valid_days, date_range: dateRange, quality_level: quality.quality_level, calculated_at: calculatedAt, reasons: quality.reasons };
+  const value = median(values), deviations = values.map((item) => Math.abs(item - value));
+  return { status: 'available', value, sample_size: values.length, valid_days: quality.valid_days, date_range: dateRange, quality_level: quality.quality_level, calculated_at: calculatedAt, reasons: quality.reasons, distribution: { median: value, mad: median(deviations), q1: quantile(values, 0.25), q3: quantile(values, 0.75), min: Math.min(...values), max: Math.max(...values) } };
 }
 
 export function calculateMetricBaselines({ logs = {}, periods = [], metric, as_of, calculated_at = new Date().toISOString(), phaseForDate, current_phase } = {}) {

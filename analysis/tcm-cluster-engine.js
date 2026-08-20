@@ -1,7 +1,10 @@
 import { readTcmObservations, tcmObservationCompletion } from '../tcm-observation-model.js';
+import { ANALYSIS_CONFIG } from './analysis-config.js';
 
 const DAY = 86400000;
 const dayDistance = (start, end) => Math.round((Date.parse(`${end}T12:00:00Z`) - Date.parse(`${start}T12:00:00Z`)) / DAY);
+const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
+const datesBetween = (start, end) => { const dates = []; for (let date = start; date <= end; date = addDays(date, 1)) dates.push(date); return dates; };
 
 function completedCycles(periods, asOf) {
   const starts = [...new Set((periods || []).filter((item) => item?.type === 'period' && item.status !== 'deleted' && item.start <= asOf).map((item) => item.start))].sort();
@@ -47,9 +50,17 @@ function confidence(cyclesCovered, cyclesSupported, config) {
   return 'exploratory';
 }
 
+function maturityFor(status, covered, supported, rate) {
+  if (status !== 'detected') return 'collecting';
+  if (supported >= ANALYSIS_CONFIG.tcm.stable_min_cycles && covered >= ANALYSIS_CONFIG.tcm.stable_min_cycles && rate >= ANALYSIS_CONFIG.tcm.stable_support_rate) return 'stable_cluster';
+  return 'observed_cluster';
+}
+
 export function analyzeTcmClusters({ logs = {}, periods = [], as_of, rules_config } = {}) {
   if (!rules_config?.rules) throw new TypeError('TCM cluster rules are required');
   const cycles = completedCycles(periods, as_of), dated = Object.entries(logs).filter(([date, log]) => date <= as_of && cycleFor(date, cycles) && tcmObservationCompletion(log?.symptomTags).valid > 0);
+  const firstStructuredDate = dated.map(([date]) => date).sort()[0] || null;
+  const eligibleDays = firstStructuredDate ? cycles.flatMap((cycle) => datesBetween(cycle.start, cycle.end)).filter((date) => date >= firstStructuredDate && date <= as_of).length : 0;
   return rules_config.rules.map((rule) => {
     const evidence = [];
     for (const [date, log] of dated) {
@@ -67,12 +78,15 @@ export function analyzeTcmClusters({ logs = {}, periods = [], as_of, rules_confi
     const covered = new Set(dated.map(([date]) => cycleFor(date, cycles)?.start).filter(Boolean)).size, supported = byCycle.size;
     const constituentCounts = new Map(); evidence.forEach((item) => item.features.forEach((feature) => constituentCounts.set(feature.label, (constituentCounts.get(feature.label) || 0) + 1)));
     const constituents = [...constituentCounts.entries()].sort((a, b) => b[1] - a[1]).map(([label, count]) => ({ label, count }));
-    const status = covered < rules_config.minimum_cycles ? 'insufficient' : supported >= rules_config.minimum_cycles ? 'detected' : 'not_detected';
+    const minimumCycles = Math.max(ANALYSIS_CONFIG.tcm.observed_min_cycles, Number(rules_config.minimum_cycles) || 0);
+    const status = covered < minimumCycles ? 'insufficient' : supported >= minimumCycles ? 'detected' : 'not_detected';
+    const supportRate = covered ? supported / covered : 0, maturity = maturityFor(status, covered, supported, supportRate);
     return Object.freeze({
       cluster_id: rule.id, rule_version: rules_config.version, display_name: rule.display_name, status,
-      cycles_covered: covered, cycles_supported: supported, support_rate: covered ? supported / covered : 0,
-      constituent_features: constituents, evidence, confidence_level: status === 'detected' ? confidence(covered, supported, rules_config) : 'insufficient',
-      data_quality: { valid_days: dated.length, total_days: Object.keys(logs).filter((date) => date <= as_of).length, completion_rate: Object.keys(logs).length ? dated.length / Object.keys(logs).length : 0, reasons: covered < rules_config.minimum_cycles ? [`需要至少${rules_config.minimum_cycles}个包含新体感记录的完整周期`] : [] },
+      maturity, cycles_covered: covered, cycles_supported: supported, support_rate: supportRate,
+      constituent_features: constituents, evidence, confidence_level: status === 'detected' ? (maturity === 'stable_cluster' ? 'stable' : confidence(covered, supported, rules_config)) : 'insufficient',
+      cycle_evidence: [...byCycle.entries()].map(([cycle_start, items]) => ({ cycle_start, evidence_days: items.length, first_date: items[0]?.date || null, last_date: items.at(-1)?.date || null })),
+      data_quality: { valid_days: dated.length, total_days: eligibleDays, completion_rate: eligibleDays ? dated.length / eligibleDays : 0, first_structured_date: firstStructuredDate, reasons: covered < minimumCycles ? [`需要至少${minimumCycles}个包含新体感记录的完整周期`] : supported < minimumCycles ? [`这组体感目前只在${supported}个周期出现，继续观察是否重复`] : [] },
       intervention_tags: rule.intervention_tags || [], generated_at: new Date().toISOString()
     });
   });

@@ -1,5 +1,5 @@
 import { createInsightsPageData } from './analysis/insights-page-data.js';
-import { readInsightsSnapshot, writeInsightsSnapshot } from './analysis/insights-repository.js';
+import { readInsightsSnapshot, readLatestInsightsSnapshot, writeInsightsSnapshot } from './analysis/insights-repository.js';
 
 const USAGE_KEY = 'period-intervention-usage-v1';
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
@@ -104,13 +104,14 @@ globalThis.renderInsightsV1 = async (context) => {
   const token = ++renderToken;
   const now = new Date();
   const asOf = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const input = { logs: context?.logs || {}, periods: context?.periods || [], as_of: asOf, next_start: context?.next, prediction_confidence: context?.predictionConfidence };
+  const input = { logs: context?.logs || {}, periods: context?.periods || [], as_of: asOf, next_start: context?.next, prediction_confidence: context?.predictionConfidence, intervention_usage: readUsage() };
   try {
     const { config, tcmRules, observationActions } = await loadResources();
     if (token !== renderToken) return;
     const cached = readInsightsSnapshot(input, config.version);
-    if (cached) renderPage(cached, observationActions);
-    const data = createInsightsPageData({ ...input, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: readUsage() });
+    if (cached) { renderPage(cached, observationActions); return; }
+    const previous = readLatestInsightsSnapshot();
+    const data = createInsightsPageData({ ...input, config, tcm_rules: tcmRules, observation_actions: observationActions, previous_snapshot: previous?._analysisSnapshot });
     if (token !== renderToken) return;
     writeInsightsSnapshot(input, config.version, data);
     renderPage(data, observationActions);
@@ -130,6 +131,9 @@ document.addEventListener('click', (event) => {
   form.elements.interventionId.value = button.dataset.interventionFeedback;
   form.elements.interventionName.value = button.dataset.interventionName;
   form.elements.target.value = button.dataset.interventionTarget;
+  form.dataset.recommendationId = button.dataset.recommendationId || '';
+  form.dataset.sourceEventId = button.dataset.sourceEventId || '';
+  form.dataset.sourcePatternId = button.dataset.sourcePatternId || '';
   document.querySelector('#interventionFeedbackName').textContent = button.dataset.interventionName;
   dialog.showModal();
 });
@@ -139,7 +143,7 @@ document.querySelector('#interventionFeedbackForm')?.addEventListener('submit', 
   const data = new FormData(form);
   const score = (name) => data.get(name) === '' ? null : Number(data.get(name));
   const records = readUsage();
-  records.push({ intervention_id: data.get('interventionId'), intervention_name: data.get('interventionName'), target: data.get('target'), helpful: data.get('helpful') === 'yes', before: score('before'), after: score('after'), used_at: new Date().toISOString() });
+  records.push({ intervention_id: data.get('interventionId'), intervention_name: data.get('interventionName'), target: data.get('target'), recommendation_id: form.dataset.recommendationId || null, source_event_id: form.dataset.sourceEventId || null, source_pattern_id: form.dataset.sourcePatternId || null, helpful: data.get('helpful') === 'yes', before: score('before'), after: score('after'), used_at: new Date().toISOString() });
   writeUsage(records.slice(-300));
   if (lastContext) globalThis.renderInsightsV1(lastContext);
 });
