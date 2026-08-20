@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#faf9f7">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fontsapi.zeoseven.com; font-src 'self' data: https://fontsapi.zeoseven.com; img-src 'self' data: blob:; connect-src 'self' https://period-sync.rsr-ren.workers.dev; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="description" content="离线优先的经期、周期趋势与生活记录工具">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -208,6 +210,6 @@
   <dialog id="interventionFeedbackDialog" class="feedback-dialog"><form id="interventionFeedbackForm" method="dialog"><input name="interventionId" type="hidden"><input name="interventionName" type="hidden"><input name="target" type="hidden"><div class="dialog-head"><div><p class="eyebrow">调养反馈</p><h2>这次对你有帮助吗？</h2></div><button value="cancel" class="round-button emoji-icon" aria-label="关闭">✖️</button></div><p id="interventionFeedbackName" class="muted"></p><fieldset class="choice-field"><legend>你的感受</legend><div class="choice-pills"><label><input name="helpful" type="radio" value="yes" required><span>有帮助</span></label><label><input name="helpful" type="radio" value="no"><span>没明显帮助</span></label></div></fieldset><div class="feedback-score-grid"><label>使用前不适程度<input name="before" type="number" min="0" max="5" step="1" inputmode="numeric" placeholder="0–5"></label><label>使用后不适程度<input name="after" type="number" min="0" max="5" step="1" inputmode="numeric" placeholder="0–5"></label></div><p class="field-hint">分数可不填；同一方案至少记录3次后才开始汇总，5次前会标记“数据仍少”。</p><div class="dialog-actions"><button value="cancel" class="soft">取消</button><button value="default" class="primary">保存反馈</button></div></form></dialog>
 
   <div id="toast" class="toast" role="status"></div>
-  <script src="sync-config.js"></script><script type="module" src="traditional-care.js?v=90"></script><script type="module" src="daily-insights.js?v=90"></script><script type="module" src="personal-insights.js?v=90"></script><script type="module" src="wellness-engine.js?v=90"></script><script type="module" src="insights-page.js?v=90"></script><script type="module" src="app.js?v=90"></script>
+  <script src="sync-config.js"></script><script type="module" src="traditional-care.js?v=92"></script><script type="module" src="daily-insights.js?v=92"></script><script type="module" src="personal-insights.js?v=92"></script><script type="module" src="wellness-engine.js?v=92"></script><script type="module" src="insights-page.js?v=92"></script><script type="module" src="app.js?v=92"></script>
 </body>
 </html>

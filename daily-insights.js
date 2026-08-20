@@ -272,7 +272,14 @@ function renderDailyOverview(logs) {
 }
 function renderDailyTrendView(logs) { renderTrendHighlights(logs); renderDailyOverview(logs); }
 
-globalThis.renderDailyEnhancements = (context) => { dailyContext = context || dailyContext || { logs: readDailyLogs(), periods: [] }; const logs = context?.logs || readDailyLogs(); markStatusDates(logs); renderHomeStatus(logs); renderHomeDecision(logs); renderCyclePatternSummary(logs); renderDailyTrendView(logs); };
+globalThis.renderDailyEnhancements = (context, view = 'today') => {
+  dailyContext = context || dailyContext || { logs: readDailyLogs(), periods: [] };
+  const logs = context?.logs || readDailyLogs();
+  if (view === 'calendar') { markStatusDates(logs); return; }
+  if (view !== 'today') return;
+  renderHomeStatus(logs);
+  renderHomeDecision(logs);
+};
 document.addEventListener('click', (event) => {
   const question = event.target.closest('[data-question-target]'); if (question) { const target = question.dataset.questionTarget; document.querySelectorAll('[data-question-panel]').forEach((panel) => { panel.hidden = panel.dataset.questionPanel !== target; }); document.querySelectorAll('[data-question-target]').forEach((button) => button.classList.toggle('active', button.dataset.questionTarget === target)); document.querySelector('#insights .page-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
   if (event.target.closest('[data-view-insights]')) { document.querySelector('[data-view="insights"]')?.click(); return; }
