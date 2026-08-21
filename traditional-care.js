@@ -20,12 +20,16 @@ const normalizePain = (value) => { const pain = Number(value); if (!Number.isFin
 const memoryStore = new Map();
 const storageGet = (key) => { try { return globalThis.localStorage?.getItem(key) ?? memoryStore.get(key) ?? null; } catch { return memoryStore.get(key) ?? null; } };
 const storageSet = (key, value) => { try { globalThis.localStorage?.setItem(key, value); } catch { memoryStore.set(key, value); } };
-const analysisResourcesPromise = Promise.all([
-  loadInterventionLibrary(),
-  fetch('./knowledge/insights_config.json').then((response) => response.json()),
-  fetch('./knowledge/tcm_cluster_rules.json').then((response) => response.json()),
-  fetch('./knowledge/observation_actions.json').then((response) => response.json())
-]).then(([library, config, tcmRules, observationActions]) => ({ library, config, tcmRules, observationActions }));
+let analysisResourcesPromise;
+function loadAnalysisResources() {
+  analysisResourcesPromise ||= Promise.all([
+    loadInterventionLibrary(),
+    fetch('./knowledge/insights_config.json').then((response) => response.json()),
+    fetch('./knowledge/tcm_cluster_rules.json').then((response) => response.json()),
+    fetch('./knowledge/observation_actions.json').then((response) => response.json())
+  ]).then(([library, config, tcmRules, observationActions]) => ({ library, config, tcmRules, observationActions })).catch((error) => { analysisResourcesPromise = null; throw error; });
+  return analysisResourcesPromise;
+}
 let recommendationRenderToken = 0;
 let latestAnalysisSnapshot = null;
 const INTERVENTION_USAGE_KEY = 'period-intervention-usage-v1';
@@ -144,7 +148,7 @@ function interventionCard(recommendation) {
 
 async function renderEngineRecommendations({ root, token, phase, log, logs }) {
   try {
-    const { library, config, tcmRules, observationActions } = await analysisResourcesPromise;
+    const { library, config, tcmRules, observationActions } = await loadAnalysisResources();
     if (token !== recommendationRenderToken || !root.isConnected) return;
     const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: readInterventionHistory(), intervention_library: library, phase }, { previous_snapshot: latestAnalysisSnapshot });
     latestAnalysisSnapshot = analysis;

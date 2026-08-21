@@ -4,7 +4,7 @@ import { evaluateMetricQuality, metricValue } from './data-quality-engine.js';
 const DAY = 86_400_000;
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
 const dayDistance = (start, end) => Math.round((Date.parse(`${end}T12:00:00Z`) - Date.parse(`${start}T12:00:00Z`)) / DAY);
-const datesBetween = (start, end) => { const result = []; for (let date = start; date <= end; date = addDays(date, 1)) result.push(date); return result; };
+const datesBetween = (start, end) => { const result = [],endTime=Date.parse(`${end}T12:00:00Z`); for(let time=Date.parse(`${start}T12:00:00Z`);time<=endTime;time+=DAY)result.push(new Date(time).toISOString().slice(0,10)); return result; };
 const mean = values => values.length ? values.reduce((sum, value) => sum + Number(value), 0) / values.length : null;
 const round = value => value === null ? null : Math.round(value * 1000) / 1000;
 
@@ -64,14 +64,11 @@ function insufficient(patternType, metric, qualities = [], cycles = 0, identity 
 
 function detected(effectSize) { return Math.abs(effectSize) >= ANALYSIS_CONFIG.patterns.detected_effect_size ? 'detected' : 'not_detected'; }
 
-export function analyzeCyclePattern({ logs = {}, periods = [], metric, as_of, target_window = { start_day: 1, end_day: 5 }, mode = 'mean', condition } = {}) {
-  const cycles = completedCycles(periods, as_of), minimum = ANALYSIS_CONFIG.patterns.cycle_pattern_min_complete_cycles;
+export function createCyclePatternContext({periods=[],as_of,target_window={start_day:1,end_day:5}}={}){const cycles=completedCycles(periods,as_of),targetDates=[],comparisonDates=[];cycles.forEach(cycle=>datesBetween(cycle.start,cycle.end).forEach(date=>{const cycleDay=dayDistance(cycle.start,date)+1;(cycleDay>=target_window.start_day&&cycleDay<=target_window.end_day?targetDates:comparisonDates).push(date)}));return {cycles,targetDates,comparisonDates}}
+
+export function analyzeCyclePattern({ logs = {}, periods = [], metric, as_of, target_window = { start_day: 1, end_day: 5 }, mode = 'mean', condition, cycle_context } = {}) {
+  const context=cycle_context||createCyclePatternContext({periods,as_of,target_window}),{cycles,targetDates,comparisonDates}=context, minimum = ANALYSIS_CONFIG.patterns.cycle_pattern_min_complete_cycles;
   if (cycles.length < minimum) return insufficient('cycle_pattern', metric, [], cycles.length, { mode, target_window, condition });
-  const targetDates = [], comparisonDates = [];
-  cycles.forEach(cycle => datesBetween(cycle.start, cycle.end).forEach(date => {
-    const cycleDay = dayDistance(cycle.start, date) + 1;
-    (cycleDay >= target_window.start_day && cycleDay <= target_window.end_day ? targetDates : comparisonDates).push(date);
-  }));
   const targetQuality = evaluateMetricQuality({ logs, metric, dates: targetDates, context: 'pattern_window', complete_cycles: cycles.length });
   const comparisonQuality = evaluateMetricQuality({ logs, metric, dates: comparisonDates, context: 'pattern_window', complete_cycles: cycles.length });
   if ([targetQuality, comparisonQuality].some(item => item.quality_level === 'insufficient')) return insufficient('cycle_pattern', metric, [targetQuality, comparisonQuality], cycles.length, { mode, target_window, condition });
@@ -131,4 +128,4 @@ export function analyzeTemporalAssociation({ logs = {}, periods = [], metric_a, 
   return Object.freeze({ pattern_id: patternId('temporal_association', { metric_a, metric_b, relation, condition_a, condition_b }), pattern_type: 'temporal_association', metric: `${metric_a}:${relation}:${metric_b}`, metric_a, metric_b, relation, lag_days: offsets[relation], direction: relation === 'same_day' ? 'undirected' : relation === 'next_day' ? 'a_precedes_b' : 'b_precedes_a', p_b_given_a: round(stats.pGivenA), p_b_given_not_a: round(stats.pGivenNotA), relative_risk: round(stats.relativeRisk), involved_days: { with_a: stats.withA.length, without_a: stats.withoutA.length, with_a_and_b: stats.exposedOccurrences, without_a_and_b: stats.unexposedOccurrences }, sample_size: pairs.length, cycles_covered: cycles, effect_size: round(stats.effectSize), confidence_level: confidence([qualityA.quality_level, qualityB.quality_level], pairs.length, cycles), status: detected(stats.effectSize), phase_strata: strata, phase_consistency: round(consistent), date_range: { start, end }, missing_or_excluded_pairs: anchorDates.length - pairs.length, same_cycle_only, causal_interpretation_allowed: false, data_quality: { metric_a: qualityA, metric_b: qualityB } });
 }
 
-export const PatternEngine = Object.freeze({ analyzeCyclePattern, analyzeCoOccurrence, analyzeTemporalAssociation });
+export const PatternEngine = Object.freeze({ createCyclePatternContext, analyzeCyclePattern, analyzeCoOccurrence, analyzeTemporalAssociation });

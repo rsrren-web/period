@@ -79,6 +79,8 @@ summary strong { font-size: 1rem }
 .legend-dot.ovulation { background: var(--teal) }
 .bar:hover:after,.legend-dot.journal { background: var(--text) }
 .history-card { margin-top: 18px }
+.history-title-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap }
+.history-title-actions .compact { min-height: 34px; padding: 6px 10px }
 .history-list { max-height: 520px; overflow: auto }
 .history-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 14px; align-items: center; padding: 13px 2px; border-bottom: 1px solid var(--line); font-size: .9rem }
 .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 19px }
@@ -1156,6 +1158,7 @@ main { width: min(1120px,calc(100% - 32px - env(safe-area-inset-left) - env(safe
 .wellness-log-dialog .dialog-head.sticky { position: sticky; top: 0; z-index: 10; min-height: 70px; margin: 0-18px; padding: max(14px,env(safe-area-inset-top)) 18px 12px; border-bottom: 1px solid var(--soft-line); background: rgba(250,249,247,.98); backdrop-filter: blur(14px) }
 .log-section-nav { position: static; top: auto; z-index: auto; margin: 0-2px 8px; padding-block: 6px; background: 0 0 }
 .log-section { scroll-margin-top: 16px; margin: 0; padding: 22px 2px; border: 0; border-bottom: 1px solid var(--soft-line); border-radius: 0; background: 0 0; outline: 0 }
+.wellness-log-dialog .log-section { content-visibility: auto; contain-intrinsic-size: auto 300px }
 .log-section:nth-of-type(even) { background: 0 0; outline: 0 }
 .log-section:last-of-type { border-bottom: 0 }
 .menstrual-status-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px }
@@ -1183,7 +1186,9 @@ main { width: min(1120px,calc(100% - 32px - env(safe-area-inset-left) - env(safe
 }
 .home-date-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 4px 0 20px }
 .home-date-copy { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto }
-.home-date-heading .muted { display: block }
+.home-date-heading .muted { display: block; min-height: 24px }
+#todaySnapshot { min-height: 104px }
+#homeDecisionCard { min-height: 128px }
 .home-period-controls { display: grid; flex: 0 0 auto; width: auto; max-width: none; margin: 0; align-self: flex-start; gap: 2px }
 .home-period-controls .period-action { width: auto; min-width: 112px; min-height: 44px; margin: 0; white-space: nowrap }
 .home-period-controls .period-edit { width: 100%; min-height: 32px; margin: 0; padding: 3px 0 0; border: 0; background: 0 0; box-shadow: none; font-size: var(--text-caption); white-space: nowrap }
@@ -1284,6 +1289,7 @@ body { min-width: 320px; line-height: 1.6 }
 .insights-section-heading h2 { margin: 2px 0 0; font-size: var(--text-section) }
 .insight-card-list,.phase-profile-grid { display: grid; gap: 12px }
 .insight-v1-card,.phase-profile-card,.intervention-response-card,.insights-empty { padding: 16px; border: 1px solid var(--soft-line); border-radius: var(--radius-inner); background: var(--surface) }
+.insights-loading { min-height: 84px }
 .insight-v1-head { display: flex; align-items: center; justify-content: space-between; gap: 10px }
 .insight-v1-head span { color: var(--primary); font-size: var(--text-caption); font-weight: 700 }
 .insight-v1-head small { color: var(--ink-muted); text-align: right }

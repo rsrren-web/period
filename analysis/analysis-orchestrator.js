@@ -10,6 +10,7 @@ import { createExplanation, explanationFromEvent, explanationFromPattern } from 
 
 const DAY = 86_400_000;
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
+const profiled = (name, operation) => { const report = globalThis.__PERIOD_ANALYSIS_PROFILE__; if (typeof report !== 'function') return operation(); const started = performance.now(); try { return operation(); } finally { report(name, performance.now() - started); } };
 
 function stableValue(value) {
   if (Array.isArray(value)) return value.map(stableValue);
@@ -64,19 +65,19 @@ function buildSignatures(input) {
 
 function calculateCore(input, signatures, calculatedAt, previous) {
   if (previous?._dependency_signatures?.core === signatures.core && previous.core) return previous.core;
-  const quality = metricCompletionReport({ logs: input.logs, start: addDays(input.as_of, -29), end: input.as_of, metrics: ['mood', 'energy', 'sleep', 'bowel', 'pain', 'activity', 'stress', 'social_intensity'] });
+  const quality = profiled('quality',()=>metricCompletionReport({ logs: input.logs, start: addDays(input.as_of, -29), end: input.as_of, metrics: ['mood', 'energy', 'sleep', 'bowel', 'pain', 'activity', 'stress', 'social_intensity'] }));
   const baselineAsOf = addDays(input.as_of, -1);
-  const baselines = createBaselineSnapshot({ logs: input.logs, periods: input.periods, as_of: baselineAsOf, calculated_at: calculatedAt, phaseForDate: input.phase_for_date, current_phase: input.phase?.key || input.current_phase });
+  const baselines = profiled('baselines',()=>createBaselineSnapshot({ logs: input.logs, periods: input.periods, as_of: baselineAsOf, calculated_at: calculatedAt, phaseForDate: input.phase_for_date, current_phase: input.phase?.key || input.current_phase }));
   const priorEvents = previous?.core?.health_events || [];
-  const evidence = buildRecommendationEvidence({ logs: input.logs, periods: input.periods, phase: input.phase || {}, record_date: input.as_of, baseline_snapshot: baselines, prior_events: priorEvents, phase_for_date: input.phase_for_date });
-  const tcmClusters = analyzeTcmClusters({ logs: input.logs, periods: input.periods, as_of: input.as_of, rules_config: input.tcm_rules });
-  const rawInsights = buildInsights({ logs: input.logs, periods: input.periods, as_of: input.as_of, next_start: input.next_start, prediction_confidence: input.prediction_confidence, config: input.config, observation_actions: input.observation_actions, tcm_clusters: tcmClusters });
-  const explanations = [
+  const evidence = profiled('recommendation-evidence',()=>buildRecommendationEvidence({ logs: input.logs, periods: input.periods, phase: input.phase || {}, record_date: input.as_of, baseline_snapshot: baselines, prior_events: priorEvents, phase_for_date: input.phase_for_date }));
+  const tcmClusters = profiled('tcm-clusters',()=>analyzeTcmClusters({ logs: input.logs, periods: input.periods, as_of: input.as_of, rules_config: input.tcm_rules }));
+  const rawInsights = profiled('insight-builder',()=>buildInsights({ logs: input.logs, periods: input.periods, as_of: input.as_of, next_start: input.next_start, prediction_confidence: input.prediction_confidence, config: input.config, observation_actions: input.observation_actions, tcm_clusters: tcmClusters }));
+  const explanations = profiled('explanations',()=>[
     ...evidence.health_events.map(explanationFromEvent),
     ...evidence.patterns.filter((item) => item.status !== 'insufficient').map((item) => explanationFromPattern(item, calculatedAt)),
     ...tcmClusters.map((item) => tcmExplanation(item, calculatedAt)),
     ...rawInsights.map((item) => insightExplanation(item, calculatedAt))
-  ];
+  ]);
   return Object.freeze({ quality, baselines, health_events: evidence.health_events, patterns: evidence.patterns, target_window: evidence.target_window, tcm_clusters: tcmClusters, raw_insights: rawInsights, explanations });
 }
 
@@ -84,8 +85,8 @@ export function runAnalysis(input = {}, options = {}) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.as_of || '')) throw new TypeError('analysis as_of must use YYYY-MM-DD');
   if (!input.config || !input.tcm_rules) throw new TypeError('analysis config and tcm rules are required');
   const normalized = { ...input, logs: input.logs || {}, periods: input.periods || [], observation_actions: input.observation_actions || [], intervention_usage: input.intervention_usage || [] };
-  const calculatedAt = options.calculated_at || new Date().toISOString(), previous = options.previous_snapshot || null, signatures = buildSignatures(normalized);
-  const core = calculateCore(normalized, signatures, calculatedAt, previous);
+  const calculatedAt = options.calculated_at || new Date().toISOString(), previous = options.previous_snapshot || null, signatures = profiled('signatures',()=>buildSignatures(normalized));
+  const core = profiled('core',()=>calculateCore(normalized, signatures, calculatedAt, previous));
   const interventionResponses = previous?._dependency_signatures?.feedback === signatures.feedback && previous.intervention_responses ? previous.intervention_responses : aggregateInterventionResponses(normalized.intervention_usage);
   let recommendations = null;
   if (normalized.intervention_library) {

@@ -3,7 +3,7 @@ import { evaluateMetricQuality, metricValue } from './data-quality-engine.js';
 
 const DAY = 86_400_000;
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
-const datesBetween = (start, end) => { const dates = []; for (let date = start; date <= end; date = addDays(date, 1)) dates.push(date); return dates; };
+const datesBetween = (start, end) => { const dates = [],endTime=Date.parse(`${end}T12:00:00Z`); for(let time=Date.parse(`${start}T12:00:00Z`);time<=endTime;time+=DAY)dates.push(new Date(time).toISOString().slice(0,10)); return dates; };
 const median = values => { const sorted = [...values].sort((a, b) => a - b), middle = Math.floor(sorted.length / 2); return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2; };
 const quantile = (values, q) => { const sorted = [...values].sort((a, b) => a - b); if (!sorted.length) return null; const position = (sorted.length - 1) * q, lower = Math.floor(position), upper = Math.ceil(position); return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower); };
 

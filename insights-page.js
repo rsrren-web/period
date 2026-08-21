@@ -16,7 +16,7 @@ function loadResources() {
     fetch('./knowledge/insights_config.json').then((r) => r.json()),
     fetch('./knowledge/tcm_cluster_rules.json').then((r) => r.json()),
     fetch('./knowledge/observation_actions.json').then((r) => r.json())
-  ]).then(([config, tcmRules, observationActions]) => ({ config, tcmRules, observationActions }));
+  ]).then(([config, tcmRules, observationActions]) => ({ config, tcmRules, observationActions })).catch((error) => { resourcePromise = null; throw error; });
   return resourcePromise;
 }
 
@@ -107,18 +107,21 @@ globalThis.renderInsightsV1 = async (context) => {
   const input = { logs: context?.logs || {}, periods: context?.periods || [], as_of: asOf, next_start: context?.next, prediction_confidence: context?.predictionConfidence, intervention_usage: readUsage() };
   try {
     const { config, tcmRules, observationActions } = await loadResources();
-    if (token !== renderToken) return;
+    if (token !== renderToken || context?.isCurrent?.() === false) return false;
     const cached = readInsightsSnapshot(input, config.version);
-    if (cached) { renderPage(cached, observationActions); return; }
+    if (cached) { renderPage(cached, observationActions); return true; }
     const previous = readLatestInsightsSnapshot();
     const data = createInsightsPageData({ ...input, config, tcm_rules: tcmRules, observation_actions: observationActions, previous_snapshot: previous?._analysisSnapshot });
-    if (token !== renderToken) return;
+    if (token !== renderToken || context?.isCurrent?.() === false) return false;
     writeInsightsSnapshot(input, config.version, data);
     renderPage(data, observationActions);
+    return true;
   } catch (error) {
+    if (token !== renderToken || context?.isCurrent?.() === false) return false;
     const root = document.querySelector('#insightsTop');
-    if (root) root.innerHTML = empty('趋势暂时无法计算', '原始记录没有受到影响；刷新页面后可以重试。');
+    if (root) root.innerHTML = `${empty('趋势暂时无法计算', '原始记录没有受到影响；请检查网络后重试。')}<button type="button" class="soft compact" data-retry-insights>重试</button>`;
     console.warn('insights_render_failed', error?.name || 'Error');
+    return true;
   }
 };
 

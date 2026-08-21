@@ -1,7 +1,7 @@
 import { ANALYSIS_CONFIG, BASELINE_METRICS } from './analysis-config.js';
 import { calculateMetricBaselines } from './baseline-engine.js';
 import { detectDeviation, detectPersistence, detectRecentlyFirstRecorded } from './health-event-engine.js';
-import { analyzeCyclePattern, analyzeTemporalAssociation } from './pattern-engine.js';
+import { analyzeCyclePattern, analyzeTemporalAssociation, createCyclePatternContext } from './pattern-engine.js';
 
 const DAY = 86_400_000;
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
@@ -29,8 +29,9 @@ export function buildRecommendationEvidence({ logs = {}, periods = [], phase = {
   }
 
   const patterns = [], window = currentWindow(phase);
+  const cycleContext=window?createCyclePatternContext({periods,as_of:record_date,target_window:window}):null;
   if (window) for (const metric of BASELINE_METRICS) {
-    try { patterns.push(analyzeCyclePattern({ logs, periods, metric, as_of: record_date, target_window: window })); } catch { /* insufficient/invalid source */ }
+    try { patterns.push(analyzeCyclePattern({ logs, periods, metric, as_of: record_date, target_window: window, cycle_context:cycleContext })); } catch { /* insufficient/invalid source */ }
   }
   const start = addDays(record_date, -89);
   const specs = [

@@ -2,10 +2,11 @@ import { readTcmObservations } from '../tcm-observation-model.js';
 
 const DAY = 86400000;
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
-const datesBetween = (start, end) => { const dates = []; for (let date = start; date <= end; date = addDays(date, 1)) dates.push(date); return dates; };
+const datesBetween = (start, end) => { const dates = [],endTime=Date.parse(`${end}T12:00:00Z`); for(let time=Date.parse(`${start}T12:00:00Z`);time<=endTime;time+=DAY)dates.push(new Date(time).toISOString().slice(0,10)); return dates; };
 const mean = (values) => values.length ? values.reduce((sum, value) => sum + Number(value), 0) / values.length : null;
 const round = (value) => value === null ? null : Math.round(value * 1000) / 1000;
 const metricLabels = Object.freeze({ energy: '精力', stress: '压力', sleep_quality: '睡眠', pain_max: '疼痛', activity_level: '活动', social_intensity: '社交强度', mood: '情绪', bloating: '腹胀' });
+const profiled = (name, operation) => { const report=globalThis.__PERIOD_ANALYSIS_PROFILE__; if(typeof report!=='function')return operation(); const started=performance.now(); try{return operation()}finally{report(name,performance.now()-started)} };
 
 function fingerprint(value) { let hash = 2166136261; for (const character of JSON.stringify(value)) { hash ^= character.charCodeAt(0); hash = Math.imul(hash, 16777619); } return (hash >>> 0).toString(16).padStart(8, '0'); }
 function completedCycles(periods, asOf) {
@@ -57,26 +58,24 @@ function candidateDates(cycle, kind, start, end) {
   return datesBetween(addDays(cycle.start, start), addDays(cycle.start, end));
 }
 
-function scanMetricWindow({ logs, cycles, metric, kind, limits, config }) {
-  const candidates = [];
-  for (let length = limits.min_window_length; length <= limits.max_window_length; length++) {
-    for (let start = limits.start; start + length - 1 <= limits.end; start++) {
-      const end = start + length - 1, targetDates = cycles.flatMap((cycle) => candidateDates(cycle, kind, start, end));
-      const comparisonDates = cycles.flatMap((cycle) => datesBetween(cycle.start, cycle.end).filter((date) => !targetDates.includes(date)));
-      const target = targetDates.map((date) => valueFor(logs[date], metric)).filter((value) => value !== null), outside = comparisonDates.map((date) => valueFor(logs[date], metric)).filter((value) => value !== null);
-      const targetCompletion = targetDates.length ? target.length / targetDates.length : 0, outsideCompletion = comparisonDates.length ? outside.length / comparisonDates.length : 0;
+function buildWindowPlans(kind,limits,cycleDateLists,targetDateCache){const plans=[];for(let length=limits.min_window_length;length<=limits.max_window_length;length++)for(let start=limits.start;start+length-1<=limits.end;start++){const end=start+length-1,cycleTargetDates=targetDateCache.map(cache=>Array.from({length},(_,index)=>cache.get(start+index))),targetDates=cycleTargetDates.flat(),targetSet=new Set(targetDates),comparisonCount=cycleDateLists.reduce((count,dates)=>count+dates.length-dates.filter(date=>targetSet.has(date)).length,0);plans.push({start,end,cycleTargetDates,targetDates,targetSet,comparisonCount})}return plans}
+
+function scanMetricWindow({ metric, kind, config, cycleDateLists, metricValues, plans }) {
+  const candidates = [],cycleValueEntries=cycleDateLists.map(dates=>dates.map(date=>[date,metricValues.get(date)]).filter(([,value])=>value!==undefined));
+  for(const {start,end,cycleTargetDates,targetDates,targetSet,comparisonCount} of plans){
+      const target = targetDates.map((date) => metricValues.get(date)).filter((value) => value !== undefined), outside = cycleValueEntries.flatMap(entries=>entries.filter(([date])=>!targetSet.has(date)).map(([,value])=>value));
+      const targetCompletion = targetDates.length ? target.length / targetDates.length : 0, outsideCompletion = comparisonCount ? outside.length / comparisonCount : 0;
       if (targetCompletion < config.pattern.phase_completion_min || outsideCompletion < config.pattern.phase_completion_min || !target.length || !outside.length) continue;
       const targetMean = mean(target), outsideMean = mean(outside), effect = targetMean - outsideMean;
       const threshold = config.pattern.scale_mean_diff_min;
-      const perCycle = cycles.map((cycle) => {
-        const within = candidateDates(cycle, kind, start, end).map((date) => valueFor(logs[date], metric)).filter((value) => value !== null);
-        const allDates = datesBetween(cycle.start, cycle.end), targetSet = new Set(candidateDates(cycle, kind, start, end)), other = allDates.filter((date) => !targetSet.has(date)).map((date) => valueFor(logs[date], metric)).filter((value) => value !== null);
+      const perCycle = cycleDateLists.map((_,index) => {
+        const cycleTargets=cycleTargetDates[index],cycleTargetSet=new Set(cycleTargets),within = cycleTargets.map((date) => metricValues.get(date)).filter((value) => value !== undefined);
+        const other = cycleValueEntries[index].filter(([date])=>!cycleTargetSet.has(date)).map(([,value])=>value);
         return within.length && other.length ? mean(within) - mean(other) : null;
       }).filter((value) => value !== null);
       const repeated = perCycle.filter((value) => Math.sign(value) === Math.sign(effect) && Math.abs(value) >= threshold).length, repeatRate = perCycle.length ? repeated / perCycle.length : 0;
       const normalizedEffect = Math.min(Math.abs(effect) / 1.5, 1), sampleSupport = Math.min((target.length + outside.length) / 60, 1), windowScore = normalizedEffect * 0.55 + repeatRate * 0.30 + sampleSupport * 0.15;
-      candidates.push({ kind, start, end, targetMean, outsideMean, effect, targetCount: target.length, outsideCount: outside.length, cyclesTested: perCycle.length, cyclesRepeated: repeated, repeatRate, windowScore, lastSupportedDate: targetDates.filter((date) => valueFor(logs[date], metric) !== null).sort().at(-1) || null });
-    }
+      candidates.push({ kind, start, end, targetMean, outsideMean, effect, targetCount: target.length, outsideCount: outside.length, cyclesTested: perCycle.length, cyclesRepeated: repeated, repeatRate, windowScore, lastSupportedDate: targetDates.filter((date) => metricValues.has(date)).sort().at(-1) || null });
   }
   return candidates.sort((a, b) => b.windowScore - a.windowScore || (a.end - a.start) - (b.end - b.start) || b.targetCount - a.targetCount)[0] || null;
 }
@@ -94,9 +93,9 @@ function nextWindow(window, nextStart, prediction) {
 
 function buildCycleInsights({ logs, periods, asOf, nextStart, predictionConfidence, config, actions }) {
   const cycles = completedCycles(periods, asOf); if (cycles.length < config.pattern.min_complete_cycles) return [];
-  const insights = [];
+  const insights = [],cycleDateLists=cycles.map(cycle=>datesBetween(cycle.start,cycle.end)),allCycleDates=cycleDateLists.flat(),valuesByMetric=new Map(config.metrics.map(metric=>[metric,new Map(allCycleDates.map(date=>[date,valueFor(logs[date],metric)]).filter(([,value])=>value!==null))])),plansByKind=new Map(['premenstrual','menstrual'].map(kind=>{const limits=config.window_search[kind],targetDateCache=cycles.map(cycle=>new Map(Array.from({length:limits.end-limits.start+1},(_,index)=>{const offset=limits.start+index,base=kind==='premenstrual'?cycle.next_start:cycle.start;return [offset,addDays(base,offset)]})));return [kind,buildWindowPlans(kind,limits,cycleDateLists,targetDateCache)]}));
   for (const metric of config.metrics) for (const kind of ['premenstrual', 'menstrual']) {
-    const window = scanMetricWindow({ logs, cycles, metric, kind, limits: config.window_search[kind], config });
+    const window = scanMetricWindow({ metric, kind, config, cycleDateLists, metricValues:valuesByMetric.get(metric), plans:plansByKind.get(kind) });
     if (!window || Math.abs(window.effect) < config.pattern.scale_mean_diff_min || window.cyclesTested < config.pattern.min_complete_cycles) continue;
     const relativeWindow = { relativeStart: window.start, relativeEnd: window.end, label: windowLabel(window) }, level = confidence(window.cyclesTested, window.repeatRate, config);
     insights.push({
@@ -123,9 +122,9 @@ function buildAssociationInsights({ logs, periods, asOf, config, actions }) {
   });
 }
 
-function phaseFor(date, periods) {
-  const cycles = completedCycles(periods, '9999-12-31'), cycle = cycles.find((item) => date >= item.start && date <= item.end); if (!cycle) return null;
-  if ((periods || []).some((period) => period?.type === 'period' && period.status !== 'deleted' && date >= period.start && date <= period.end)) return 'menstrual';
+function phaseFor(date, periods, cycles=completedCycles(periods, '9999-12-31'), periodDates=null) {
+  const cycle = cycles.find((item) => date >= item.start && date <= item.end); if (!cycle) return null;
+  if (periodDates?periodDates.has(date):(periods || []).some((period) => period?.type === 'period' && period.status !== 'deleted' && date >= period.start && date <= period.end)) return 'menstrual';
   if (date >= addDays(cycle.next_start, -16) && date <= addDays(cycle.next_start, -12)) return 'ovulatory_window';
   if (date >= addDays(cycle.next_start, -11)) return 'luteal';
   return 'follicular';
@@ -133,11 +132,13 @@ function phaseFor(date, periods) {
 
 function buildPhaseProfiles({ logs, periods, asOf, config, actions }) {
   const cycles = completedCycles(periods, asOf); if (cycles.length < config.pattern.min_complete_cycles) return [];
-  const dates = cycles.flatMap((cycle) => datesBetween(cycle.start, cycle.end)), phases = ['menstrual', 'follicular', 'ovulatory_window', 'luteal'], insights = [];
+  const phases = ['menstrual', 'follicular', 'ovulatory_window', 'luteal'], insights = [],periodDates=new Set((periods||[]).filter(period=>period?.type==='period'&&period.status!=='deleted').flatMap(period=>datesBetween(period.start,period.end))),datesByPhase=new Map(phases.map(phase=>[phase,[]]));
+  for(const cycle of cycles){const ovulationStart=addDays(cycle.next_start,-16),ovulationEnd=addDays(cycle.next_start,-12),lutealStart=addDays(cycle.next_start,-11);for(const date of datesBetween(cycle.start,cycle.end)){const phase=periodDates.has(date)?'menstrual':date>=ovulationStart&&date<=ovulationEnd?'ovulatory_window':date>=lutealStart?'luteal':'follicular';datesByPhase.get(phase).push(date)}}
+  const dates=phases.flatMap(phase=>datesByPhase.get(phase));
   for (const metric of config.metrics) {
     const all = dates.map((date) => valueFor(logs[date], metric)).filter((value) => value !== null), overall = mean(all); if (overall === null) continue;
     for (const phase of phases) {
-      const phaseDates = dates.filter((date) => phaseFor(date, periods) === phase), values = phaseDates.map((date) => valueFor(logs[date], metric)).filter((value) => value !== null), completion = phaseDates.length ? values.length / phaseDates.length : 0;
+      const phaseDates = datesByPhase.get(phase), values = phaseDates.map((date) => valueFor(logs[date], metric)).filter((value) => value !== null), completion = phaseDates.length ? values.length / phaseDates.length : 0;
       if (!values.length || completion < config.pattern.phase_completion_min) continue;
       const difference = mean(values) - overall; if (Math.abs(difference) < config.pattern.scale_mean_diff_min) continue;
       const phaseLabel = { menstrual: '月经期', follicular: '卵泡期', ovulatory_window: '排卵估算窗口', luteal: '黄体期' }[phase];
@@ -148,7 +149,7 @@ function buildPhaseProfiles({ logs, periods, asOf, config, actions }) {
 }
 
 export function buildInsights({ logs = {}, periods = [], as_of, next_start, prediction_confidence, config, observation_actions = [], tcm_clusters = [] } = {}) {
-  const standard = [...buildCycleInsights({ logs, periods, asOf: as_of, nextStart: next_start, predictionConfidence: prediction_confidence, config, actions: observation_actions }), ...buildAssociationInsights({ logs, periods, asOf: as_of, config, actions: observation_actions }), ...buildPhaseProfiles({ logs, periods, asOf: as_of, config, actions: observation_actions })];
+  const standard = [...profiled('insights:cycle-windows',()=>buildCycleInsights({ logs, periods, asOf: as_of, nextStart: next_start, predictionConfidence: prediction_confidence, config, actions: observation_actions })), ...profiled('insights:associations',()=>buildAssociationInsights({ logs, periods, asOf: as_of, config, actions: observation_actions })), ...profiled('insights:phase-profiles',()=>buildPhaseProfiles({ logs, periods, asOf: as_of, config, actions: observation_actions }))];
   const tcm = tcm_clusters.filter((cluster) => cluster.status === 'detected').map((cluster) => ({ id: `insight:tcm_cluster:${cluster.cluster_id}`, type: 'tcm_cluster', title: cluster.display_name, observation: { symptom: cluster.cluster_id, sampleSize: cluster.evidence.length, validDays: cluster.data_quality.valid_days, cyclesCovered: cluster.cycles_covered, windowRate: cluster.support_rate, outsideRate: 0, effectSizeRaw: cluster.support_rate, effectSizeType: 'proportion_difference', supportingData: { cyclesSupported: cluster.cycles_supported, constituentFeatures: cluster.constituent_features, lastSupportedDate: cluster.evidence.at(-1)?.date || null, dataQuality: cluster.data_quality } }, confidenceLevel: cluster.confidence_level, action: { type: 'observation', matchedInterventionIds: [], observationAction: null }, tcmClusterId: cluster.cluster_id, status: 'active', generatedAt: cluster.generated_at, lastRecomputedAt: cluster.generated_at }));
   return Object.freeze([...standard, ...tcm]);
 }

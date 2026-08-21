@@ -1,12 +1,61 @@
-const CACHE='period-helper-v93';
-const ASSETS=['./','./index.html','./styles.css','./sync-config.js','./daily-record-model.js','./tcm-observation-model.js','./analysis/analysis-config.js','./analysis/analysis-orchestrator.js','./analysis/explanation-object.js','./analysis/data-quality-engine.js','./analysis/baseline-engine.js','./analysis/baseline-snapshot-store.js','./analysis/health-event-engine.js','./analysis/pattern-engine.js','./analysis/intervention-engine.js','./analysis/recommendation-context-adapter.js','./analysis/recommendation-engine.js','./analysis/recommendation-pipeline.js','./analysis/daily-nourishment.js','./analysis/insight-builder.js','./analysis/insight-ranker.js','./analysis/insights-page-data.js','./analysis/insights-repository.js','./analysis/intervention-response-aggregator.js','./analysis/tcm-cluster-engine.js','./knowledge/interventions.v1.json','./knowledge/insights_config.json','./knowledge/observation_actions.json','./knowledge/tcm_cluster_rules.json','./knowledge/wellness-knowledge.js','./traditional-care.js','./daily-insights.js','./personal-insights.js','./wellness-engine.js','./insights-page.js','./app.js','./manifest.webmanifest','./public/og.png','./public/icons/favicon-32.png','./public/icons/icon-192.png','./public/icons/icon-512.png','./public/icons/icon-maskable-512.png','./public/icons/apple-touch-icon.png'];
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>Promise.all(ASSETS.map(async url=>{const response=await fetch(new Request(url,{cache:'reload'}));if(!response.ok)throw new Error(`cache install failed: ${url}`);await cache.put(url,response)}))).then(()=>self.skipWaiting())));
-self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+const CACHE='period-helper-v94';
+const REQUIRED_ASSETS=[
+  './',
+  './index.html',
+  './styles.css',
+  './sync-config.js',
+  './outputs/meiyou_periods_draft.csv',
+  './daily-record-model.js',
+  './tcm-observation-model.js',
+  './analysis/analysis-config.js',
+  './analysis/data-quality-engine.js',
+  './analysis/baseline-engine.js',
+  './analysis/baseline-snapshot-store.js',
+  './wellness-engine.js',
+  './app.js'
+];
+const OPTIONAL_ASSETS=[
+  './manifest.webmanifest',
+  './public/icons/favicon-32.png',
+  './public/icons/icon-192.png',
+  './public/icons/apple-touch-icon.png'
+];
+
+async function cacheAsset(cache,url){
+  const response=await fetch(new Request(url,{cache:'reload'}));
+  if(!response.ok)throw new Error(`cache install failed: ${url}`);
+  await cache.put(url,response);
+}
+
+self.addEventListener('install',event=>event.waitUntil(
+  caches.open(CACHE)
+    .then(async cache=>{
+      await Promise.all(REQUIRED_ASSETS.map(url=>cacheAsset(cache,url)));
+      await Promise.allSettled(OPTIONAL_ASSETS.map(url=>cacheAsset(cache,url)));
+    })
+    .then(()=>self.skipWaiting())
+));
+
+self.addEventListener('activate',event=>event.waitUntil(
+  caches.keys()
+    .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
+    .then(()=>self.clients.claim())
+));
+
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   if(event.request.mode==='navigate'){
-    event.respondWith(caches.match('./index.html').then(cached=>cached||fetch(event.request).then(response=>{if(!response.ok)throw new Error('navigation failed');const copy=response.clone();caches.open(CACHE).then(cache=>cache.put('./index.html',copy));return response})));
+    event.respondWith(caches.match('./index.html').then(cached=>cached||fetch(event.request).then(response=>{
+      if(!response.ok)throw new Error('navigation failed');
+      const copy=response.clone();
+      caches.open(CACHE).then(cache=>cache.put('./index.html',copy));
+      return response;
+    })));
     return;
   }
-  event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy))}return response})));
+  const url=new URL(event.request.url),sameOrigin=url.origin===self.location.origin;
+  event.respondWith(caches.match(event.request,sameOrigin?{ignoreSearch:true}:undefined).then(cached=>cached||fetch(event.request).then(response=>{
+    if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy))}
+    return response;
+  })));
 });
