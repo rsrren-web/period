@@ -16,10 +16,17 @@ jobs:
   remind:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
+      - name: 恢复提醒去重账本
+        uses: actions/cache/restore@v4
+        with:
+          path: .reminder-ledger.json
+          key: reminder-ledger-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            reminder-ledger-
       - run: npm ci --omit=dev --ignore-scripts
       - run: npm run remind
         env:
@@ -28,6 +35,13 @@ jobs:
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
           PARTNER_EMAIL: ${{ secrets.PARTNER_EMAIL }}
           FORCE_SEND_TEST: ${{ inputs.send_test || 'false' }}
+          REMINDER_LEDGER_PATH: .reminder-ledger.json
+      - name: 保存提醒去重账本
+        if: ${{ always() && hashFiles('.reminder-ledger.json') != '' }}
+        uses: actions/cache/save@v4
+        with:
+          path: .reminder-ledger.json
+          key: reminder-ledger-${{ github.run_id }}-${{ github.run_attempt }}
       - name: 创建明显的邮件失败告警
         if: ${{ failure() }}
         run: node scripts/report-workflow-failure.mjs
