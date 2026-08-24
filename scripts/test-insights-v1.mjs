@@ -47,10 +47,10 @@ assert.match(traditional, /runAnalysis\(/, '首页针对性调养必须走统一
 assert.doesNotMatch(traditional, /buildRecommendationEvidence\(/, '首页不得保留独立的重复分析入口');
 assert.equal(tcmRules.minimum_cycles, 2);
 assert.doesNotMatch(html, /traditional-care\.js|personal-insights\.js|insights-page\.js/, '大型功能模块不得阻塞首屏');
-assert.match(html, /app\.js\?v=94/);
+assert.match(html, /app\.js\?v=95/);
 assert.match(app, /import\('\.\/insights-page\.js'\)/, '趋势页必须按需加载');
 assert.match(app, /import\('\.\/traditional-care\.js'\)/, '传统调养必须按需加载');
-assert.match(serviceWorker, /period-helper-v94/);
+assert.match(serviceWorker, /period-helper-v95/);
 assert.match(html, /Content-Security-Policy/);
 assert.match(html, /connect-src 'self' https:\/\/period-sync\.rsr-ren\.workers\.dev/);
 assert.match(app, /else if\(id==='calendar'\)\{renderCalendarEnhanced\(model,phase\);renderCalendarStatusAsync\(state\.logs,currentNavigation,currentRender\);renderWellnessEnhancements\(context,'calendar'\)/, '日历每次重绘后都必须恢复身体状态图标并携带当前 render token');

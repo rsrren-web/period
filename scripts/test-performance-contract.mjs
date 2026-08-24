@@ -8,7 +8,8 @@ const line = name => app.split(/\r?\n/).find(value => value.startsWith(`function
 
 const startup = app.split(/\r?\n/).find(value => value.startsWith("try{markPerformanceStart('startup-local-render')")) || '';
 assert.ok(startup.indexOf('await loadBase()') < startup.indexOf('renderCurrentView({heavy:true})'), '基础历史必须在本地首屏前完成');
-assert.ok(startup.indexOf('renderCurrentView({heavy:true})') < startup.indexOf('pullRemote()'), '远端同步不得阻塞本地首屏');
+assert.ok(startup.indexOf('renderCurrentView({heavy:true})') < startup.indexOf('startupCloudSync()'), '远端同步不得阻塞本地首屏');
+assert.match(line('startupCloudSync'), /await syncNow\(false\).*await pullRemote\(\)/, '存在本地待上传数据时必须先完成或尝试同步，再读取远端，避免并发竞态');
 assert.match(startup, /scheduleStatusCheck\(\)/, '状态检查必须移出首屏关键路径');
 assert.match(line('scheduleStatusCheck'), /setTimeout\([^]*2500/, '状态检查必须延后，避免争抢首屏');
 assert.match(line('fetchJsonWithTimeout'), /timeout=2500[^]*await response\.json/, '远端读取及响应体解析必须有 2–3 秒总超时');

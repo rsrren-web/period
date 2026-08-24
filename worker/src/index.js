@@ -14,12 +14,14 @@ export default {
     const url=new URL(request.url);
     const requestId=crypto.randomUUID().slice(0,8);
     try{
-      if(url.pathname==='/health'&&request.method==='GET')return reply({ok:true,service:'period-sync'},200,cors);
+      if(url.pathname==='/health'&&request.method==='GET')return reply({ok:true,service:'period-sync',version:'v95'},200,cors);
       if(url.pathname==='/status'&&request.method==='GET'){
         const expiresAt=env.GITHUB_TOKEN_EXPIRES_AT||null;
         const daysRemaining=expiresAt?Math.ceil((Date.parse(`${expiresAt}T23:59:59Z`)-Date.now())/DAY):null;
         const githubOk=(await github(env,`/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}`)).ok;
-        return reply({ok:githubOk,githubOk,tokenExpiresAt:expiresAt,tokenDaysRemaining:daysRemaining},githubOk?200:503,cors);
+        const deviceAuthOk=await deviceCredentialSelfCheck(env);
+        const ok=githubOk&&deviceAuthOk;
+        return reply({ok,githubOk,deviceAuthOk,tokenExpiresAt:expiresAt,tokenDaysRemaining:daysRemaining},ok?200:503,cors);
       }
       if(url.pathname==='/state'&&request.method==='GET'){
         const remote=await readState(env);
@@ -94,15 +96,20 @@ async function issueDeviceCredential(env){
   const signature=base64url(new Uint8Array(await crypto.subtle.sign('HMAC',await signingKey(env),new TextEncoder().encode(encoded))));
   return {deviceToken:`${encoded}.${signature}`,expiresAt:new Date(payload.exp*1000).toISOString()};
 }
-async function requireDeviceCredential(request,env){
-  const match=/^Bearer ([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)$/.exec(request.headers.get('authorization')||'');
-  if(!match)throw authError('需要重新验证编辑口令');
-  const [encoded,signature]=match[1].split('.');
+async function verifyDeviceCredentialToken(token,env){
+  if(!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token||''))throw authError('需要重新验证编辑口令');
+  const [encoded,signature]=token.split('.');
   let payload;
   try{payload=JSON.parse(new TextDecoder().decode(decodeBase64url(encoded)))}catch{throw authError('设备凭证无效')}
   const valid=await crypto.subtle.verify('HMAC',await signingKey(env),decodeBase64url(signature),new TextEncoder().encode(encoded));
   if(!valid||payload.v!==1||typeof payload.sub!=='string'||payload.exp<=Math.floor(Date.now()/1000))throw authError('设备凭证已过期，请重新验证编辑口令');
   return payload;
+}
+async function deviceCredentialSelfCheck(env){try{const credential=await issueDeviceCredential(env);await verifyDeviceCredentialToken(credential.deviceToken,env);return true}catch{return false}}
+async function requireDeviceCredential(request,env){
+  const match=/^Bearer (.+)$/.exec(request.headers.get('authorization')||'');
+  if(!match)throw authError('需要重新验证编辑口令');
+  return verifyDeviceCredentialToken(match[1],env);
 }
 async function authenticateSync(request,env){
   if(request.headers.get('authorization'))return requireDeviceCredential(request,env);
@@ -266,4 +273,4 @@ async function githubError(response){const detail=await response.json().catch(()
 function fromBase64(value){const binary=atob(value.replace(/\s/g,''));const bytes=Uint8Array.from(binary,char=>char.charCodeAt(0));return new TextDecoder().decode(bytes)}
 function toBase64(value){const bytes=new TextEncoder().encode(value);let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return btoa(binary)}
 
-export {mergeJournal,mergeState,normalizeState,validateJournalPayload,validatePayload};
+export {deviceCredentialSelfCheck,issueDeviceCredential,mergeJournal,mergeState,normalizeState,validateJournalPayload,validatePayload,verifyDeviceCredentialToken};
