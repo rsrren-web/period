@@ -69,7 +69,6 @@ summary strong { font-size: 1rem }
 .day.predicted:not(.recorded) { background: repeating-linear-gradient(135deg,#fbe3ed,#fbe3ed 5px,#fbe3ed 5px,#fbe3ed 10px) }
 .day.pms:not(.recorded):before { content: ""; position: absolute; inset: 4px; border-radius: 10px; border-bottom: 4px solid var(--amber) }
 .day.ovulation:not(.recorded):after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%) }
-.day.has-journal .day-number:after { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; position: absolute; right: -8px; top: -2px }
 .day-number { position: relative }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 18px; color: var(--muted); font-size: .78rem }
 .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px }
@@ -77,7 +76,7 @@ summary strong { font-size: 1rem }
 .legend-dot.predicted { background: var(--berry-soft); border: 1px solid var(--berry) }
 .legend-dot.pms { background: var(--amber) }
 .legend-dot.ovulation { background: var(--teal) }
-.bar:hover:after,.legend-dot.journal { background: var(--text) }
+.bar:hover:after { background: var(--text) }
 .history-card { margin-top: 18px }
 .history-title-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap }
 .history-title-actions .compact { min-height: 34px; padding: 6px 10px }

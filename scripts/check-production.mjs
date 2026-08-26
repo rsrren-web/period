@@ -1,6 +1,6 @@
 const pageUrl = process.env.PERIOD_PAGE_URL || 'https://rsrren-web.github.io/period/';
 const workerUrl = process.env.PERIOD_WORKER_URL || 'https://period-sync.rsr-ren.workers.dev';
-const release = process.env.PERIOD_RELEASE || 'v95';
+const release = process.env.PERIOD_RELEASE || 'v96';
 
 async function text(url) {
   const response = await fetch(url, { cache: 'no-store' });
