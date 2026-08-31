@@ -9,7 +9,7 @@
   "pattern": {
     "binary_effect_min": 0.15,
     "scale_mean_diff_min": 0.40,
-    "min_complete_cycles": 3,
+    "min_complete_cycles": 2,
     "association_min_pairs": 14,
     "phase_completion_min": 0.60
   },

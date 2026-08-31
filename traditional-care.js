@@ -12,6 +12,7 @@ import { loadInterventionLibrary } from './analysis/intervention-engine.js';
 import { runAnalysis } from './analysis/analysis-orchestrator.js';
 import { selectDailyNourishment } from './analysis/daily-nourishment.js';
 import { readTcmObservations } from './tcm-observation-model.js';
+import { readInterventionUsage } from './intervention-feedback.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const addDays = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
@@ -32,8 +33,6 @@ function loadAnalysisResources() {
 }
 let recommendationRenderToken = 0;
 let latestAnalysisSnapshot = null;
-const INTERVENTION_USAGE_KEY = 'period-intervention-usage-v1';
-const readInterventionHistory = () => { try { const value = JSON.parse(storageGet(INTERVENTION_USAGE_KEY) || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } };
 
 function tags(log = {}) {
   return compatibilityTags(log);
@@ -114,16 +113,16 @@ const METRIC_NAMES = Object.freeze({
   stress: '压力', energy: '精力', sleep_quality: '睡眠', activity_level: '活动', social_intensity: '社交强度', pain_max: '疼痛',
   'pain.head': '头部疼痛', breast_tenderness: '乳房不适', 'pain.neck_shoulder': '肩颈不适', stomach_discomfort: '胃部不适',
   'pain.lower_abdomen': '小腹不适', 'pain.lower_back': '腰背不适', 'pain.legs': '腿部不适', 'pain.feet': '足部不适', body_stiffness: '身体僵硬',
-  nausea: '恶心', diarrhea: '腹泻', cold_sensation: '明显怕冷', bloating: '腹胀'
+  nausea: '恶心', diarrhea: '腹泻', cold_sensation: '明显怕冷', bloating: '腹胀', appetite_low: '食欲较差', poor_appetite: '食欲较差'
 });
 
 function recommendationReason(recommendation) {
-  const metric = METRIC_NAMES[recommendation.reason.metric] || recommendation.reason.metric;
-  if (recommendation.reason.code === 'CURRENT_DISCOMFORT') return `今天明确记录了${metric}，这项内容与该记录直接对应。`;
-  if (recommendation.reason.code === 'HEALTH_EVENT') return `${metric}出现了达到门槛的偏离或连续状态，因此列为今天的优先候选。`;
-  if (recommendation.reason.code === 'PERSONAL_PATTERN') return `个人历史中，${metric}出现了有数据支持的时间关联；这里只用于安排观察，不代表因果。`;
-  if (recommendation.reason.code === 'CYCLE_PATTERN') return `目前进入了${metric}在个人历史中较常变化的周期窗口。`;
-  return '这项内容通过了今天的数据门控、匹配和安全排除。';
+  const metric = METRIC_NAMES[recommendation.reason.metric] || '当前不适';
+  if (recommendation.reason.code === 'CURRENT_DISCOMFORT') return `你今天记录了${metric}，所以优先匹配这项调养。`;
+  if (recommendation.reason.code === 'HEALTH_EVENT') return `${metric}最近持续出现，或比你平时更明显。`;
+  if (recommendation.reason.code === 'PERSONAL_PATTERN') return `过去记录中，${metric}在类似情况下更常出现。`;
+  if (recommendation.reason.code === 'CYCLE_PATTERN') return `过去记录中，${metric}在当前周期阶段更常出现。`;
+  return '这项调养与今天记录的状态相符。';
 }
 
 function interventionMethod(item) {
@@ -143,14 +142,14 @@ function interventionMethod(item) {
 function interventionCard(recommendation) {
   const item = recommendation.intervention, [icon, label] = CATEGORY_META[item.category] || ['养', '今日建议'];
   const target = recommendation.reason?.metric || item.targets?.[0] || 'general';
-  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么今天出现</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}">记录这次效果</button></div></details>`;
+  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}">记录这次效果</button></div></details>`;
 }
 
 async function renderEngineRecommendations({ root, token, phase, log, logs }) {
   try {
     const { library, config, tcmRules, observationActions } = await loadAnalysisResources();
     if (token !== recommendationRenderToken || !root.isConnected) return;
-    const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: readInterventionHistory(), intervention_library: library, phase }, { previous_snapshot: latestAnalysisSnapshot });
+    const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: readInterventionUsage(), intervention_library: library, phase }, { previous_snapshot: latestAnalysisSnapshot });
     latestAnalysisSnapshot = analysis;
     const result = analysis.recommendations;
     if (token !== recommendationRenderToken) return;

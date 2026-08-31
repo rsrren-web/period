@@ -1,7 +1,7 @@
 import { createInsightsPageData } from './analysis/insights-page-data.js';
 import { readInsightsSnapshot, readLatestInsightsSnapshot, writeInsightsSnapshot } from './analysis/insights-repository.js';
+import { readInterventionUsage } from './intervention-feedback.js';
 
-const USAGE_KEY = 'period-intervention-usage-v1';
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
 const dateText = (value) => value ? new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' }).format(new Date(`${value}T12:00:00`)) : '';
 const pct = (value) => `${Math.round(Number(value || 0) * 100)}%`;
@@ -20,8 +20,6 @@ function loadResources() {
   return resourcePromise;
 }
 
-function readUsage() { try { const data = JSON.parse(localStorage.getItem(USAGE_KEY) || '[]'); return Array.isArray(data) ? data : []; } catch { return []; } }
-function writeUsage(data) { localStorage.setItem(USAGE_KEY, JSON.stringify(data)); }
 function empty(title, detail) { return `<div class="insights-empty"><strong>${esc(title)}</strong><p>${esc(detail)}</p></div>`; }
 function level(item) { return confidence[item.confidenceLevel] || '观察中'; }
 function fixed(value) { return Number.isFinite(Number(value)) ? Number(value).toFixed(1) : '—'; }
@@ -59,7 +57,7 @@ function renderTop(data, actions) {
 }
 function renderNext(data, actions) {
   const root = document.querySelector('#insightsNextCycle');
-  if (root) root.innerHTML = data.nextCycleWindows.length ? data.nextCycleWindows.slice(0, 3).map((item) => card(item, actions)).join('') : empty('暂时没有需要提前观察的周期窗口', '至少三个完整周期重复且达到效应门槛后才会出现。');
+  if (root) root.innerHTML = data.nextCycleWindows.length ? data.nextCycleWindows.slice(0, 3).map((item) => card(item, actions)).join('') : empty('暂时没有需要提前观察的周期窗口', '至少两个完整周期重复且达到效应门槛后才会出现。');
 }
 function renderProfiles(data) {
   const root = document.querySelector('#insightsPhaseProfiles');
@@ -104,7 +102,7 @@ globalThis.renderInsightsV1 = async (context) => {
   const token = ++renderToken;
   const now = new Date();
   const asOf = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const input = { logs: context?.logs || {}, periods: context?.periods || [], as_of: asOf, next_start: context?.next, prediction_confidence: context?.predictionConfidence, intervention_usage: readUsage() };
+  const input = { logs: context?.logs || {}, periods: context?.periods || [], as_of: asOf, next_start: context?.next, prediction_confidence: context?.predictionConfidence, intervention_usage: readInterventionUsage() };
   try {
     const { config, tcmRules, observationActions } = await loadResources();
     if (token !== renderToken || context?.isCurrent?.() === false) return false;
@@ -125,28 +123,6 @@ globalThis.renderInsightsV1 = async (context) => {
   }
 };
 
-document.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-intervention-feedback]');
-  if (!button) return;
-  const dialog = document.querySelector('#interventionFeedbackDialog');
-  const form = document.querySelector('#interventionFeedbackForm');
-  form.reset();
-  form.elements.interventionId.value = button.dataset.interventionFeedback;
-  form.elements.interventionName.value = button.dataset.interventionName;
-  form.elements.target.value = button.dataset.interventionTarget;
-  form.dataset.recommendationId = button.dataset.recommendationId || '';
-  form.dataset.sourceEventId = button.dataset.sourceEventId || '';
-  form.dataset.sourcePatternId = button.dataset.sourcePatternId || '';
-  document.querySelector('#interventionFeedbackName').textContent = button.dataset.interventionName;
-  dialog.showModal();
-});
-
-document.querySelector('#interventionFeedbackForm')?.addEventListener('submit', (event) => {
-  const form = event.currentTarget;
-  const data = new FormData(form);
-  const score = (name) => data.get(name) === '' ? null : Number(data.get(name));
-  const records = readUsage();
-  records.push({ intervention_id: data.get('interventionId'), intervention_name: data.get('interventionName'), target: data.get('target'), recommendation_id: form.dataset.recommendationId || null, source_event_id: form.dataset.sourceEventId || null, source_pattern_id: form.dataset.sourcePatternId || null, helpful: data.get('helpful') === 'yes', before: score('before'), after: score('after'), used_at: new Date().toISOString() });
-  writeUsage(records.slice(-300));
+document.addEventListener('intervention-feedback-saved', () => {
   if (lastContext) globalThis.renderInsightsV1(lastContext);
 });

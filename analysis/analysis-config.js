@@ -7,8 +7,8 @@ export const ANALYSIS_CONFIG = Object.freeze({
   contexts: Object.freeze({
     rolling_30d: Object.freeze({ total_days: 30, min_valid_days: 14, min_completion_rate: 0 }),
     rolling_90d: Object.freeze({ total_days: 90, min_valid_days: 30, min_completion_rate: 0 }),
-    cycle_phase: Object.freeze({ min_valid_days: 1, min_completion_rate: 0.60, min_complete_cycles: 3 }),
-    recent_cycles: Object.freeze({ min_valid_days: 14, min_completion_rate: 0, min_complete_cycles: 3, cycle_count: 3 }),
+    cycle_phase: Object.freeze({ min_valid_days: 1, min_completion_rate: 0.60, min_complete_cycles: 2 }),
+    recent_cycles: Object.freeze({ min_valid_days: 14, min_completion_rate: 0, min_complete_cycles: 2, cycle_count: 3 }),
     comparison_segment: Object.freeze({ min_valid_days: 7, min_completion_rate: 0.60 }),
     event_current: Object.freeze({ min_valid_days: 1, min_completion_rate: 1 }),
     event_persistence: Object.freeze({ min_valid_days: 3, min_completion_rate: 1 }),

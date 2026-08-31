@@ -28,19 +28,31 @@ assert.match(endMail[0].text,/毛毛球/);
 assert.match(endMail[0].text,/——/);
 
 const periodCharacters=new Set();
-for(let day=1;day<=7;day++){
-  const [mail]=mailForEvent({type:'period-daily',key:`period-daily:2026-07-11:day-${day}`,period:{start:'2026-07-11'},day},{prediction,ownerEmail:'owner@example.com',partnerEmail:'partner@example.com'});
-  assert.match(mail.subject,/经期第\d天/);
+const periodTopics=new Set();
+const recentHistory=[];
+for(let day=1;day<=10;day++){
+  const [mail]=mailForEvent({type:'period-daily',key:`period-daily:2026-07-11:day-${day}`,period:{start:'2026-07-11'},day},{prediction,ownerEmail:'owner@example.com',partnerEmail:'partner@example.com',recentHistory});
+  assert.match(mail.subject,/经期第\d+天/);
   assert.match(mail.text,/公主大人/);
+  assert.match(mail.text,/周期小知识/);
   const signature=mail.text.match(/——(.+)$/m)?.[1];
   assert.ok(signature,'经期邮件缺少角色落款');
+  assert.notEqual(mail.meta.role,recentHistory.at(-1)?.role,'同一受众不得连续收到相同角色邮件');
+  assert.notEqual(mail.meta.topic,recentHistory.at(-1)?.topic,'科普主题用尽后也不得连续重复');
   periodCharacters.add(signature);
+  periodTopics.add(mail.meta.topic);
+  recentHistory.push(mail.meta);
 }
-assert.equal(periodCharacters.size,7,'同一经期前7天角色不得重复');
+assert.ok(periodCharacters.size>=4,'经期邮件应有足够的角色变化');
+assert.equal(periodTopics.size,8,'科普主题未全部使用前不得重复');
 
 const stageOwner=mailForEvent({type:'stage-period',label:'预计经期',key:'stage-period:2026-08-09'},{prediction,ownerEmail:'owner@example.com',partnerEmail:'partner@example.com'});
-assert.match(stageOwner[0].text,/——魈/);
-assert.match(stageOwner[1].text,/——最好的伙伴与向导·派蒙/);
+assert.match(stageOwner[0].text,/周期小知识/);
+assert.match(stageOwner[1].text,/周期小知识/);
+assert.notEqual(stageOwner[0].meta.topic,stageOwner[1].meta.topic,'同一事件的两封邮件不应重复科普');
+const nextStage=mailForEvent({type:'stage-luteal',label:'经前准备阶段',key:'stage-luteal:2026-08-02'},{prediction,ownerEmail:'owner@example.com',partnerEmail:'partner@example.com',recentHistory:stageOwner.map(mail=>mail.meta)});
+assert.notEqual(nextStage[0].meta.role,stageOwner[0].meta.role,'本人邮件角色不得连续重复');
+assert.notEqual(nextStage[1].meta.role,stageOwner[1].meta.role,'伴侣邮件角色不得连续重复');
 
 const endedBeforeBatch={periods:[{id:'p2',start:'2026-07-11',end:'2026-07-17',type:'period',status:'confirmed',updatedAt:'2026-07-17T16:00:00Z'}]};
 assert.deepEqual(buildReminderEvents({date:'2026-07-17',prediction,periods,userData:endedBeforeBatch}).map(event=>event.type),['period-ended']);

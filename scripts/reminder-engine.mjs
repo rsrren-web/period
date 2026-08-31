@@ -95,6 +95,29 @@ const blessingProfiles=[
 ];
 const rewards=['20元自由小礼包：可以买任何想吃或想玩的小东西','一杯喜欢的饮品','今晚免做一项家务','一份自选甜点或水果','一次不被打扰的休息时段','周末一顿喜欢的饭','挑一件30元以内让自己开心的小物'];
 
+const partnerCharacters=[
+  {name:'派蒙',subject:'派蒙的向导委托',opening:'毛毛球，新的陪伴任务来啦！',signature:'最好的伙伴与向导·派蒙'},
+  {name:'托马',subject:'托马的贴心后勤单',opening:'毛毛球，今天把照顾做得具体一点，会比猜测更有用。',signature:'可靠的后勤专家·托马'},
+  {name:'白术',subject:'白术的温和照护提醒',opening:'毛毛球，先听她今天真实的感受，再决定怎样帮忙。',signature:'白术'},
+  {name:'阿贝多',subject:'阿贝多的陪伴观察笔记',opening:'毛毛球，好的支持从观察、询问和尊重选择开始。',signature:'阿贝多'}
+];
+
+const educationTopics=[
+  {id:'estimate',title:'预测不是确认',text:'周期日期来自历史记录估算，可能提前或推迟；它不能确认排卵，也不能替代避孕措施。'},
+  {id:'sleep',title:'睡眠与体感',text:'睡眠不足可能放大疲倦、压力和疼痛感。先争取规律作息，比追求一次“补够”更实际。'},
+  {id:'movement',title:'活动要看身体反馈',text:'散步和轻柔活动可能帮助一些人缓解不适；如果活动后更难受，就应降低强度或休息。'},
+  {id:'food',title:'规律进食更重要',text:'经期前后优先保证规律进食和饮水。没有一种食物能替代治疗，也不必为了“养生”勉强自己。'},
+  {id:'heat',title:'热敷是舒缓选项',text:'热敷可能缓解部分人的下腹或腰背不适；注意温度，避免直接长时间接触皮肤。'},
+  {id:'heavy',title:'留意异常出血',text:'如果出血量突然明显增多，或伴随头晕、气短、快要晕倒，应及时寻求医疗帮助。'},
+  {id:'pain',title:'疼痛不必硬忍',text:'疼痛明显加重、持续影响生活，或与以往很不一样时，值得记录变化并咨询专业人员。'},
+  {id:'pms',title:'经前变化可以记录',text:'连续记录情绪、睡眠和身体感受，更容易看出是否总在相似周期阶段出现，而不是凭一次感受下结论。'}
+];
+
+function pickAvoiding(values,key,blocked=new Set(),identity=(item)=>item.name){const available=values.filter(item=>!blocked.has(identity(item)));return pick(available.length?available:values,key)}
+function lastRole(history,audience){return [...history].reverse().find(item=>item.audience===audience)?.role||''}
+function educationFor(key,history,extra=[]){const used=new Set(history.map(item=>item.topic).filter(Boolean).concat(extra)),unused=educationTopics.filter(item=>!used.has(item.id));if(unused.length)return pick(unused,key);const last=history.at(-1)?.topic;return pickAvoiding(educationTopics,key,new Set([last,...extra].filter(Boolean)),item=>item.id)}
+function educationBlock(topic){return `📚 周期小知识｜${topic.title}\n${topic.text}`}
+
 function predictionNote(prediction){return `预计日期：${prediction.next}\n可能范围：${prediction.windowStart} 至 ${prediction.windowEnd}\n近期中心周期：${prediction.center}天\n\n日期来自历史记录估算，可能提前或推迟。`}
 
 function stageAdvice(type){
@@ -106,20 +129,22 @@ function stageAdvice(type){
   })[type];
 }
 
-export function mailForEvent(event,{prediction,ownerEmail,partnerEmail,ownerNotify=true,partnerNotify=true}){
+export function mailForEvent(event,{prediction,ownerEmail,partnerEmail,ownerNotify=true,partnerNotify=true,recentHistory=[]}){
   const common=predictionNote(prediction);
   if(event.type==='period-ended'){
-    const god=pick(blessingProfiles,event.period.start),reward=pick(rewards,`${event.key}:reward`);
-    return ownerNotify?[{to:ownerEmail,cc:partnerNotify?partnerEmail:undefined,subject:`${god.title} · 公主大人的奖励已送达`,text:`公主大人，还有负责见证的毛毛球：\n\n${god.voice}\n\n🎁 本次随机奖励\n${reward}\n\n毛毛球，请协助公主大人把奖励变成现实。\n\n本次记录：${event.period.start} 至 ${event.period.end}\n\n——${god.name}`}]:[];
+    const god=pickAvoiding(blessingProfiles,event.period.start,new Set([lastRole(recentHistory,'owner')])),reward=pick(rewards,`${event.key}:reward`),topic=educationFor(`${event.key}:education`,recentHistory);
+    return ownerNotify?[{meta:{audience:'owner',role:god.name,topic:topic.id},to:ownerEmail,cc:partnerNotify?partnerEmail:undefined,subject:`${god.title} · 公主大人的奖励已送达`,text:`公主大人，还有负责见证的毛毛球：\n\n${god.voice}\n\n🎁 本次随机奖励\n${reward}\n\n${educationBlock(topic)}\n\n毛毛球，请协助公主大人把奖励变成现实。\n\n本次记录：${event.period.start} 至 ${event.period.end}\n\n——${god.name}`}]:[];
   }
   if(event.type==='period-daily'){
-    const offset=hash(event.period.start)%friendCharacters.length,character=friendCharacters[(offset+event.day-1)%friendCharacters.length],action=pick(dailyActions,`${event.key}:${character.name}`);
-    return ownerNotify?[{to:ownerEmail,subject:`${character.subject}｜经期第${event.day}天`,text:`公主大人：\n\n${character.opening}\n\n${character.label}\n${action}\n\n${character.closing}\n\n——${character.signature}`}]:[];
+    const character=pickAvoiding(friendCharacters,`${event.period.start}:${event.day}`,new Set([lastRole(recentHistory,'owner')])),action=pick(dailyActions,`${event.key}:${character.name}`),topic=educationFor(`${event.key}:education`,recentHistory);
+    return ownerNotify?[{meta:{audience:'owner',role:character.name,topic:topic.id},to:ownerEmail,subject:`${character.subject}｜经期第${event.day}天`,text:`公主大人：\n\n${character.opening}\n\n${character.label}\n${action}\n\n${educationBlock(topic)}\n\n${character.closing}\n\n——${character.signature}`}]:[];
   }
   const advice=stageAdvice(event.type);
-  const label=event.label||'经后恢复阶段',periodSoon=event.type==='stage-period';
-  const owner=ownerNotify?(periodSoon?{to:ownerEmail,subject:'魈的夜前传讯：公主大人，明日由我守着你',text:`公主大人：\n\n明日可能进入${label}。无需逞强，也不必向任何人证明你能忍耐。\n\n今日委托\n${advice}\n\n若有不适，唤我便是。其余纷扰，我替你挡下。\n\n${common}\n\n——魈`}:{to:ownerEmail,subject:`菲林斯的私信：公主大人，${label}在敲门`,text:`我的公主大人：\n\n明天可能进入${label}。我已经替你把“必须完美”的那一页从日程里悄悄撕掉了。\n\n今天只做这件事\n${advice}\n\n慢一点没有关系。你只管告诉我想被怎样宠着，剩下的交给我。\n\n${common}\n\n——菲林斯`}):null;
-  const partner=partnerNotify?{to:partnerEmail,subject:`派蒙的紧急向导委托：毛毛球，请接住您的公主大人！`,text:`毛毛球，派蒙发现新任务啦！\n\n明天您的公主大人可能进入${label}。这次的任务不是猜她会不会不开心，而是先问一句：“今天想让我怎么陪你？”\n\n🧭 毛毛球的向导任务\n${advice}\n\n任务完成条件：公主大人觉得被理解，而不是被安排。派蒙会在旁边负责加油和监督！\n\n${common}\n\n——最好的伙伴与向导·派蒙`} : null;
+  const label=event.label||'经后恢复阶段';
+  const ownerCharacter=pickAvoiding(friendCharacters,`${event.key}:owner`,new Set([lastRole(recentHistory,'owner')])),ownerTopic=educationFor(`${event.key}:owner-topic`,recentHistory);
+  const partnerCharacter=pickAvoiding(partnerCharacters,`${event.key}:partner`,new Set([lastRole(recentHistory,'partner')])),partnerTopic=educationFor(`${event.key}:partner-topic`,recentHistory,[ownerTopic.id]);
+  const owner=ownerNotify?{meta:{audience:'owner',role:ownerCharacter.name,topic:ownerTopic.id},to:ownerEmail,subject:`${ownerCharacter.name}的提醒：${label}可能明天到来`,text:`公主大人：\n\n${ownerCharacter.opening}\n\n今日建议\n${advice}\n\n${educationBlock(ownerTopic)}\n\n${common}\n\n——${ownerCharacter.signature}`}:null;
+  const partner=partnerNotify?{meta:{audience:'partner',role:partnerCharacter.name,topic:partnerTopic.id},to:partnerEmail,subject:`${partnerCharacter.subject}：${label}可能明天到来`,text:`${partnerCharacter.opening}\n\n明天您的公主大人可能进入${label}。先问她今天希望怎样被陪伴，再提供具体帮助。\n\n🧭 今日陪伴任务\n${advice}\n\n${educationBlock(partnerTopic)}\n\n任务完成条件：她觉得被理解，而不是被安排。\n\n${common}\n\n——${partnerCharacter.signature}`} : null;
   return [owner,partner].filter(Boolean);
 }
 
