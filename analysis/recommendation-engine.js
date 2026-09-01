@@ -80,6 +80,16 @@ function evidenceRank(candidate, triggers) {
   return matches;
 }
 
+function whyMatched(candidate, fieldEvidence = {}) {
+  const excluded = new Set(['cycle_phase', 'cycle_day']);
+  const rows = candidate.matched_features.map((feature) => {
+    const field = feature.condition.field, sources = fieldEvidence[field] || [];
+    return { field, value: feature.actual, weight: feature.weight, sources, explicit: sources.some((item) => /^(detail:|tcm:|painLocations|pain$|primaryEmotion|bedtime|flow_level|clot_level)/.test(item.source || '')) };
+  }).filter((item) => !excluded.has(item.field));
+  rows.sort((a, b) => Number(b.explicit) - Number(a.explicit) || b.weight - a.weight || a.field.localeCompare(b.field));
+  return rows.slice(0, 4).map((item) => Object.freeze(item));
+}
+
 function recommendationId(date, interventionId, trigger) {
   const source = trigger.source_event_id || trigger.source_pattern_id || `${trigger.trigger_type}:${trigger.metric}`;
   return `recommendation:${date}:${interventionId}:${source}`;
@@ -117,6 +127,11 @@ export function generateRecommendations({ today_record, record_date, health_even
       priority,
       supporting_evidence: item.evidence.map((evidence) => ({ type: evidence.trigger_type, id: evidence.source_event_id || evidence.source_pattern_id || null, metric: evidence.metric })),
       match_score: item.candidate.score,
+      base_match_score: item.candidate.base_score,
+      why_matched: whyMatched(item.candidate, adapted.evidence),
+      combination_matches: item.candidate.combination_matches,
+      persistence_matches: item.candidate.persistence_matches,
+      unknown_safety_fields: item.candidate.unknown_safety_fields,
       intervention: item.candidate.intervention
     }));
     targetKeys.add(targetKey);

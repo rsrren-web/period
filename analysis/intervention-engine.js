@@ -133,6 +133,32 @@ function personalPatternAvailable(context, matchedFeatures, options) {
   return matchedFeatures.some((feature) => feature.condition.operator === 'pattern_exists');
 }
 
+function contextualBoosts(context, matchedFeatures) {
+  const matchedFields = new Set(matchedFeatures.map((feature) => feature.condition.field));
+  const combinationMatches = [];
+  let combinationBoost = 0;
+  for (const [patternId, pattern] of Object.entries(context.care_patterns || {})) {
+    if (!pattern?.active) continue;
+    const fields = (pattern.fields || []).filter((field) => matchedFields.has(field));
+    if (fields.length < 2) continue;
+    const boost = Math.min(2, fields.length - 1);
+    combinationBoost += boost;
+    combinationMatches.push({ pattern_id: patternId, fields, boost });
+  }
+  const persistenceMatches = [];
+  let persistenceBoost = 0;
+  for (const [metric, state] of Object.entries(context.persistence || {})) {
+    if (!state?.active || !matchedFields.has(metric)) continue;
+    const boost = state.consecutive_days >= 7 ? 2 : 1;
+    persistenceBoost += boost;
+    persistenceMatches.push({ metric, consecutive_days: state.consecutive_days, event_id: state.event_id, boost });
+  }
+  return {
+    combination_boost: Math.min(4, combinationBoost), persistence_boost: Math.min(3, persistenceBoost),
+    combination_matches: combinationMatches, persistence_matches: persistenceMatches
+  };
+}
+
 export function evaluateIntervention(intervention, context = {}, options = {}) {
   const now = asTime(options.now) ?? Date.now();
   const policy = intervention?.recommendation_policy || {};
@@ -156,7 +182,9 @@ export function evaluateIntervention(intervention, context = {}, options = {}) {
     return { condition: feature.condition, weight: Number(feature.weight) || 0, ...result };
   });
   const matchedFeatures = scoringChecks.filter((feature) => feature.matched);
-  const score = matchedFeatures.reduce((sum, feature) => sum + feature.weight, 0);
+  const baseScore = matchedFeatures.reduce((sum, feature) => sum + feature.weight, 0);
+  const boosts = contextualBoosts(context, matchedFeatures);
+  const score = baseScore + boosts.combination_boost + boosts.persistence_boost;
   const minimumScore = Number(matching.minimum_score) || 0;
   if (score < minimumScore) blocked.push({ code: 'minimum_score_not_met', score, minimum_score: minimumScore });
   if (policy.requires_current_state && !currentStateAvailable(context, matchedFeatures, options)) blocked.push({ code: 'current_state_required' });
@@ -174,12 +202,15 @@ export function evaluateIntervention(intervention, context = {}, options = {}) {
     intervention,
     eligible: blocked.length === 0,
     score,
+    base_score: baseScore,
+    ...boosts,
     minimum_score: minimumScore,
     matched_features: matchedFeatures,
     scoring_checks: scoringChecks,
     hard_requirement_checks: hardRequirementChecks,
     exclusion_checks: exclusionChecks,
     exclusion_reasons: blocked,
+    unknown_safety_fields: exclusionChecks.filter((check) => check.missing && /^(contraindication|medication|state)\./.test(check.condition?.field || '')).map((check) => check.condition.field),
     recommendation_priority: priority,
     effective_priority: priority + feedbackAdjustment - (deprioritized ? 100 : 0),
     personally_helpful_rate: history.helpful_rate,

@@ -132,6 +132,22 @@
               "value": true
             },
             "weight": 2
+          },
+          {
+            "condition": {
+              "field": "pain_quality.cold",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 2
+          },
+          {
+            "condition": {
+              "field": "pain_response.warmth_relief",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 2
           }
         ],
         "minimum_score": 4,
@@ -1470,6 +1486,30 @@
               "value": true
             },
             "weight": 1
+          },
+          {
+            "condition": {
+              "field": "stool_sticky",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 2
+          },
+          {
+            "condition": {
+              "field": "subjective_puffiness",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 2
+          },
+          {
+            "condition": {
+              "field": "head_heaviness",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 1
           }
         ],
         "minimum_score": 4,
@@ -2123,6 +2163,38 @@
               "value": -1
             },
             "weight": 2
+          },
+          {
+            "condition": {
+              "field": "sleep_fragmentation",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 2
+          },
+          {
+            "condition": {
+              "field": "dream_disturbed_sleep",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 1
+          },
+          {
+            "condition": {
+              "field": "early_waking",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 2
+          },
+          {
+            "condition": {
+              "field": "unrefreshed_sleep",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 1
           }
         ],
         "minimum_score": 4,
@@ -8146,6 +8218,22 @@
               "value": true
             },
             "weight": 1
+          },
+          {
+            "condition": {
+              "field": "stool_sticky",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 2
+          },
+          {
+            "condition": {
+              "field": "no_bowel_movement",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 2
           }
         ],
         "minimum_score": 3,
@@ -8356,6 +8444,22 @@
               "value": 1
             },
             "weight": 2
+          },
+          {
+            "condition": {
+              "field": "sleep_fragmentation",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 2
+          },
+          {
+            "condition": {
+              "field": "early_waking",
+              "operator": "==",
+              "value": true
+            },
+            "weight": 1
           }
         ],
         "minimum_score": 3,

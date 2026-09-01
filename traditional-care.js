@@ -113,10 +113,18 @@ const METRIC_NAMES = Object.freeze({
   stress: '压力', energy: '精力', sleep_quality: '睡眠', activity_level: '活动', social_intensity: '社交强度', pain_max: '疼痛',
   'pain.head': '头部疼痛', breast_tenderness: '乳房不适', 'pain.neck_shoulder': '肩颈不适', stomach_discomfort: '胃部不适',
   'pain.lower_abdomen': '小腹不适', 'pain.lower_back': '腰背不适', 'pain.legs': '腿部不适', 'pain.feet': '足部不适', body_stiffness: '身体僵硬',
-  nausea: '恶心', diarrhea: '腹泻', cold_sensation: '明显怕冷', bloating: '腹胀', appetite_low: '食欲较差', poor_appetite: '食欲较差'
+  nausea: '恶心', diarrhea: '腹泻', cold_sensation: '明显怕冷', bloating: '腹胀', appetite_low: '食欲较差', poor_appetite: '食欲较差',
+  cold_hands_feet: '手脚发凉', body_heaviness: '身体沉重困倦', subjective_puffiness: '浮肿感', head_heaviness: '头重感',
+  stool_hard: '排便偏硬', stool_loose: '排便偏稀', stool_sticky: '排便黏滞', no_bowel_movement: '今日未排便',
+  sleep_onset_difficulty: '入睡困难', sleep_fragmentation: '夜间易醒', dream_disturbed_sleep: '多梦扰眠', early_waking: '早醒', unrefreshed_sleep: '醒后仍疲倦',
+  'pain_quality.distending': '胀痛', 'pain_quality.stabbing': '刺痛', 'pain_quality.dull': '隐痛', 'pain_quality.dragging': '坠痛', 'pain_quality.cold': '冷痛',
+  'pain_response.warmth_relief': '热敷后缓解', 'pain_response.pressure_relief': '按压后缓解', 'pain_response.activity_changed': '活动后疼痛发生变化'
 });
 
 function recommendationReason(recommendation) {
+  const recorded = (recommendation.why_matched || []).map((item) => METRIC_NAMES[item.field]).filter(Boolean).slice(0, 3);
+  if (recorded.length >= 2) return `今天记录到${recorded.join('、')}，这些状态共同提高了这项调养的匹配度。`;
+  if (recorded.length === 1) return `今天记录到${recorded[0]}，因此优先匹配这项调养。`;
   const metric = METRIC_NAMES[recommendation.reason.metric] || '当前不适';
   if (recommendation.reason.code === 'CURRENT_DISCOMFORT') return `你今天记录了${metric}，所以优先匹配这项调养。`;
   if (recommendation.reason.code === 'HEALTH_EVENT') return `${metric}最近持续出现，或比你平时更明显。`;

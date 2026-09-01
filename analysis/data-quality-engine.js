@@ -1,4 +1,6 @@
 import { ANALYSIS_CONFIG, METRIC_DEFINITIONS } from './analysis-config.js';
+import { readDailyDetails } from '../daily-detail-model.js';
+import { readTcmObservations } from '../tcm-observation-model.js';
 
 const RECORDED_STATUSES = new Set(['reported', 'legacy_uncertain', 'legacy_inferred', 'system_generated', 'user_corrected', 'legacy_manual']);
 const roundRate = value => Math.round(value * 1000) / 1000;
@@ -13,6 +15,18 @@ function dateList(start, end) {
 export function metricValue(log, metric) {
   const definition = METRIC_DEFINITIONS[metric];
   if (!definition || !log || typeof log !== 'object') return null;
+  if (definition.source === 'tcm') {
+    const value = readTcmObservations(log.symptomTags)[definition.field];
+    return value === null ? null : value === 'yes';
+  }
+  if (definition.source === 'detail_single') {
+    const value = readDailyDetails(log.symptomTags)[definition.field];
+    return value === null ? null : value === definition.value;
+  }
+  if (definition.source === 'detail_multi') {
+    const value = readDailyDetails(log.symptomTags)[definition.field];
+    return value === null ? null : value.includes(definition.value);
+  }
   const value = log[definition.field], status = log.fieldStatus?.[definition.status_field];
   if (status === 'not_recorded' || (status && !RECORDED_STATUSES.has(status))) return null;
   if (definition.type === 'boolean') return typeof value === 'boolean' ? value : null;

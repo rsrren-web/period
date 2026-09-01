@@ -23,7 +23,7 @@ export function buildRecommendationEvidence({ logs = {}, periods = [], phase = {
       if (event) healthEvents.push(event);
     } catch { /* An unavailable metric must not block the remaining evidence. */ }
   }
-  for (const metric of ['sleep_quality', 'stress', 'pain_max', 'bowel']) {
+  for (const metric of ['sleep_quality', 'stress', 'pain_max', 'bowel', 'bloating', 'body_heaviness', 'cold_sensation', 'appetite_low', 'stool_hard', 'stool_loose', 'stool_sticky', 'no_bowel_movement', 'sleep_onset_difficulty', 'sleep_fragmentation', 'early_waking', 'unrefreshed_sleep']) {
     try { const event = detectPersistence({ logs, metric, date: record_date }); if (event) healthEvents.push(event); } catch { /* no configured/recorded evidence */ }
     try { const event = detectRecentlyFirstRecorded({ logs, metric, date: record_date }); if (event) healthEvents.push(event); } catch { /* no configured/recorded evidence */ }
   }

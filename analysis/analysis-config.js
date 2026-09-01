@@ -35,7 +35,19 @@ export const ANALYSIS_CONFIG = Object.freeze({
       sleep_quality: Object.freeze({ operator: 'lte', value: 2 }),
       stress: Object.freeze({ operator: 'gte', value: 4 }),
       pain_max: Object.freeze({ operator: 'gt', value: 0 }),
-      bowel: Object.freeze({ operator: 'eq', value: false })
+      bowel: Object.freeze({ operator: 'eq', value: false }),
+      bloating: Object.freeze({ operator: 'eq', value: true }),
+      body_heaviness: Object.freeze({ operator: 'eq', value: true }),
+      cold_sensation: Object.freeze({ operator: 'eq', value: true }),
+      appetite_low: Object.freeze({ operator: 'eq', value: true }),
+      stool_hard: Object.freeze({ operator: 'eq', value: true }),
+      stool_loose: Object.freeze({ operator: 'eq', value: true }),
+      stool_sticky: Object.freeze({ operator: 'eq', value: true }),
+      no_bowel_movement: Object.freeze({ operator: 'eq', value: true }),
+      sleep_onset_difficulty: Object.freeze({ operator: 'eq', value: true }),
+      sleep_fragmentation: Object.freeze({ operator: 'eq', value: true }),
+      early_waking: Object.freeze({ operator: 'eq', value: true }),
+      unrefreshed_sleep: Object.freeze({ operator: 'eq', value: true })
     })
   }),
   patterns: Object.freeze({
@@ -75,7 +87,19 @@ export const METRIC_DEFINITIONS = Object.freeze({
   social_intensity: Object.freeze({ field: 'socialIntensity', status_field: 'socialIntensity', type: 'number' }),
   activity_level: Object.freeze({ field: 'activity', status_field: 'activity', type: 'number' }),
   sleep_quality: Object.freeze({ field: 'sleep', status_field: 'sleep', type: 'number' }),
-  pain_max: Object.freeze({ field: 'pain', status_field: 'pain', type: 'number' })
+  pain_max: Object.freeze({ field: 'pain', status_field: 'pain', type: 'number' }),
+  bloating: Object.freeze({ source: 'tcm', field: 'bloating', type: 'presence' }),
+  body_heaviness: Object.freeze({ source: 'tcm', field: 'body_heaviness', type: 'presence' }),
+  cold_sensation: Object.freeze({ source: 'tcm', field: 'cold_sensation', type: 'presence' }),
+  appetite_low: Object.freeze({ source: 'tcm', field: 'poor_appetite', type: 'presence' }),
+  stool_hard: Object.freeze({ source: 'detail_single', field: 'bowel', value: 'hard', type: 'boolean' }),
+  stool_loose: Object.freeze({ source: 'detail_single', field: 'bowel', value: 'loose', type: 'boolean' }),
+  stool_sticky: Object.freeze({ source: 'detail_single', field: 'bowel', value: 'sticky', type: 'boolean' }),
+  no_bowel_movement: Object.freeze({ source: 'detail_single', field: 'bowel', value: 'not_passed', type: 'boolean' }),
+  sleep_onset_difficulty: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'sleep_onset', type: 'boolean' }),
+  sleep_fragmentation: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'waking', type: 'boolean' }),
+  early_waking: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'early_waking', type: 'boolean' }),
+  unrefreshed_sleep: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'unrefreshed', type: 'boolean' })
 });
 
 export const BASELINE_METRICS = Object.freeze([
