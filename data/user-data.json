@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 67,
-  "updatedAt": "2026-09-01T05:04:09.980Z",
+  "revision": 68,
+  "updatedAt": "2026-09-01T05:09:58.456Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -2691,7 +2691,12 @@
         "tcm:diarrhea:no",
         "tcm:bloating:no",
         "tcm:poor_appetite:yes",
-        "tcm:body_heaviness:yes"
+        "tcm:body_heaviness:yes",
+        "detail:pain_nature:none",
+        "detail:pain_response:none",
+        "detail:bowel:not_passed",
+        "detail:body_sense:edema",
+        "detail:sleep_issue:unrefreshed"
       ],
       "temperature": null,
       "menstrual_status": "not_on_period",
@@ -2721,7 +2726,7 @@
         "painLocations": "not_recorded",
         "symptomTags": "reported",
         "temperature": "not_recorded",
-        "menstrual_status": "reported",
+        "menstrual_status": "system_generated",
         "cycle_day": "system_generated",
         "flow_level": "not_recorded",
         "blood_color": "not_recorded",
@@ -2731,7 +2736,7 @@
         "period_episode_id": "not_recorded"
       },
       "legacySymptoms": [],
-      "updatedAt": "2026-08-31T23:26:03.335Z"
+      "updatedAt": "2026-09-01T05:09:57.088Z"
     },
     "2026-08-28": {
       "modelVersion": 3,
@@ -2888,6 +2893,7 @@
     "ab40fba8-9146-415a-8b43-69ed654744b8",
     "c43fdca5-45b3-4494-a7f8-47ef6e4746f8",
     "055c6e4b-3a09-4185-900c-3c1b104d278c",
-    "38b04dd2-cd2b-42a1-b3d4-108c891b4d59"
+    "38b04dd2-cd2b-42a1-b3d4-108c891b4d59",
+    "0ea0ec39-b285-49db-a3e4-663ecf81042d"
   ]
 }
