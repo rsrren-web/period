@@ -6,6 +6,15 @@ const storage = new Map();
 let opened = false;
 let closed = false;
 let savedEvent = false;
+let savedDetail = null;
+const buttonClasses = new Set();
+const button = {
+  dataset: { interventionFeedback: 'tea_1', interventionName: '测试茶饮', interventionTarget: 'appetite_low', recommendationId: 'rec_1', sourceEventId: 'event_1', sourcePatternId: '' },
+  disabled: false,
+  textContent: '记录这次效果',
+  classList: { add(value) { buttonClasses.add(value); } },
+  setAttribute() {}
+};
 
 const form = {
   dataset: {},
@@ -28,16 +37,16 @@ globalThis.localStorage = {
 globalThis.document = {
   addEventListener(type, listener) { documentListeners.set(type, listener); },
   querySelector(selector) { return selector === '#interventionFeedbackDialog' ? dialog : selector === '#interventionFeedbackForm' ? form : selector === '#interventionFeedbackName' ? name : null; },
-  dispatchEvent(event) { if (event.type === 'intervention-feedback-saved') savedEvent = true; }
+  querySelectorAll(selector) { return selector === '[data-intervention-feedback]' ? [button] : []; },
+  dispatchEvent(event) { if (event.type === 'intervention-feedback-saved') { savedEvent = true; savedDetail = event.detail; } }
 };
 globalThis.FormData = class {
   constructor(source) { this.values = source.values; }
   get(key) { return this.values.get(key) ?? null; }
 };
-globalThis.CustomEvent = class { constructor(type) { this.type = type; } };
+globalThis.CustomEvent = class { constructor(type, options = {}) { this.type = type; this.detail = options.detail; } };
 
 const module = await import(`../intervention-feedback.js?test=${Date.now()}`);
-const button = { dataset: { interventionFeedback: 'tea_1', interventionName: '测试茶饮', interventionTarget: 'appetite_low', recommendationId: 'rec_1', sourceEventId: 'event_1', sourcePatternId: '' } };
 documentListeners.get('click')({ target: { closest: () => button } });
 assert.equal(opened, true, '点击效果按钮必须打开反馈弹窗');
 assert.equal(form.elements.interventionId.value, 'tea_1');
@@ -47,6 +56,15 @@ form.values = new Map([['interventionId', 'tea_1'], ['interventionName', '测试
 formListeners.get('submit')({ preventDefault() {}, currentTarget: form });
 assert.equal(closed, true, '保存后必须关闭反馈弹窗');
 assert.equal(savedEvent, true, '保存后必须通知趋势页局部刷新');
+assert.equal(savedDetail.duplicate, false, '首次保存必须明确标记成功');
+assert.equal(button.disabled, true, '同一天保存后按钮必须锁定');
+assert.equal(button.textContent, '今天已记录 ✓', '按钮必须直接显示成功状态');
+assert.equal(buttonClasses.has('is-recorded'), true);
 assert.deepEqual(module.readInterventionUsage().map(({ used_at, ...item }) => item), [{ intervention_id: 'tea_1', intervention_name: '测试茶饮', target: 'appetite_low', recommendation_id: 'rec_1', source_event_id: 'event_1', source_pattern_id: null, helpful: true, before: 4, after: 2 }]);
+assert.equal(module.hasInterventionFeedbackToday('tea_1'), true);
+
+formListeners.get('submit')({ preventDefault() {}, currentTarget: form });
+assert.equal(module.readInterventionUsage().length, 1, '同一天同一调养项目不得重复写入');
+assert.equal(savedDetail.duplicate, true, '重复提交必须返回已记录状态');
 
 console.log('Intervention feedback click and save tests passed.');

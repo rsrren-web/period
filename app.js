@@ -119,6 +119,7 @@ function renderSettings(){document.querySelector('#lifeStage').value=settings.li
 
 function showView(id,{render=true,behavior='smooth'}={}){navigationGeneration++;if(id!=='calendar')cancelHistoryRender();document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===id));scrollTo({top:0,behavior});history.replaceState(null,'',`#${id}`);if(render)renderView(id,{heavy:true})}
 function showToast(msg){const t=document.querySelector('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+document.addEventListener('intervention-feedback-saved',event=>showToast(event.detail?.duplicate?'今天已经记录过这项效果':'效果已记录 ✓'));
 function openDialog(id){const dialog=document.querySelector(id);dialog.showModal();if(id==='#logDialog'){dialog.scrollTop=0;requestAnimationFrame(()=>{dialog.scrollTop=0})}}
 function closeDialog(el){el.closest('dialog').close()}
 function updateScoreMeanings(form=document.querySelector('#dailyForm')){form.querySelectorAll('.core-score').forEach(group=>{const picked=group.querySelector('input:checked'),output=group.querySelector('[data-score-output]'),labels=(group.dataset.scoreLabels||'').split('|'),inputs=[...group.querySelectorAll('input')],index=inputs.indexOf(picked);if(output&&index>=0)output.textContent=labels[index]||'已选择'})}

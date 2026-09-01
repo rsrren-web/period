@@ -12,7 +12,7 @@ import { loadInterventionLibrary } from './analysis/intervention-engine.js';
 import { runAnalysis } from './analysis/analysis-orchestrator.js';
 import { selectDailyNourishment } from './analysis/daily-nourishment.js';
 import { readTcmObservations } from './tcm-observation-model.js';
-import { readInterventionUsage } from './intervention-feedback.js';
+import { hasInterventionFeedbackToday, readInterventionUsage } from './intervention-feedback.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const addDays = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
@@ -142,7 +142,8 @@ function interventionMethod(item) {
 function interventionCard(recommendation) {
   const item = recommendation.intervention, [icon, label] = CATEGORY_META[item.category] || ['养', '今日建议'];
   const target = recommendation.reason?.metric || item.targets?.[0] || 'general';
-  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}">记录这次效果</button></div></details>`;
+  const recorded = hasInterventionFeedbackToday(item.id);
+  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft${recorded ? ' is-recorded' : ''}" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}" ${recorded ? `disabled aria-label="${esc(item.name)}今天已记录效果"` : ''}>${recorded ? '今天已记录 ✓' : '记录这次效果'}</button></div></details>`;
 }
 
 async function renderEngineRecommendations({ root, token, phase, log, logs }) {
