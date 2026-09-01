@@ -1307,6 +1307,46 @@ body { min-width: 320px; line-height: 1.6 }
 .association-group+.association-group { margin-top: 16px }
 .association-group>h3 { margin: 0 0 8px }
 .association-group>.insight-v1-card+.insight-v1-card { margin-top: 10px }
+
+.state-cluster-list { display: grid; gap: 12px }
+.state-cluster-card { padding: 17px; border: 1px solid var(--soft-line); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow-soft) }
+.state-cluster-card>header { display: flex; align-items: center; justify-content: space-between; gap: 10px }
+.state-cluster-card>header>span { padding: 4px 9px; border-radius: 999px; color: #7d3c5a; background: #f9e7ef; font-size: var(--text-caption); font-weight: 800 }
+.state-cluster-card>header>small { color: var(--ink-muted) }
+.state-cluster-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 14px }
+.state-cluster-chips>span { display: inline-flex; align-items: center; gap: 6px; padding: 9px 11px; border-radius: 12px; color: var(--ink); background: var(--surface-muted); font-size: .86rem; font-weight: 760 }
+.state-cluster-chips>span>i { font-style: normal }
+.state-cluster-chips>b { color: var(--ink-muted); font-size: .8rem }
+.state-cluster-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-top: 14px }
+.state-cluster-stats>div { min-width: 0; padding: 10px 7px; border-radius: 12px; text-align: center; background: #faf8fa }
+.state-cluster-stats strong,.state-cluster-stats small { display: block }
+.state-cluster-stats strong { font-size: 1.12rem }
+.state-cluster-stats small { margin-top: 2px; color: var(--ink-muted) }
+.cluster-phase { margin-top: 14px }
+.cluster-phase-bar { display: flex; height: 8px; overflow: hidden; border-radius: 999px; background: var(--surface-muted) }
+.cluster-phase-bar>span { min-width: 4px; height: 100% }
+.cluster-phase-menstrual { background: var(--period-base) }
+.cluster-phase-follicular { background: var(--phase-follicular-base) }
+.cluster-phase-ovulatory_window { background: var(--phase-ovulation-base) }
+.cluster-phase-luteal { background: var(--phase-luteal-base) }
+.cluster-width-1 { width: 10% }.cluster-width-2 { width: 20% }.cluster-width-3 { width: 30% }.cluster-width-4 { width: 40% }.cluster-width-5 { width: 50% }
+.cluster-width-6 { width: 60% }.cluster-width-7 { width: 70% }.cluster-width-8 { width: 80% }.cluster-width-9 { width: 90% }.cluster-width-10 { width: 100% }
+.cluster-phase>small { display: block; margin-top: 6px; color: var(--ink-muted) }
+.cluster-timeline { display: grid; grid-template-columns: repeat(14,1fr); gap: 5px; margin-top: 14px }
+.cluster-day { aspect-ratio: 1; border-radius: 50%; background: #e7e3e7 }
+.cluster-day-hit,.cluster-day.cluster-day-hit { background: #c35f88 }
+.cluster-day-recorded,.cluster-day.cluster-day-recorded { background: #9bcac1 }
+.cluster-day-missing,.cluster-day.cluster-day-missing { background: #e7e3e7 }
+.cluster-timeline-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 7px; color: var(--ink-muted); font-size: var(--text-micro) }
+.cluster-timeline-legend span { display: inline-flex; align-items: center; gap: 4px }
+.cluster-timeline-legend i { width: 7px; height: 7px; border-radius: 50% }
+.state-cluster-card .insight-action { margin-top: 14px }
+.state-cluster-card details { margin-top: 10px }
+.state-cluster-card details p { margin: 8px 0 0; color: var(--ink-muted); font-size: var(--text-caption); line-height: 1.55 }
+
+@media (min-width:720px) {
+  .state-cluster-list { grid-template-columns: repeat(2,minmax(0,1fr)) }
+}
 .insights-method-note { margin: -5px 0 12px; color: var(--ink-muted) }
 .intervention-response-card+.intervention-response-card { margin-top: 10px }
 .intervention-response-card>div { display: flex; justify-content: space-between; gap: 10px }

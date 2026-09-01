@@ -7,6 +7,7 @@ const dateText = (value) => value ? new Intl.DateTimeFormat('zh-CN', { month: 'n
 const pct = (value) => `${Math.round(Number(value || 0) * 100)}%`;
 const labels = { mood: '情绪', energy: '精力', sleep: '睡眠', bowel: '排便', pain: '疼痛', activity: '活动', stress: '压力', sleep_quality: '睡眠', pain_max: '疼痛', activity_level: '活动', social_intensity: '社交强度', bloating: '腹胀' };
 const confidence = { exploratory: '初步观察', moderate: '值得注意', stable: '较明确规律' };
+const phaseLabels = { menstrual: '月经期', follicular: '卵泡期', ovulatory_window: '排卵估算窗口', luteal: '黄体期' };
 let resourcePromise;
 let renderToken = 0;
 let lastContext = null;
@@ -59,6 +60,17 @@ function renderNext(data, actions) {
   const root = document.querySelector('#insightsNextCycle');
   if (root) root.innerHTML = data.nextCycleWindows.length ? data.nextCycleWindows.slice(0, 3).map((item) => card(item, actions)).join('') : empty('暂时没有需要提前观察的周期窗口', '至少两个完整周期重复且达到效应门槛后才会出现。');
 }
+function renderStateClusters(data) {
+  const root = document.querySelector('#insightsStateClusters');
+  if (!root) return;
+  const maturityLabels = { new: '刚刚发现', emerging: '初步观察', stable: '较稳定组合' };
+  root.innerHTML = data.stateClusters.length ? data.stateClusters.map((item) => {
+    const support = item.observation.supportingData, parts = support.constituentFeatures || [], phaseTotal = Object.values(support.phaseCounts || {}).reduce((sum, value) => sum + value, 0), dominant = support.dominantPhase ? phaseLabels[support.dominantPhase] : '尚未形成阶段集中', dates = (support.occurrenceDates || []).slice(-8).reverse();
+    const phaseBar = phaseTotal ? Object.entries(support.phaseCounts).filter(([, count]) => count).map(([phase, count]) => `<span class="cluster-phase-${esc(phase)} cluster-width-${Math.max(1, Math.round(count / phaseTotal * 10))}" title="${esc(phaseLabels[phase])} ${count}次"></span>`).join('') : '';
+    const timeline = (support.timeline || []).map((day) => `<i class="cluster-day cluster-day-${esc(day.state)}" title="${esc(dateText(day.date))}${day.state === 'hit' ? ' · 组合出现' : day.state === 'recorded' ? ' · 有记录' : ' · 未记录'}"></i>`).join('');
+    return `<article class="state-cluster-card"><header><span>${esc(maturityLabels[support.maturity] || '初步观察')}</span><small>${parts.length} 项组合</small></header><div class="state-cluster-chips">${parts.map((part, index) => `${index ? '<b aria-hidden="true">＋</b>' : ''}<span><i aria-hidden="true">${esc(part.icon)}</i>${esc(part.label)}</span>`).join('')}</div><div class="state-cluster-stats"><div><strong>${support.occurrenceCount}</strong><small>共同出现天数</small></div><div><strong>${item.observation.cyclesCovered || '—'}</strong><small>覆盖周期</small></div><div><strong>${support.eligibleDays}</strong><small>有效记录日</small></div></div><div class="cluster-phase"><div class="cluster-phase-bar">${phaseBar}</div><small>${support.dominantPhaseCount ? `${dominant}出现 ${support.dominantPhaseCount} 次` : dominant}</small></div><div class="cluster-timeline" aria-label="最近28天记录点阵">${timeline}</div><div class="cluster-timeline-legend"><span><i class="cluster-day-hit"></i>组合出现</span><span><i class="cluster-day-recorded"></i>有记录</span><span><i class="cluster-day-missing"></i>未记录</span></div><div class="insight-action"><small>下一步</small><p>下次其中两项同时出现时，留意其他状态是否也出现。</p></div><details><summary>查看出现日期</summary><p>${dates.map(dateText).join('、') || '暂无日期'}${support.occurrenceDates.length > dates.length ? `，另有 ${support.occurrenceDates.length - dates.length} 天` : ''}</p><p>这是个人记录中的共同出现情况，不是医学诊断或因果结论。</p></details></article>`;
+  }).join('') : empty('还没有重复的状态组合', '相同的两项或多项状态至少共同出现两天后，会在这里形成初步观察。');
+}
 function renderProfiles(data) {
   const root = document.querySelector('#insightsPhaseProfiles');
   if (!root) return;
@@ -73,7 +85,7 @@ function renderProfiles(data) {
 function renderAssociations(data, actions) {
   const root = document.querySelector('#insightsAssociations');
   if (!root) return;
-  const groups = [['sameDay', '哪些状态常在同一天出现？'], ['previousToToday', '昨天的状态与今天有什么关系？'], ['todayToNextDay', '今天的状态与明天有什么关系？']];
+  const groups = [['previousToToday', '昨天的状态与今天有什么关系？'], ['todayToNextDay', '今天的状态与明天有什么关系？']];
   root.innerHTML = groups.map(([key, title]) => `<section class="association-group"><h3>${title}</h3>${data.associations[key].length ? data.associations[key].map((item) => card(item, actions, false)).join('') : '<p class="muted">目前没有足够数据支持稳定关系。</p>'}</section>`).join('');
 }
 function renderInterventions(data) {
@@ -92,7 +104,7 @@ function renderQuality(data) {
   if (root) root.innerHTML = Object.values(data.dataQualitySummary.metrics).map((item) => `<div class="quality-row"><span>${esc(labels[item.metric] || item.metric)}</span><strong>${item.valid_days}/${item.total_days} 天</strong><small>${pct(item.completion_rate)} · ${esc(item.quality_level)}</small></div>`).join('');
 }
 function renderPage(data, actions) {
-  renderTop(data, actions); renderNext(data, actions); renderProfiles(data); renderAssociations(data, actions); renderInterventions(data); renderTcm(data, actions); renderQuality(data);
+  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderAssociations(data, actions); renderInterventions(data); renderTcm(data, actions); renderQuality(data);
   const stamp = document.querySelector('#insightsGeneratedAt');
   if (stamp) stamp.textContent = `更新于 ${new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' }).format(new Date(data.generatedAt))}`;
 }

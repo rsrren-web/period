@@ -51,11 +51,14 @@ assert.match(traditional, /runAnalysis\(/, '首页针对性调养必须走统一
 assert.doesNotMatch(traditional, /buildRecommendationEvidence\(/, '首页不得保留独立的重复分析入口');
 assert.equal(tcmRules.minimum_cycles, 2);
 assert.doesNotMatch(html, /traditional-care\.js|personal-insights\.js|insights-page\.js/, '大型功能模块不得阻塞首屏');
-assert.match(html, /app\.js\?v=97/);
+assert.match(html, /app\.js\?v=98/);
 assert.match(app, /import\('\.\/insights-page\.js'\)/, '趋势页必须按需加载');
 assert.match(app, /import\('\.\/traditional-care\.js'\)/, '传统调养必须按需加载');
-assert.match(serviceWorker, /period-helper-v97/);
-assert.match(worker, /version:'v97'/, 'Worker 健康检查版本必须与页面发布版本一致');
+assert.match(serviceWorker, /period-helper-v98/);
+assert.match(worker, /version:'v98'/, 'Worker 健康检查版本必须与页面发布版本一致');
+assert.match(insightsPage, /renderStateClusters/, '趋势页必须渲染多状态组合卡片');
+assert.match(html, /id="insightsStateClusters"/, '趋势页必须提供状态组合视觉区域');
+assert.equal(insightsConfig.version, 4, '组合分析变更必须刷新趋势缓存');
 assert.match(app, /import '\.\/intervention-feedback\.js'/, '效果记录事件必须在首屏核心模块注册');
 assert.match(interventionFeedback, /data-intervention-feedback/, '核心反馈模块必须处理调养效果按钮');
 assert.doesNotMatch(insightsPage, /closest\('\[data-intervention-feedback\]'/, '趋势模块不得重复注册效果按钮监听器');

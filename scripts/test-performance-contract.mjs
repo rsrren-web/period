@@ -37,7 +37,7 @@ assert.match(renderView, /`render-\$\{id\}`/, '缺少 today 等页面渲染性�
 assert.match(renderView, /`render-calendar-\$\{calendarMode\}`/, '缺少月历和年历性能测量');
 
 assert.doesNotMatch(index, /traditional-care\.js|personal-insights\.js|insights-page\.js/, '非核心页面模块不得由 HTML 首屏加载');
-assert.match(index, /styles\.css\?v=96/, '样式变更必须使用当前缓存版本');
+assert.match(index, /styles\.css\?v=98/, '样式变更必须使用当前缓存版本');
 assert.match(line('loadInsightsPage'), /import\('\.\/insights-page\.js'\)/, '趋势模块必须动态加载');
 assert.match(line('loadInsightsPage'), /catch\(error=>\{insightsPagePromise=null;insightsPageAttempt\+\+;throw error\}\)/, '失败的趋势模块 Promise 必须清空，并更换模块 URL 以允许浏览器真正重试');
 assert.match(line('loadPersonalInsights'), /catch\(error=>\{personalInsightsPromise=null;personalInsightsAttempt\+\+;throw error\}\)/, '个人趋势模块必须有独立的 single-flight 重试生命周期');

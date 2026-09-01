@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "ranking": {
     "weights": { "effect": 0.35, "confidence": 0.25, "cycles": 0.15, "recency": 0.10, "actionability": 0.15 },
     "top_insight_min": 0.58,
@@ -12,6 +12,12 @@
     "min_complete_cycles": 2,
     "association_min_pairs": 14,
     "phase_completion_min": 0.60
+  },
+  "state_clusters": {
+    "lookback_days": 90,
+    "min_occurrences": 2,
+    "max_size": 4,
+    "max_results": 4
   },
   "window_search": {
     "premenstrual": { "start": -10, "end": -1, "min_window_length": 2, "max_window_length": 5 },
