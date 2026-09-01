@@ -1,4 +1,4 @@
-const CACHE='period-helper-v99';
+const CACHE='period-helper-v100';
 const REQUIRED_ASSETS=[
   './',
   './index.html',
@@ -6,6 +6,7 @@ const REQUIRED_ASSETS=[
   './sync-config.js',
   './outputs/meiyou_periods_draft.csv',
   './daily-record-model.js',
+  './daily-detail-model.js',
   './tcm-observation-model.js',
   './analysis/analysis-config.js',
   './analysis/data-quality-engine.js',

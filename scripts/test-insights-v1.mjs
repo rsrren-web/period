@@ -51,11 +51,11 @@ assert.match(traditional, /runAnalysis\(/, '首页针对性调养必须走统一
 assert.doesNotMatch(traditional, /buildRecommendationEvidence\(/, '首页不得保留独立的重复分析入口');
 assert.equal(tcmRules.minimum_cycles, 2);
 assert.doesNotMatch(html, /traditional-care\.js|personal-insights\.js|insights-page\.js/, '大型功能模块不得阻塞首屏');
-assert.match(html, /app\.js\?v=99/);
+assert.match(html, /app\.js\?v=100/);
 assert.match(app, /import\('\.\/insights-page\.js'\)/, '趋势页必须按需加载');
 assert.match(app, /import\('\.\/traditional-care\.js'\)/, '传统调养必须按需加载');
-assert.match(serviceWorker, /period-helper-v99/);
-assert.match(worker, /version:'v99'/, 'Worker 健康检查版本必须与页面发布版本一致');
+assert.match(serviceWorker, /period-helper-v100/);
+assert.match(worker, /version:'v100'/, 'Worker 健康检查版本必须与页面发布版本一致');
 assert.match(insightsPage, /renderStateClusters/, '趋势页必须渲染多状态组合卡片');
 assert.match(html, /id="insightsStateClusters"/, '趋势页必须提供状态组合视觉区域');
 assert.match(insightsPage, /renderTemporalClusters/, '趋势页必须渲染多状态前后日关系卡片');

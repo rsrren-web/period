@@ -200,7 +200,7 @@ export function migrateDailyLogs(logs = {}) {
 
 export function compatibilityTags(log = {}) {
   const value = migrateDailyLog(log, { legacy: false });
-  const tags = [...(value.symptomTags || [])];
+  const tags = [...(value.symptomTags || []).filter((tag) => !tag.startsWith('detail:'))];
   if (value.primaryEmotion) tags.push(`情绪：${value.primaryEmotion}`);
   if (value.bedtime) tags.push(`入睡：${value.bedtime === 'before_23' ? '23:00前' : '23:00后'}`);
   if (value.bowelMovement !== null) tags.push(`排便：${value.bowelMovement ? '已排便' : '未排便'}`);

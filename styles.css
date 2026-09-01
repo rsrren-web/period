@@ -828,6 +828,13 @@ summary strong { font-size: var(--font-body); line-height: 1.45 }
 .log-section-title>span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 11px; background: #dceaf3; color: #527fa7; font-weight: 800 }
 .log-section-title h3 { margin: 0; font-size: 19px }
 .log-section-title p { margin: 4px 0 0; color: rgba(48,44,52,.64); font-size: 13px; line-height: 1.5 }
+.menstrual-detail-section .log-section-title>span { background: #f9e7ef; color: #a85a79; font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif }
+.menstrual-detail-section .choice-field+.choice-field,.log-section .choice-field+.choice-field { margin-top: 14px }
+.three-choice { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)) }
+.three-choice span { text-align: center }
+.detail-choice-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px }
+.detail-choice-grid span { min-height: 44px; display: grid; place-items: center; padding: 8px 6px; text-align: center; line-height: 1.25 }
+.body-detail-field { margin-bottom: 16px }
 .emoji-icon,.snapshot-icon,.status-icon { font-weight: 400 }
 .body-map-grid label>span,.emoji-icon,.emotion-blob,.icon-choice-grid label>span,.large-binary-choice>label>span,.nav-item>span,.round-button,.snapshot-icon,.status-icon { font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; font-style: normal; text-rendering: optimizeLegibility }
 .body-map-grid label>span,.icon-choice-grid label>span,.large-binary-choice>label>span,.nav-item>span,.round-button { font-weight: 400 }
