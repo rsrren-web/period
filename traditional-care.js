@@ -205,7 +205,7 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   document.querySelector('#tcmPhaseDot').className = `phase-dot phase-${phase.key}`;
   const token = ++recommendationRenderToken;
   root.innerHTML = `
-    <section class="tcm-reasoning"><span>今天为什么这样建议</span><p>${esc(practicalReason)}</p>${practicalEvidence.length ? `<ul>${practicalEvidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : ''}</section>
+    <section class="tcm-reasoning"><p>${esc(practicalReason)}</p>${practicalEvidence.length ? `<ul>${practicalEvidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : ''}</section>
     ${bodySenseAction}
     ${constitution ? `<details class="constitution-hint"><summary><span>体质观察线索</span><strong>${esc(constitution.name)} · ${constitution.total}次线索</strong></summary><div><p>${esc(constitution.explanation)}</p><p><strong>边界：</strong>${esc(constitution.avoid)}</p><small>这里只是近7天的感受倾向，不是体质诊断。</small></div></details>` : ''}
     <div class="traditional-plan">

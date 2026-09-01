@@ -1,4 +1,4 @@
-const CACHE='period-helper-v100';
+const CACHE='period-helper-v101';
 const REQUIRED_ASSETS=[
   './',
   './index.html',

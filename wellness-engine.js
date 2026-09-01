@@ -141,7 +141,7 @@ function renderUsefulDecision(logs, context) {
   }
   const choice = adviceCandidates(logs, context, log)[0], recentIds = JSON.parse(localStorage.getItem('period-recent-actions-v2') || '[]');
   localStorage.setItem('period-recent-actions-v2', JSON.stringify([choice.id, ...recentIds.filter((id) => id !== choice.id)].slice(0, 7)));
-  root.innerHTML = `<div class="decision-simple-head"><span class="decision-kicker">今天最值得做</span><h2>${escapeWellness(choice.title)}</h2></div><p class="decision-reason">${escapeWellness(choice.reason)}</p><div class="decision-action"><small>今日行动</small><strong>${escapeWellness(choice.action)}</strong></div><p class="decision-comparison"><span>相较个人${escapeWellness(PHASE_NAMES[phaseFor(isoToday(), context)])}平均</span>${escapeWellness(todayComparison(logs, context, log))}</p>`;
+  root.innerHTML = `<div class="decision-simple-head"><h2>${escapeWellness(choice.title)}</h2></div><p class="decision-reason">${escapeWellness(choice.reason)}</p><div class="decision-action"><small>今日行动</small><strong>${escapeWellness(choice.action)}</strong></div><p class="decision-comparison"><span>相较个人${escapeWellness(PHASE_NAMES[phaseFor(isoToday(), context)])}平均</span>${escapeWellness(todayComparison(logs, context, log))}</p>`;
 }
 
 function recentSignals(logs) {

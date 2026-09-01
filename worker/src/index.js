@@ -14,7 +14,7 @@ export default {
     const url=new URL(request.url);
     const requestId=crypto.randomUUID().slice(0,8);
     try{
-      if(url.pathname==='/health'&&request.method==='GET')return reply({ok:true,service:'period-sync',version:'v100'},200,cors);
+      if(url.pathname==='/health'&&request.method==='GET')return reply({ok:true,service:'period-sync',version:'v101'},200,cors);
       if(url.pathname==='/status'&&request.method==='GET'){
         const expiresAt=env.GITHUB_TOKEN_EXPIRES_AT||null;
         const daysRemaining=expiresAt?Math.ceil((Date.parse(`${expiresAt}T23:59:59Z`)-Date.now())/DAY):null;

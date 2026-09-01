@@ -49,16 +49,16 @@ function card(item, actions, showNext = true) {
   const next = item.timing?.nextExpectedWindow;
   const instruction = action(item, actions);
   const parts = observedTogether(item);
-  return `<article class="insight-v1-card"><div class="insight-v1-head"><span>${level(item)}</span><small>${item.observation.cyclesCovered} 个周期 · ${item.observation.sampleSize} 条有效记录</small></div><h3>${esc(item.title)}</h3>${parts.length ? `<div class="insight-constituents"><small>同时记录到</small><p>${parts.map(esc).join(' · ')}</p></div>` : ''}<p class="insight-evidence"><small>依据：${esc(evidence(item))}</small></p>${showNext && next ? `<div class="insight-next"><small>下一次值得观察</small><strong>${dateText(next.startDate)}–${dateText(next.endDate)}</strong>${next.confidence === 'low' ? '<p>日期仅供参考，以实际月经开始时间为准。</p>' : ''}</div>` : ''}${instruction ? `<div class="insight-action"><small>下一步</small><p>${esc(instruction)}</p></div>` : ''}<details><summary>查看计算信息</summary><p>规律价值 ${Math.round(item.ranking.insightValue * 100)}/100 · 效应 ${Math.round(item.ranking.effectScore * 100)}/100 · 可信度 ${Math.round(item.ranking.confidenceScore * 100)}/100。它是产品排序，不是医学风险评分。</p></details></article>`;
+  return `<article class="insight-v1-card"><div class="insight-v1-head"><span>${level(item)}</span><small>${item.observation.cyclesCovered} 个周期</small></div><h3>${esc(item.title)}</h3>${parts.length ? `<div class="insight-constituents"><small>同时记录到</small><p>${parts.map(esc).join(' · ')}</p></div>` : ''}${instruction ? `<div class="insight-action"><small>下一步</small><p>${esc(instruction)}</p></div>` : ''}<details class="insight-card-detail"><summary>查看依据${showNext && next ? '和时间' : ''}</summary><p class="insight-evidence"><small>${item.observation.sampleSize} 条有效记录 · ${esc(evidence(item))}</small></p>${showNext && next ? `<div class="insight-next"><small>下一次值得观察</small><strong>${dateText(next.startDate)}–${dateText(next.endDate)}</strong>${next.confidence === 'low' ? '<p>日期仅供参考，以实际月经开始时间为准。</p>' : ''}</div>` : ''}<p class="insight-calculation">规律价值 ${Math.round(item.ranking.insightValue * 100)}/100 · 可信度 ${Math.round(item.ranking.confidenceScore * 100)}/100；这是排序，不是医学风险评分。</p></details></article>`;
 }
 
 function renderTop(data, actions) {
   const root = document.querySelector('#insightsTop');
-  if (root) root.innerHTML = data.topInsights.length ? data.topInsights.map((item) => card(item, actions)).join('') : empty('目前没有达到门槛的个人规律', '继续记录即可；系统不会为了填满页面而生成建议。');
+  if (root) root.innerHTML = data.topInsights.length ? data.topInsights.slice(0, 2).map((item) => card(item, actions)).join('') : empty('目前没有达到门槛的个人规律', '继续记录即可；系统不会为了填满页面而生成建议。');
 }
 function renderNext(data, actions) {
   const root = document.querySelector('#insightsNextCycle');
-  if (root) root.innerHTML = data.nextCycleWindows.length ? data.nextCycleWindows.slice(0, 3).map((item) => card(item, actions)).join('') : empty('暂时没有需要提前观察的周期窗口', '至少两个完整周期重复且达到效应门槛后才会出现。');
+  if (root) root.innerHTML = data.nextCycleWindows.length ? data.nextCycleWindows.slice(0, 2).map((item) => card(item, actions)).join('') : empty('暂时没有需要提前观察的周期窗口', '至少两个完整周期重复且达到效应门槛后才会出现。');
 }
 function renderStateClusters(data) {
   const root = document.querySelector('#insightsStateClusters');
