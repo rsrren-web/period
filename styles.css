@@ -1329,7 +1329,7 @@ body { min-width: 320px; line-height: 1.6 }
 .cluster-phase-follicular { background: var(--phase-follicular-base) }
 .cluster-phase-ovulatory_window { background: var(--phase-ovulation-base) }
 .cluster-phase-luteal { background: var(--phase-luteal-base) }
-.cluster-width-1 { width: 10% }.cluster-width-2 { width: 20% }.cluster-width-3 { width: 30% }.cluster-width-4 { width: 40% }.cluster-width-5 { width: 50% }
+.cluster-width-0 { width: 0 }.cluster-width-1 { width: 10% }.cluster-width-2 { width: 20% }.cluster-width-3 { width: 30% }.cluster-width-4 { width: 40% }.cluster-width-5 { width: 50% }
 .cluster-width-6 { width: 60% }.cluster-width-7 { width: 70% }.cluster-width-8 { width: 80% }.cluster-width-9 { width: 90% }.cluster-width-10 { width: 100% }
 .cluster-phase>small { display: block; margin-top: 6px; color: var(--ink-muted) }
 .cluster-timeline { display: grid; grid-template-columns: repeat(14,1fr); gap: 5px; margin-top: 14px }
@@ -1344,8 +1344,34 @@ body { min-width: 320px; line-height: 1.6 }
 .state-cluster-card details { margin-top: 10px }
 .state-cluster-card details p { margin: 8px 0 0; color: var(--ink-muted); font-size: var(--text-caption); line-height: 1.55 }
 
+.temporal-cluster-list { display: grid; gap: 12px }
+.temporal-flow { display: grid; gap: 8px; margin-top: 14px }
+.temporal-flow>div { padding: 12px; border-radius: 14px; background: var(--surface-muted) }
+.temporal-flow>div>small { color: var(--ink-muted); font-weight: 750 }
+.temporal-flow>.state-cluster-chips,.temporal-flow .state-cluster-chips { margin-top: 8px }
+.temporal-flow>strong { color: #a85a79; text-align: center; line-height: 1 }
+.temporal-rate { display: grid; gap: 7px; margin-top: 14px }
+.temporal-rate>div { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 4px 10px; color: var(--ink-muted); font-size: var(--text-caption) }
+.temporal-rate>div>b { color: var(--ink) }
+.temporal-rate>div>i { grid-column: 1/-1; display: block; height: 7px; overflow: hidden; border-radius: 999px; background: var(--surface-muted) }
+.temporal-rate>div>i>em { display: block; height: 100%; border-radius: inherit; background: #c35f88 }
+.temporal-rate>div+div>i>em { background: #9bcac1 }
+.temporal-rate-note { margin: 7px 0 0; color: var(--ink-muted); font-size: var(--text-micro) }
+.temporal-timeline { display: grid; grid-template-columns: repeat(14,1fr); gap: 5px; margin-top: 15px }
+.temporal-day { display: grid; justify-items: center; gap: 1px; min-width: 0 }
+.temporal-day>i,.temporal-legend i { width: 7px; height: 7px; border-radius: 50%; background: #e7e3e7 }
+.temporal-day>b { color: #c9c3c8; font-size: 7px; line-height: 1 }
+.temporal-day>i.active,.temporal-legend i.active { background: #c35f88 }
+.temporal-day>i.inactive,.temporal-legend i.inactive { background: #9bcac1 }
+.temporal-day>i.missing,.temporal-legend i.missing { background: #e7e3e7 }
+.temporal-day-hit>b { color: #a85a79 }
+.temporal-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; color: var(--ink-muted); font-size: var(--text-micro) }
+.temporal-legend span { display: inline-flex; align-items: center; gap: 4px }
+.temporal-cluster-card .insight-action { margin-top: 14px }
+
 @media (min-width:720px) {
   .state-cluster-list { grid-template-columns: repeat(2,minmax(0,1fr)) }
+  .temporal-cluster-list { grid-template-columns: repeat(2,minmax(0,1fr)) }
 }
 .insights-method-note { margin: -5px 0 12px; color: var(--ink-muted) }
 .intervention-response-card+.intervention-response-card { margin-top: 10px }

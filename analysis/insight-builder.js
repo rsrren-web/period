@@ -1,5 +1,6 @@
 import { readTcmObservations } from '../tcm-observation-model.js';
 import { analyzeStateClusters } from './state-cluster-engine.js';
+import { analyzeTemporalClusters } from './temporal-cluster-engine.js';
 
 const DAY = 86400000;
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
@@ -150,7 +151,7 @@ function buildPhaseProfiles({ logs, periods, asOf, config, actions }) {
 }
 
 export function buildInsights({ logs = {}, periods = [], as_of, next_start, prediction_confidence, config, observation_actions = [], tcm_clusters = [] } = {}) {
-  const standard = [...profiled('insights:state-clusters',()=>analyzeStateClusters({ logs, periods, as_of, config })), ...profiled('insights:cycle-windows',()=>buildCycleInsights({ logs, periods, asOf: as_of, nextStart: next_start, predictionConfidence: prediction_confidence, config, actions: observation_actions })), ...profiled('insights:associations',()=>buildAssociationInsights({ logs, periods, asOf: as_of, config, actions: observation_actions })), ...profiled('insights:phase-profiles',()=>buildPhaseProfiles({ logs, periods, asOf: as_of, config, actions: observation_actions }))];
+  const standard = [...profiled('insights:state-clusters',()=>analyzeStateClusters({ logs, periods, as_of, config })), ...profiled('insights:temporal-clusters',()=>analyzeTemporalClusters({ logs, periods, as_of, config })), ...profiled('insights:cycle-windows',()=>buildCycleInsights({ logs, periods, asOf: as_of, nextStart: next_start, predictionConfidence: prediction_confidence, config, actions: observation_actions })), ...profiled('insights:associations',()=>buildAssociationInsights({ logs, periods, asOf: as_of, config, actions: observation_actions })), ...profiled('insights:phase-profiles',()=>buildPhaseProfiles({ logs, periods, asOf: as_of, config, actions: observation_actions }))];
   const tcm = tcm_clusters.filter((cluster) => cluster.status === 'detected').map((cluster) => ({ id: `insight:tcm_cluster:${cluster.cluster_id}`, type: 'tcm_cluster', title: cluster.display_name, observation: { symptom: cluster.cluster_id, sampleSize: cluster.evidence.length, validDays: cluster.data_quality.valid_days, cyclesCovered: cluster.cycles_covered, windowRate: cluster.support_rate, outsideRate: 0, effectSizeRaw: cluster.support_rate, effectSizeType: 'proportion_difference', supportingData: { cyclesSupported: cluster.cycles_supported, constituentFeatures: cluster.constituent_features, lastSupportedDate: cluster.evidence.at(-1)?.date || null, dataQuality: cluster.data_quality } }, confidenceLevel: cluster.confidence_level, action: { type: 'observation', matchedInterventionIds: [], observationAction: null }, tcmClusterId: cluster.cluster_id, status: 'active', generatedAt: cluster.generated_at, lastRecomputedAt: cluster.generated_at }));
   return Object.freeze([...standard, ...tcm]);
 }

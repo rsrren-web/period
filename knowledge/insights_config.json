@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "ranking": {
     "weights": { "effect": 0.35, "confidence": 0.25, "cycles": 0.15, "recency": 0.10, "actionability": 0.15 },
     "top_insight_min": 0.58,
@@ -17,6 +17,15 @@
     "lookback_days": 90,
     "min_occurrences": 2,
     "max_size": 4,
+    "max_results": 4
+  },
+  "temporal_clusters": {
+    "lookback_days": 90,
+    "min_occurrences": 2,
+    "min_eligible_pairs": 8,
+    "max_today_size": 2,
+    "max_tomorrow_size": 2,
+    "effect_min": 0.15,
     "max_results": 4
   },
   "window_search": {

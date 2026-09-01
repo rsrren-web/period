@@ -82,11 +82,17 @@ function renderProfiles(data) {
     return `<article class="phase-profile-card"><h3>${name}</h3>${items.length ? items.map((item) => `<div><span>${esc(labels[item.observation.metric] || item.observation.metric)}</span><strong>${fixed(item.observation.windowMean)}/5</strong><small>个人周期平均 ${fixed(item.observation.outsideMean)} · ${item.observation.effectSizeRaw > 0 ? '+' : ''}${item.observation.effectSizeRaw}</small></div>`).join('') : '<p>暂未发现达到门槛的稳定差异。</p>'}</article>`;
   }).join('');
 }
-function renderAssociations(data, actions) {
+function renderTemporalClusters(data) {
   const root = document.querySelector('#insightsAssociations');
   if (!root) return;
-  const groups = [['previousToToday', '昨天的状态与今天有什么关系？'], ['todayToNextDay', '今天的状态与明天有什么关系？']];
-  root.innerHTML = groups.map(([key, title]) => `<section class="association-group"><h3>${title}</h3>${data.associations[key].length ? data.associations[key].map((item) => card(item, actions, false)).join('') : '<p class="muted">目前没有足够数据支持稳定关系。</p>'}</section>`).join('');
+  const maturityLabels = { new: '刚刚发现', emerging: '初步观察', stable: '较稳定关系' };
+  root.innerHTML = data.temporalClusters.length ? data.temporalClusters.map((item) => {
+    const support = item.observation.supportingData, todayParts = support.todayFeatures || [], tomorrowParts = support.tomorrowFeatures || [], dates = (support.occurrenceDates || []).slice(-8).reverse();
+    const chips = (parts) => parts.map((part, index) => `${index ? '<b aria-hidden="true">＋</b>' : ''}<span><i aria-hidden="true">${esc(part.icon)}</i>${esc(part.label)}</span>`).join('');
+    const timeline = (support.timeline || []).map((day) => `<span class="temporal-day temporal-day-${esc(day.state)}" title="${esc(dateText(day.date))} → ${esc(dateText(day.tomorrow))}${day.state === 'hit' ? ' · 前后组合出现' : day.state === 'exposed' ? ' · 今天组合出现，次日未出现结果组合' : day.state === 'recorded' ? ' · 有可比记录' : ' · 记录不完整'}"><i class="${day.todayActive === null ? 'missing' : day.todayActive ? 'active' : 'inactive'}"></i><b aria-hidden="true">↓</b><i class="${day.tomorrowActive === null ? 'missing' : day.tomorrowActive ? 'active' : 'inactive'}"></i></span>`).join('');
+    const exposedWidth = Math.max(0, Math.round(Number(support.exposedRate || 0) * 10)), baselineWidth = Math.max(0, Math.round(Number(support.baselineRate || 0) * 10));
+    return `<article class="state-cluster-card temporal-cluster-card"><header><span>${esc(maturityLabels[support.maturity] || '初步观察')}</span><small>${todayParts.length} 项 → ${tomorrowParts.length} 项</small></header><div class="temporal-flow"><div><small>今天记录到</small><div class="state-cluster-chips">${chips(todayParts)}</div></div><strong aria-hidden="true">↓</strong><div><small>第二天更常记录到</small><div class="state-cluster-chips">${chips(tomorrowParts)}</div></div></div><div class="state-cluster-stats"><div><strong>${support.occurrenceCount}</strong><small>重复前后日</small></div><div><strong>${item.observation.cyclesCovered || '—'}</strong><small>覆盖周期</small></div><div><strong>${support.eligiblePairs}</strong><small>有效对照组</small></div></div><div class="temporal-rate"><div><span>出现今天组合时</span><b>${pct(support.exposedRate)}</b><i><em class="cluster-width-${exposedWidth}"></em></i></div><div><span>其他记录日</span><b>${pct(support.baselineRate)}</b><i><em class="cluster-width-${baselineWidth}"></em></i></div></div><p class="temporal-rate-note">前者高 ${Math.round(item.observation.effectSizeRaw * 100)} 个百分点；只表示先后记录关系。</p><div class="temporal-timeline" aria-label="最近28组前后日记录点阵">${timeline}</div><div class="temporal-legend"><span><i class="active"></i>状态出现</span><span><i class="inactive"></i>未出现</span><span><i class="missing"></i>记录不完整</span></div><div class="insight-action"><small>下一步</small><p>下次出现左侧状态时，第二天继续记录，看看右侧状态是否再次出现。</p></div><details><summary>查看出现日期与依据</summary><p>${dates.map((date) => `${dateText(date)} → ${dateText(addOneDay(date))}`).join('、') || '暂无日期'}${support.occurrenceDates.length > dates.length ? `，另有 ${support.occurrenceDates.length - dates.length} 组` : ''}</p><p>共比较 ${support.eligiblePairs} 组前后日记录，其中左侧状态出现 ${support.exposedDays} 次。这是个人记录中的先后关系，不是医学诊断或因果结论。</p></details></article>`;
+  }).join('') : empty('还没有重复的前后日关系', '同一组今天状态与次日状态至少重复出现两次，并高于个人其他记录日后，会在这里形成初步观察。');
 }
 function renderInterventions(data) {
   const root = document.querySelector('#insightsInterventions');
@@ -103,8 +109,9 @@ function renderQuality(data) {
   const root = document.querySelector('#insightsDataQuality');
   if (root) root.innerHTML = Object.values(data.dataQualitySummary.metrics).map((item) => `<div class="quality-row"><span>${esc(labels[item.metric] || item.metric)}</span><strong>${item.valid_days}/${item.total_days} 天</strong><small>${pct(item.completion_rate)} · ${esc(item.quality_level)}</small></div>`).join('');
 }
+function addOneDay(value) { return new Date(Date.parse(`${value}T12:00:00Z`) + 86400000).toISOString().slice(0, 10); }
 function renderPage(data, actions) {
-  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderAssociations(data, actions); renderInterventions(data); renderTcm(data, actions); renderQuality(data);
+  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderTemporalClusters(data); renderInterventions(data); renderTcm(data, actions); renderQuality(data);
   const stamp = document.querySelector('#insightsGeneratedAt');
   if (stamp) stamp.textContent = `更新于 ${new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' }).format(new Date(data.generatedAt))}`;
 }

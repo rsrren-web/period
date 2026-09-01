@@ -31,11 +31,13 @@ function combinations(values, size, start = 0, selected = [], output = []) {
   return output;
 }
 
-function activeFeatures(log) {
-  if (!log) return [];
+export function stateFeaturesForLog(log) {
+  if (!log) return FEATURES.map(({ key, label, icon }) => ({ key, label, icon, state: null }));
   const tcm = readTcmObservations(log.symptomTags);
-  return FEATURES.filter((feature) => feature.tcm ? tcm[feature.tcm] === 'yes' : feature.test(log) === true);
+  return FEATURES.map((feature) => ({ key: feature.key, label: feature.label, icon: feature.icon, state: feature.tcm ? tcm[feature.tcm] === null ? null : tcm[feature.tcm] === 'yes' : feature.test(log) }));
 }
+
+function activeFeatures(log) { return stateFeaturesForLog(log).filter((feature) => feature.state === true); }
 
 function cycleStarts(periods, asOf) {
   return [...new Set((periods || []).filter((period) => period?.type === 'period' && period.status !== 'deleted' && period.start <= asOf).map((period) => period.start))].sort();
@@ -117,4 +119,4 @@ export function analyzeStateClusters({ logs = {}, periods = [], as_of, config = 
   return Object.freeze(selected);
 }
 
-export const StateClusterEngine = Object.freeze({ analyze: analyzeStateClusters, features: FEATURES });
+export const StateClusterEngine = Object.freeze({ analyze: analyzeStateClusters, features: FEATURES, statesForLog: stateFeaturesForLog });
