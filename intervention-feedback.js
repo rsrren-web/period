@@ -24,6 +24,11 @@ export function hasInterventionFeedbackToday(interventionId, records = readInter
   return Boolean(interventionId) && records.some((record) => record.intervention_id === interventionId && localDateKey(record.used_at) === today);
 }
 
+export function interventionHistoryBeforeToday(records = readInterventionUsage()) {
+  const today = localDateKey();
+  return records.filter((record) => localDateKey(record.used_at) !== today);
+}
+
 function markRecordedButtons(interventionId) {
   document.querySelectorAll?.('[data-intervention-feedback]').forEach((button) => {
     if (button.dataset.interventionFeedback !== interventionId) return;

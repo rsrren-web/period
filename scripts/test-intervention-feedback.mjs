@@ -62,6 +62,11 @@ assert.equal(button.textContent, '今天已记录 ✓', '按钮必须直接显�
 assert.equal(buttonClasses.has('is-recorded'), true);
 assert.deepEqual(module.readInterventionUsage().map(({ used_at, ...item }) => item), [{ intervention_id: 'tea_1', intervention_name: '测试茶饮', target: 'appetite_low', recommendation_id: 'rec_1', source_event_id: 'event_1', source_pattern_id: null, helpful: true, before: 4, after: 2 }]);
 assert.equal(module.hasInterventionFeedbackToday('tea_1'), true);
+assert.equal(module.interventionHistoryBeforeToday().length, 0, '今天的反馈不得让今天的建议进入冷却并消失');
+
+const yesterday = new Date(Date.now() - 86400000).toISOString();
+const withYesterday = [...module.readInterventionUsage(), { intervention_id: 'tea_old', used_at: yesterday }];
+assert.equal(module.interventionHistoryBeforeToday(withYesterday).length, 1, '历史反馈仍须参与后续推荐排序');
 
 formListeners.get('submit')({ preventDefault() {}, currentTarget: form });
 assert.equal(module.readInterventionUsage().length, 1, '同一天同一调养项目不得重复写入');

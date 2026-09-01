@@ -12,7 +12,7 @@ import { loadInterventionLibrary } from './analysis/intervention-engine.js';
 import { runAnalysis } from './analysis/analysis-orchestrator.js';
 import { selectDailyNourishment } from './analysis/daily-nourishment.js';
 import { readTcmObservations } from './tcm-observation-model.js';
-import { hasInterventionFeedbackToday, readInterventionUsage } from './intervention-feedback.js';
+import { hasInterventionFeedbackToday, interventionHistoryBeforeToday, readInterventionUsage } from './intervention-feedback.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const addDays = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
@@ -150,7 +150,8 @@ async function renderEngineRecommendations({ root, token, phase, log, logs }) {
   try {
     const { library, config, tcmRules, observationActions } = await loadAnalysisResources();
     if (token !== recommendationRenderToken || !root.isConnected) return;
-    const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: readInterventionUsage(), intervention_library: library, phase }, { previous_snapshot: latestAnalysisSnapshot });
+    const interventionUsage = readInterventionUsage();
+    const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: interventionHistoryBeforeToday(interventionUsage), intervention_library: library, phase }, { previous_snapshot: latestAnalysisSnapshot });
     latestAnalysisSnapshot = analysis;
     const result = analysis.recommendations;
     if (token !== recommendationRenderToken) return;
