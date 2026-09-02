@@ -23,6 +23,10 @@ function validEvent(event) {
   return event?.event_id && ['deviation', 'persistence'].includes(event.event_type) && event.confidence_level !== 'insufficient';
 }
 
+function canonicalEventMetric(event) {
+  return event?.metric === 'bowel' && event?.value === false ? 'no_bowel_movement' : event?.metric;
+}
+
 function cycleWindowActive(pattern, cycleDay) {
   return pattern?.pattern_type === 'cycle_pattern' && pattern.status === 'detected' && supportedConfidence(pattern) &&
     Number.isInteger(cycleDay) && cycleDay >= pattern.target_window?.start_day && cycleDay <= pattern.target_window?.end_day;
@@ -36,7 +40,7 @@ export function evaluateRecommendationGate({ today_record, health_events = [], p
   const triggers = [];
   for (const event of health_events.filter(validEvent)) triggers.push({
     trigger_type: 'health_event', source_event_id: event.event_id, source_pattern_id: null,
-    metric: event.metric, source_priority: ANALYSIS_CONFIG.recommendations.source_priority.health_event, evidence: event
+    metric: canonicalEventMetric(event), source_priority: ANALYSIS_CONFIG.recommendations.source_priority.health_event, evidence: event
   });
   for (const pattern of patterns.filter(supportedTemporal)) triggers.push({
     trigger_type: 'personal_pattern', source_event_id: null, source_pattern_id: pattern.pattern_id,

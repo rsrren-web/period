@@ -43,4 +43,10 @@ const legacy = buildCareContext({ log: { symptomTags: ['tcm:bloating_level:4', '
 assert.equal(legacy.context.bloating, true);
 assert.equal(legacy.context.appetite_low, true);
 
+const bowelEvent = { event_id: 'event:bowel', event_type: 'persistence', metric: 'bowel', value: false, sample_size: 3, confidence_level: 'low', supporting_data: { consecutive_days: 3 } };
+const bowelTags = writeDailyDetails([], { pain_nature: [], pain_response: [], bowel: 'not_passed', body_sense: [], sleep_issue: [] });
+const bowelResult = generateRecommendations({ today_record: { bowelMovement: false, symptomTags: bowelTags, fieldStatus: { bowelMovement: 'reported' } }, record_date: '2026-09-01', health_events: [bowelEvent], intervention_library: library, phase: { key: 'pms', cycleDay: 24 } });
+assert.equal(bowelResult.status, 'RECOMMENDATIONS', '连续未排便事件必须与知识库 canonical 字段正确衔接');
+assert.ok(bowelResult.recommendations.some((item) => item.intervention_id === 'TCM_ACU_018'));
+
 console.log('Care context mapping, neutral activity change, weighted scoring and legacy compatibility passed.');

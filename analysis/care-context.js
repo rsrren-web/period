@@ -182,7 +182,8 @@ export function buildCareContext({ log = {}, record_date, phase = {}, health_eve
   for (const event of health_events || []) {
     const difference = event?.supporting_data?.signed_difference;
     if (event?.metric && Number.isFinite(difference)) context.deviations[event.metric] = difference;
-    if (event?.event_type === 'persistence' && event.metric && event.confidence_level !== 'insufficient') context.persistence[event.metric] = Object.freeze({
+    const persistenceMetric = event?.metric === 'bowel' && event?.value === false ? 'no_bowel_movement' : event?.metric;
+    if (event?.event_type === 'persistence' && persistenceMetric && event.confidence_level !== 'insufficient') context.persistence[persistenceMetric] = Object.freeze({
       active: true, consecutive_days: event.supporting_data?.consecutive_days || event.sample_size || 0, event_id: event.event_id
     });
   }
