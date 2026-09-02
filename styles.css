@@ -1162,11 +1162,38 @@ main { width: min(1120px,calc(100% - 32px - env(safe-area-inset-left) - env(safe
 .tcm-reasoning { background: var(--primary-soft) }
 .tcm-reasoning>span,.traditional-detail dt { color: var(--ink) }
 .wellness-log-dialog .dialog-head.sticky { position: sticky; top: 0; z-index: 10; min-height: 70px; margin: 0-18px; padding: max(14px,env(safe-area-inset-top)) 18px 12px; border-bottom: 1px solid var(--soft-line); background: rgba(250,249,247,.98); backdrop-filter: blur(14px) }
-.log-section-nav { position: static; top: auto; z-index: auto; margin: 0-2px 8px; padding-block: 6px; background: 0 0 }
+.log-section-nav { position: sticky; top: 123px; z-index: 9; margin: 0-18px 8px; padding: 8px 18px; border-bottom: 1px solid var(--soft-line); background: rgba(250,249,247,.96); backdrop-filter: blur(12px) }
+.log-section-nav a { display: grid; place-items: center; border: 1px solid transparent; transition: border-color .16s ease,background .16s ease,color .16s ease }
+.log-section-nav a:hover,.log-section-nav a:focus-visible { border-color: var(--primary); background: var(--primary-soft); color: var(--ink) }
 .log-section { scroll-margin-top: 16px; margin: 0; padding: 22px 2px; border: 0; border-bottom: 1px solid var(--soft-line); border-radius: 0; background: 0 0; outline: 0 }
 .wellness-log-dialog .log-section { content-visibility: auto; contain-intrinsic-size: auto 300px }
 .log-section:nth-of-type(even) { background: 0 0; outline: 0 }
 .log-section:last-of-type { border-bottom: 0 }
+.wellness-log-dialog .log-category-block { scroll-margin-top: 126px; padding-block: 24px }
+.wellness-log-dialog .log-section-title { margin-bottom: 16px }
+.wellness-log-dialog .log-section-title>span { width: 36px; height: 36px; border-radius: 12px; background: var(--primary-soft); font-size: 19px }
+.wellness-log-dialog .log-section-title h3 { font-size: 20px }
+.log-category-content { display: grid; gap: 14px }
+.log-subsection { min-width: 0; padding: 16px; border: 1px solid var(--soft-line); border-radius: 18px; background: var(--surface-muted) }
+.log-subsection-title { margin-bottom: 14px }
+.log-subsection-title h4 { margin: 0; color: var(--ink); font-size: 16px }
+.log-subsection-title p { margin: 4px 0 0; color: var(--ink-muted); font-size: var(--text-caption); line-height: 1.5 }
+.wellness-log-dialog .choice-field { border: 1px solid var(--soft-line); border-radius: 16px; background: var(--surface); padding: 14px }
+.wellness-log-dialog .choice-field legend { padding-inline: 4px; font-size: var(--text-label) }
+.wellness-log-dialog .core-score { border-color: var(--soft-line); background: var(--surface) }
+.wellness-log-dialog :is(.emotion-picker,.body-map-grid,.icon-choice-grid,.body-sense-icon-grid)>label { min-width: 0; padding: 8px 5px; border: 1px solid var(--soft-line); border-radius: 15px; background: var(--surface); transition: border-color .16s ease,background .16s ease,transform .16s ease }
+.wellness-log-dialog :is(.emotion-picker,.body-map-grid,.icon-choice-grid,.body-sense-icon-grid)>label:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--primary) }
+.wellness-log-dialog :is(.emotion-picker,.body-map-grid,.icon-choice-grid,.body-sense-icon-grid)>label:has(input:focus-visible) { outline: 3px solid rgba(82,127,167,.24); outline-offset: 2px }
+.wellness-log-dialog :is(.body-map-grid,.icon-choice-grid)>label>span { min-height: 46px; border: 0; background: transparent; box-shadow: none }
+.wellness-log-dialog :is(.body-map-grid,.icon-choice-grid)>label>small { margin-top: 2px }
+.wellness-log-dialog :is(.body-map-grid,.icon-choice-grid) input:checked+span { border: 0; background: transparent; box-shadow: none }
+.wellness-log-dialog .emotion-picker label { gap: 3px }
+.wellness-log-dialog .emotion-blob { border: 0; background: transparent; box-shadow: none }
+.wellness-log-dialog .emotion-picker input:checked+.emotion-blob { border: 0; transform: none; box-shadow: none }
+.wellness-log-dialog .body-sense-icon-grid label>span,.wellness-log-dialog .body-sense-icon-grid label>small { border: 0; background: transparent }
+.wellness-log-dialog .body-sense-icon-grid label>span { min-height: 48px }
+.wellness-log-dialog .body-sense-icon-grid label>small { min-height: 28px }
+.wellness-log-dialog .body-sense-icon-grid input:checked~span,.wellness-log-dialog .body-sense-icon-grid input:checked~small { border: 0; background: transparent }
 .menstrual-status-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px }
 .menstrual-status-options label,.menstrual-status-options span { width: 100% }
 .bleeding-details { display: grid; gap: 14px; margin-top: 14px }
@@ -1178,7 +1205,9 @@ main { width: min(1120px,calc(100% - 32px - env(safe-area-inset-left) - env(safe
 .sticky-save { border-top: 0; background: linear-gradient(to bottom,rgba(250,249,247,0),rgba(250,249,247,.98) 28%); backdrop-filter: none }
 @media (max-width:620px) {
   .wellness-log-dialog .dialog-head.sticky { margin-inline: -14px; padding-inline: 14px }
+  .log-section-nav { margin-inline: -14px; padding-inline: 14px }
   .log-section { padding: 20px 0 }
+  .log-subsection { padding: 14px 12px }
 }
 .home-date-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 4px 0 20px }
 .home-date-copy { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto }
