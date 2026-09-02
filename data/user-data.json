@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 72,
-  "updatedAt": "2026-09-02T02:19:02.924Z",
+  "revision": 73,
+  "updatedAt": "2026-09-02T03:10:47.383Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -2816,7 +2816,7 @@
       "pain": 0,
       "primaryEmotion": "普通",
       "bedtime": "after_23",
-      "bowelMovement": false,
+      "bowelMovement": true,
       "exerciseTypes": [
         "徒步"
       ],
@@ -2833,13 +2833,13 @@
         "tcm:cold_sensation:no",
         "tcm:warmth_relief:no",
         "tcm:nausea:no",
-        "tcm:diarrhea:no",
+        "tcm:diarrhea:yes",
         "tcm:bloating:no",
         "tcm:poor_appetite:no",
         "tcm:body_heaviness:no",
         "detail:pain_nature:dull",
         "detail:pain_response:pressure_relief",
-        "detail:bowel:not_passed",
+        "detail:bowel:diarrhea",
         "detail:body_sense:none",
         "detail:sleep_issue:dreamy"
       ],
@@ -2881,7 +2881,7 @@
         "period_episode_id": "not_recorded"
       },
       "legacySymptoms": [],
-      "updatedAt": "2026-09-01T22:57:49.741Z"
+      "updatedAt": "2026-09-02T03:10:46.415Z"
     }
   },
   "tombstones": {
@@ -2976,6 +2976,7 @@
     "c458d001-f21e-44a0-ad5c-052630cbc503",
     "3d40f9f4-94b2-479d-80fc-b7d5c6030203",
     "036f7f0e-da27-472e-9c3b-ae2b3c85dae8",
-    "582587c7-3cff-4cf5-895c-5433217ab5fb"
+    "582587c7-3cff-4cf5-895c-5433217ab5fb",
+    "3417efbd-34d7-4530-80be-7eae372cdaca"
   ]
 }
