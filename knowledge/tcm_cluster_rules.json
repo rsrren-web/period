@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "minimum_cycles": 2,
   "minimum_feature_completion": 0.60,
   "minimum_constituent_features": 2,

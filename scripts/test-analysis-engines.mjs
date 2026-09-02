@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { evaluateComparisonQuality, evaluateMetricQuality, metricCompletionReport, metricValue } from '../analysis/data-quality-engine.js';
 import { createBaselineSnapshot } from '../analysis/baseline-engine.js';
 import { appendBaselineSnapshot, readBaselineSnapshots } from '../analysis/baseline-snapshot-store.js';
+import { writeDailyDetails } from '../daily-detail-model.js';
+import { writeTcmObservations } from '../tcm-observation-model.js';
 
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * 86_400_000).toISOString().slice(0, 10);
 const logs = {};
@@ -28,6 +30,11 @@ for (let index = 0; index < 30; index += 1) {
 assert.equal(metricValue({ bowelMovement: false, fieldStatus: { bowelMovement: 'reported' } }, 'bowel'), false, '明确“没有排便”必须是有效记录');
 assert.equal(metricValue({ bowelMovement: null, fieldStatus: { bowelMovement: 'not_recorded' } }, 'bowel'), null, '未记录不得解释为 false');
 assert.equal(metricValue({ pain: 0, fieldStatus: { pain: 'reported' } }, 'pain'), 0, '明确疼痛 0 分必须是有效记录');
+const noStructuredSymptoms = writeDailyDetails(writeTcmObservations([], { cold_sensation: 'no', warmth_relief: 'no', nausea: 'no', diarrhea: 'no', bloating: 'no', poor_appetite: 'no', body_heaviness: 'no' }), { pain_nature: [], pain_response: [], bowel: 'normal', body_sense: [], sleep_issue: [] });
+assert.equal(metricValue({ symptomTags: noStructuredSymptoms }, 'bloating'), false, '明确无腹胀必须是有效的 false');
+assert.equal(metricValue({ symptomTags: noStructuredSymptoms }, 'sleep_fragmentation'), false, '明确无易醒必须是有效的 false');
+assert.equal(metricValue({ symptomTags: [] }, 'bloating'), null, '未记录体感不得解释为 false');
+assert.equal(metricValue({ symptomTags: [] }, 'sleep_fragmentation'), null, '未记录睡眠表现不得解释为 false');
 
 const report = metricCompletionReport({ logs, start: '2026-07-15', end: '2026-08-13' });
 assert.equal(report.energy_completion_rate.valid_days, 14);

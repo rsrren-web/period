@@ -1,5 +1,5 @@
-import { readTcmObservations, tcmObservationCompletion } from '../tcm-observation-model.js';
 import { ANALYSIS_CONFIG } from './analysis-config.js';
+import { buildCareContext } from './care-context.js';
 
 const DAY = 86400000;
 const dayDistance = (start, end) => Math.round((Date.parse(`${end}T12:00:00Z`) - Date.parse(`${start}T12:00:00Z`)) / DAY);
@@ -14,23 +14,33 @@ function completedCycles(periods, asOf) {
 function cycleFor(date, cycles) { return cycles.find((cycle) => date >= cycle.start && date <= cycle.end) || null; }
 function inMenstrualContext(log) { return log?.menstrual_status === 'on_period' || (log?.menstrual_status === 'spotting_only' && ['period_start_transition', 'period_end_transition'].includes(log?.spotting_context)); }
 
+const legacyPresence = (value) => value === true ? 'yes' : value === false ? 'no' : null;
+const known = (care, field) => Array.isArray(care.evidence[field]) && care.evidence[field].length > 0;
+const positivePain = (value) => Number.isFinite(value) ? value > 0 : null;
+
 function observationContext(date, log, periods) {
-  const tcm = readTcmObservations(log?.symptomTags), locations = new Set(log?.painLocations || []);
+  const care = buildCareContext({ log, record_date: date }), context = care.context;
+  const locations = new Set(log?.painLocations || []);
+  const painFlag = (canonical, locationNames) => positivePain(canonical) ?? (Number(log?.pain) > 0 && locationNames.some((name) => locations.has(name)));
   const previousPeriod = [...periods].filter((period) => period?.type === 'period' && period.status !== 'deleted' && period.end < date).sort((a, b) => b.end.localeCompare(a.end))[0];
   return {
-    ...tcm,
-    menstrual_context: inMenstrualContext(log),
+    cold_sensation: legacyPresence(context.cold_sensation),
+    warmth_relief: legacyPresence(context.pain_response?.warmth_relief),
+    nausea: legacyPresence(context.nausea), diarrhea: legacyPresence(context.diarrhea), bloating: legacyPresence(context.bloating),
+    poor_appetite: legacyPresence(context.appetite_low), body_heaviness: legacyPresence(context.body_heaviness),
+    menstrual_context: context.menstruating ?? inMenstrualContext(log),
     post_menstrual_window: Boolean(previousPeriod && dayDistance(previousPeriod.end, date) >= 1 && dayDistance(previousPeriod.end, date) <= 5),
-    stress: log?.stress ?? null, emotion: log?.primaryEmotion ?? null, social_effect: log?.socialEffect ?? null,
-    energy: log?.energy ?? null, activity: log?.activity ?? null, sleep: log?.sleep ?? null, bedtime: log?.bedtime ?? null,
-    bowel_movement: typeof log?.bowelMovement === 'boolean' ? log.bowelMovement : null,
-    clot_presence: log?.clot_presence === 'not_recorded' ? null : log?.clot_presence ?? null,
-    blood_color: log?.blood_color ?? null,
-    lower_abdomen_pain: log?.pain > 0 && locations.has('小腹/盆腔'),
-    breast_chest_pain: log?.pain > 0 && locations.has('乳房/胸部'),
-    neck_shoulder_pain: log?.pain > 0 && locations.has('肩颈'),
-    upper_abdomen_pain: log?.pain > 0 && locations.has('胃/上腹'),
-    head_neck_pain: log?.pain > 0 && (locations.has('头部') || locations.has('肩颈'))
+    stress: context.stress ?? log?.stress ?? null, emotion: context.primary_emotion ?? log?.primaryEmotion ?? null, social_effect: context.social_aftereffect ?? log?.socialEffect ?? null,
+    energy: context.energy ?? log?.energy ?? null, activity: context.activity_level ?? log?.activity ?? null, sleep: context.sleep_quality ?? log?.sleep ?? null,
+    bedtime: known(care, 'late_sleep') ? (context.late_sleep ? 'after_23' : 'before_23') : log?.bedtime ?? null,
+    bowel_movement: known(care, 'no_bowel_movement') ? !context.no_bowel_movement : typeof log?.bowelMovement === 'boolean' ? log.bowelMovement : null,
+    clot_presence: known(care, 'clot_presence') ? legacyPresence(context.clot_presence) : log?.clot_presence === 'not_recorded' ? null : log?.clot_presence ?? null,
+    blood_color: context.blood_color ?? log?.blood_color ?? null,
+    lower_abdomen_pain: painFlag(context.pain?.lower_abdomen, ['小腹/盆腔']),
+    breast_chest_pain: painFlag(context.breast_tenderness, ['乳房/胸部']),
+    neck_shoulder_pain: painFlag(context.pain?.neck_shoulder, ['肩颈']), upper_abdomen_pain: painFlag(context.stomach_discomfort, ['胃/上腹']),
+    head_neck_pain: painFlag(Math.max(...[context.pain?.head, context.pain?.neck_shoulder].filter(Number.isFinite)), ['头部', '肩颈']),
+    structured_observation: Object.values(care.evidence).flat().some((item) => String(item.source).startsWith('tcm:') || String(item.source).startsWith('detail:'))
   };
 }
 
@@ -58,13 +68,13 @@ function maturityFor(status, covered, supported, rate) {
 
 export function analyzeTcmClusters({ logs = {}, periods = [], as_of, rules_config } = {}) {
   if (!rules_config?.rules) throw new TypeError('TCM cluster rules are required');
-  const cycles = completedCycles(periods, as_of), dated = Object.entries(logs).filter(([date, log]) => date <= as_of && cycleFor(date, cycles) && tcmObservationCompletion(log?.symptomTags).valid > 0);
+  const cycles = completedCycles(periods, as_of), dated = Object.entries(logs).filter(([date]) => date <= as_of && cycleFor(date, cycles)).map(([date, log]) => [date, log, observationContext(date, log, periods)]).filter(([, , context]) => context.structured_observation);
   const firstStructuredDate = dated.map(([date]) => date).sort()[0] || null;
   const eligibleDays = firstStructuredDate ? cycles.flatMap((cycle) => datesBetween(cycle.start, cycle.end)).filter((date) => date >= firstStructuredDate && date <= as_of).length : 0;
   return rules_config.rules.map((rule) => {
     const evidence = [];
-    for (const [date, log] of dated) {
-      const cycle = cycleFor(date, cycles), context = observationContext(date, log, periods);
+    for (const [date, , context] of dated) {
+      const cycle = cycleFor(date, cycles);
       const hard = rule.hard_requirements.map((condition) => evaluate(context[condition.field], condition));
       if (hard.some((result) => !result.known || !result.matched)) continue;
       const checked = rule.weighted_features.map((feature) => ({ feature, ...evaluate(context[feature.field], feature) }));

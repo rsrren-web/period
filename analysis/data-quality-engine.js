@@ -1,9 +1,17 @@
 import { ANALYSIS_CONFIG, METRIC_DEFINITIONS } from './analysis-config.js';
-import { readDailyDetails } from '../daily-detail-model.js';
-import { readTcmObservations } from '../tcm-observation-model.js';
+import { buildCareContext } from './care-context.js';
 
 const RECORDED_STATUSES = new Set(['reported', 'legacy_uncertain', 'legacy_inferred', 'system_generated', 'user_corrected', 'legacy_manual']);
 const roundRate = value => Math.round(value * 1000) / 1000;
+const STRUCTURED_CONTEXT_FIELDS = Object.freeze({
+  'tcm:bloating': 'bloating', 'tcm:body_heaviness': 'body_heaviness', 'tcm:cold_sensation': 'cold_sensation', 'tcm:poor_appetite': 'appetite_low', 'tcm:nausea': 'nausea',
+  'detail_single:bowel:hard': 'stool_hard', 'detail_single:bowel:loose': 'stool_loose', 'detail_single:bowel:sticky': 'stool_sticky', 'detail_single:bowel:not_passed': 'no_bowel_movement',
+  'detail_multi:sleep_issue:sleep_onset': 'sleep_onset_difficulty', 'detail_multi:sleep_issue:waking': 'sleep_fragmentation', 'detail_multi:sleep_issue:early_waking': 'early_waking',
+  'detail_multi:sleep_issue:unrefreshed': 'unrefreshed_sleep', 'detail_multi:sleep_issue:dreamy': 'dream_disturbed_sleep',
+  'detail_multi:body_sense:cold_hands_feet': 'cold_hands_feet', 'detail_multi:body_sense:edema': 'subjective_puffiness', 'detail_multi:body_sense:head_heavy': 'head_heaviness',
+  'detail_multi:pain_nature:cold': 'pain_quality.cold'
+});
+const pathValue = (value, path) => path.split('.').reduce((current, part) => current?.[part], value);
 
 function dateList(start, end) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(start || '') || !/^\d{4}-\d{2}-\d{2}$/.test(end || '') || end < start) return [];
@@ -15,17 +23,11 @@ function dateList(start, end) {
 export function metricValue(log, metric) {
   const definition = METRIC_DEFINITIONS[metric];
   if (!definition || !log || typeof log !== 'object') return null;
-  if (definition.source === 'tcm') {
-    const value = readTcmObservations(log.symptomTags)[definition.field];
-    return value === null ? null : value === 'yes';
-  }
-  if (definition.source === 'detail_single') {
-    const value = readDailyDetails(log.symptomTags)[definition.field];
-    return value === null ? null : value === definition.value;
-  }
-  if (definition.source === 'detail_multi') {
-    const value = readDailyDetails(log.symptomTags)[definition.field];
-    return value === null ? null : value.includes(definition.value);
+  if (['tcm', 'detail_single', 'detail_multi'].includes(definition.source)) {
+    const key = definition.source === 'tcm' ? `tcm:${definition.field}` : `${definition.source}:${definition.field}:${definition.value}`;
+    const field = STRUCTURED_CONTEXT_FIELDS[key]; if (!field) return null;
+    const care = buildCareContext({ log }), evidence = care.evidence[field];
+    return Array.isArray(evidence) && evidence.length ? pathValue(care.context, field) === true : null;
   }
   const value = log[definition.field], status = log.fieldStatus?.[definition.status_field];
   if (status === 'not_recorded' || (status && !RECORDED_STATUSES.has(status))) return null;

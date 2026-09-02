@@ -4,9 +4,9 @@
 
 | 功能 | 数据生产者 | 存储字段 | 标准化 feature | 分析/推荐消费者 | 记录或配置入口 | 结果入口 | 用户操作与空状态 | 测试 | 当前状态 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 每日 TCM 体感 | 每日记录弹窗 | `tcm:*` | `cold_sensation`、`warmth_relief`、`nausea`、`diarrhea`、`bloating`、`appetite_low`、`body_heaviness` | careContext、推荐；cluster 尚未统一 | Today → 每日记录 → 身体体感 | Today 调养、趋势 TCM | 可明确“没有以上体感”；未操作为未记录 | daily semantics、careContext | 部分接通 |
-| pain detail | 每日记录弹窗 | `detail:pain_nature:*`、`detail:pain_response:*`、`painLocations`、`pain` | `pain_quality.*`、`pain_response.*`、`pain.*` | careContext、推荐；cluster 尚未统一 | Today → 每日记录 → 疼痛 | Today、当天详情、趋势 | 可明确无疼痛表现；未操作为未记录 | daily detail、careContext | 部分接通 |
-| sleep detail | 每日记录弹窗 | `detail:sleep_issue:*`、`sleep`、`bedtime` | `sleep_onset_difficulty`、`sleep_fragmentation`、`dream_disturbed_sleep`、`early_waking`、`unrefreshed_sleep` | careContext、推荐、趋势 | Today → 每日记录 → 睡眠与排便 | Today、趋势 | 可明确无所列睡眠表现；未操作为未记录 | daily detail、careContext | 部分接通 |
+| 每日 TCM 体感 | 每日记录弹窗 | `tcm:*` | `cold_sensation`、`warmth_relief`、`nausea`、`diarrhea`、`bloating`、`appetite_low`、`body_heaviness` | 统一 careContext、推荐、数据质量、cluster、趋势 | Today → 每日记录 → 身体体感 | Today 调养、趋势 TCM | 可明确“没有以上体感”；未操作为未记录 | daily semantics、careContext、cluster | 已统一接入；可见进度仍待补 |
+| pain detail | 每日记录弹窗 | `detail:pain_nature:*`、`detail:pain_response:*`、`painLocations`、`pain` | `pain_quality.*`、`pain_response.*`、`pain.*` | 统一 careContext、推荐、数据质量、多状态趋势 | Today → 每日记录 → 疼痛 | Today、当天详情、趋势 | 可明确无疼痛表现；未操作为未记录 | daily detail、careContext、state cluster | 已统一接入；更多规则待扩展 |
+| sleep detail | 每日记录弹窗 | `detail:sleep_issue:*`、`sleep`、`bedtime` | `sleep_onset_difficulty`、`sleep_fragmentation`、`dream_disturbed_sleep`、`early_waking`、`unrefreshed_sleep` | 统一 careContext、推荐、数据质量、多状态趋势 | Today → 每日记录 → 睡眠与排便 | Today、趋势 | 可明确无所列睡眠表现；未操作为未记录 | daily detail、careContext、state cluster | 已统一接入 |
 | bowel detail | 每日记录弹窗 | `detail:bowel:*`、`bowelMovement` | `bowel_normal`、`stool_hard`、`stool_loose`、`stool_sticky`、`diarrhea`、`no_bowel_movement` | careContext、持续事件、推荐 | Today → 每日记录 → 睡眠与排便 | Today、趋势 | 单选包含“未排便”；不选择为未记录 | daily detail、recommendation | 已接通 |
 | menstrual detail | 经期日期 + 每日记录弹窗 | `menstrual_status`、`flow_level`、`blood_color`、`clot_*` | `menstrual_status`、`flow_level`、`blood_color`、`clot_level` | 周期模型、careContext、推荐、趋势 | Today 首页设置日期；经期日弹窗记录表现 | Today、日历、趋势 | 非经期隐藏；历史扩展枚举保留兼容 | menstrual UI、sync | 已接通 |
 | 近期中医状态 | 待建 TcmStateEngine | 派生，不写回每日记录 | 7 个 `TcmState` | Today、趋势、推荐 | 来源于每日记录 | Today 1–3 项；趋势常驻模块 | 无数据时显示用途、进度和记录入口 | 待建 state tests | 未实现 |
@@ -32,7 +32,7 @@
 ## 分阶段完成条件
 
 1. 未触碰字段保持 `null/not_recorded`，明确“没有”与未记录不同。
-2. 所有 `tcm:*`、`detail:*` 统一经过 `buildCareContext()`。
+2. ✅ 所有分析、建议和详情展示消费者读取 `tcm:*`、`detail:*` 时统一经过 `buildCareContext()`；表单模型只负责读写存储编码。
 3. 近期状态、跨周期 pattern、长期体质和调养决策在代码与 UI 中严格分层。
 4. pattern 必须真实影响推荐和解释。
 5. 反馈、安全档案和长期体质进入备份、导入、同步、迁移和去重。

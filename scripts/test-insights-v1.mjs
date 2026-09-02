@@ -4,6 +4,7 @@ import { readTcmObservations, writeTcmObservations } from '../tcm-observation-mo
 import { aggregateInterventionResponses } from '../analysis/intervention-response-aggregator.js';
 import { analyzeTcmClusters } from '../analysis/tcm-cluster-engine.js';
 import { adaptRecommendationContext } from '../analysis/recommendation-context-adapter.js';
+import { writeDailyDetails } from '../daily-detail-model.js';
 
 const empty = readTcmObservations([]);
 assert.equal(empty.cold_sensation, null, '未记录必须保持 null');
@@ -31,6 +32,9 @@ const tcmRules = JSON.parse(fs.readFileSync(new URL('../knowledge/tcm_cluster_ru
 const noTcm = analyzeTcmClusters({ logs: {}, periods: [], as_of: '2026-08-13', rules_config: tcmRules });
 assert.equal(noTcm.filter((item) => item.status === 'active').length, 0, '无新增体感记录时不得形成可展示的 TCM Cluster');
 assert.ok(noTcm.every((item) => item.status === 'insufficient'), '数据不足状态必须保留，供质量审计使用');
+const detailOnlyTags = writeDailyDetails([], { pain_nature: ['cold'], pain_response: [], bowel: null, body_sense: [], sleep_issue: [] });
+const detailOnly = analyzeTcmClusters({ logs: { '2026-01-10': { symptomTags: detailOnlyTags } }, periods: [{ type: 'period', start: '2026-01-01', end: '2026-01-05', status: 'confirmed' }, { type: 'period', start: '2026-02-01', end: '2026-02-05', status: 'confirmed' }], as_of: '2026-02-20', rules_config: tcmRules });
+assert.ok(detailOnly.every((item) => item.data_quality.valid_days === 1), '详细体感记录必须纳入 TCM 数据质量，不得只识别旧 tcm 标签');
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const app = fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8');
@@ -40,6 +44,7 @@ const serviceWorker = fs.readFileSync(new URL('../sw.js', import.meta.url), 'utf
 const worker = fs.readFileSync(new URL('../worker/src/index.js', import.meta.url), 'utf8');
 const insightsPage = fs.readFileSync(new URL('../insights-page.js', import.meta.url), 'utf8');
 const interventionFeedback = fs.readFileSync(new URL('../intervention-feedback.js', import.meta.url), 'utf8');
+const unifiedConsumers = ['state-cluster-engine.js', 'tcm-cluster-engine.js', 'data-quality-engine.js', 'insight-builder.js'].map((name) => fs.readFileSync(new URL(`../analysis/${name}`, import.meta.url), 'utf8')).concat([traditional, fs.readFileSync(new URL('../daily-insights.js', import.meta.url), 'utf8')]);
 const insightsConfig = JSON.parse(fs.readFileSync(new URL('../knowledge/insights_config.json', import.meta.url), 'utf8'));
 for (const name of ['coldSensation', 'warmthRelief', 'nausea', 'diarrhea', 'bloating', 'poorAppetite', 'bodyHeaviness']) assert.match(html, new RegExp(`name="${name}"`));
 assert.doesNotMatch(html, /name="bloatingLevel"|name="appetiteLevel"/);
@@ -68,7 +73,11 @@ assert.match(insightsPage, /topInsights\.slice\(0, 2\)/, '首页趋势重点最�
 assert.match(insightsPage, /nextCycleWindows\.slice\(0, 2\)/, '下一周期观察最多展示两条');
 assert.match(insightsPage, /renderTemporalClusters/, '趋势页必须渲染多状态前后日关系卡片');
 assert.match(html, /今天的状态与明天有什么关系/, '趋势页必须提供前后日视觉区域');
-assert.equal(insightsConfig.version, 5, '前后日组合分析变更必须刷新趋势缓存');
+assert.equal(insightsConfig.version, 6, '统一健康上下文与新增状态特征必须刷新趋势缓存');
+for (const consumer of unifiedConsumers) {
+  assert.match(consumer, /buildCareContext/, '分析与建议消费者必须通过统一健康上下文读取结构化记录');
+  assert.doesNotMatch(consumer, /readTcmObservations|readDailyDetails/, '消费者不得绕过统一健康上下文重复解释结构化记录');
+}
 assert.match(app, /import '\.\/intervention-feedback\.js'/, '效果记录事件必须在首屏核心模块注册');
 assert.match(interventionFeedback, /data-intervention-feedback/, '核心反馈模块必须处理调养效果按钮');
 assert.doesNotMatch(insightsPage, /closest\('\[data-intervention-feedback\]'/, '趋势模块不得重复注册效果按钮监听器');

@@ -1,6 +1,6 @@
 import { compatibilityTags } from './daily-record-model.js';
-import { readTcmObservations } from './tcm-observation-model.js';
-import { DAILY_DETAIL_LABELS, readDailyDetails } from './daily-detail-model.js';
+import { DAILY_DETAIL_LABELS } from './daily-detail-model.js';
+import { buildCareContext } from './analysis/care-context.js';
 
 const DAILY_STORE_KEY = 'period-helper-state-v1';
 const DAILY_LABELS = ['很低', '偏低', '一般', '较好', '很好'];
@@ -28,7 +28,7 @@ function escapeDaily(value) { return String(value ?? '').replace(/[&<>'"]/g, (ch
 function tagged(log, prefix) { return compatibilityTags(log).find((item) => item.startsWith(prefix))?.slice(prefix.length); }
 function painParts(log = {}) { const symptoms = compatibilityTags(log); const parts = symptoms.filter((item) => item.startsWith('疼痛部位：')).map((item) => item.slice(5)); if (symptoms.includes('头痛') && !parts.includes('头部')) parts.push('头部'); if (symptoms.includes('腰腹不适')) { if (!parts.includes('小腹/盆腔')) parts.push('小腹/盆腔'); if (!parts.includes('腰背')) parts.push('腰背'); } return parts; }
 function painFive(log = {}) { if (log.pain === null || log.pain === undefined || log.pain === '') return null; const value = Number(log.pain); if (!Number.isFinite(value)) return null; return value > 5 ? Math.round(value / 2) : value; }
-function visibleSymptoms(log = {}) { const visible=compatibilityTags(log).filter((item) => !item.startsWith('tcm:') && !item.startsWith('疼痛部位：') && !item.startsWith('入睡：') && !item.startsWith('排便：') && !['头痛', '腰腹不适'].includes(item)),tcm=readTcmObservations(log.symptomTags);if(tcm.nausea==='yes')visible.push('恶心');if(tcm.diarrhea==='yes')visible.push('腹泻');return [...new Set(visible)]; }
+function visibleSymptoms(log = {}, care = null) { const visible=compatibilityTags(log).filter((item) => !item.startsWith('tcm:') && !item.startsWith('疼痛部位：') && !item.startsWith('入睡：') && !item.startsWith('排便：') && !['头痛', '腰腹不适'].includes(item)),context=(care||buildCareContext({ log })).context;if(context.nausea===true)visible.push('恶心');if(context.diarrhea===true)visible.push('腹泻');return [...new Set(visible)]; }
 
 function rangeDates() { const now = new Date(), end = localIso(now); if (dailyTrendRange === 'week') { const mondayOffset = (now.getDay() + 6) % 7; return { start: addDate(end, -mondayOffset), end, title: '本周' }; } if (dailyTrendRange === 'month') return { start: `${end.slice(0, 8)}01`, end, title: '本月' }; const firstMonth = Math.floor(now.getMonth() / 3) * 3; return { start: localIso(new Date(now.getFullYear(), firstMonth, 1)), end, title: '本季度' }; }
 
@@ -74,7 +74,7 @@ function menstrualSummary(log = {}) {
   return parts.join(' · ');
 }
 function menstrualRows(log) { const status=MENSTRUAL_LABELS.menstrual_status[log.menstrual_status]||'未记录',source=MENSTRUAL_LABELS.cycle_day_source[log.cycle_day_source]||'未记录',rows=[['月经状态',status],['周期日',log.cycle_day===null||log.cycle_day===undefined?source:`第 ${log.cycle_day} 天 · ${source}`]],bleeding=log.menstrual_status==='on_period'||log.menstrual_status==='spotting_only';if(bleeding){rows.push(['出血量',MENSTRUAL_LABELS.flow_level[log.flow_level]||'未记录'],['颜色',MENSTRUAL_LABELS.blood_color[log.blood_color]||'未记录'],['血块',log.clot_presence==='yes'?`有 · ${MENSTRUAL_LABELS.clot_level[log.clot_level]||'大小未记录'}`:(MENSTRUAL_LABELS.clot_presence[log.clot_presence]||'未记录')]);if(log.menstrual_status==='spotting_only')rows.push(['点滴类型',MENSTRUAL_LABELS.spotting_context[log.spotting_context]||'未记录'])}return rows}
-function statusCard(date, log) { if (!log) return '<section class="day-status-card empty"><strong>身体状态</strong><p>这一天还没有记录身体状态。</p></section>'; const ratings = [['情绪', tagged(log, '情绪：') || DAILY_LABELS[Number(log.mood) - 1] || '—'], ['精力', `${log.energy || '—'}/5`], ['睡眠', `${log.sleep || '—'}/5`], ['活动', `${log.activity || '—'}/5`], ['压力', `${log.stress || '—'}/5`], ['疼痛', `${painFive(log) ?? '—'}/5`]], locations = painParts(log), symptoms = visibleSymptoms(log).filter((item) => !item.startsWith('情绪：') && !item.startsWith('运动：') && !item.startsWith('社交：') && !item.startsWith('社交强度：') && !item.startsWith('社交影响：')), bedtime = tagged(log, '入睡：'), menstrual=menstrualRows(log),tcm=readTcmObservations(log.symptomTags),details=readDailyDetails(log.symptomTags),bowel=details.bowel?DAILY_DETAIL_LABELS.bowel[details.bowel]:tagged(log,'排便：'),detailRows=[['睡眠表现','sleep_issue'],['疼痛性质','pain_nature'],['疼痛反应','pain_response'],['寒热水湿','body_sense']].map(([label,key])=>[label,(details[key]||[]).map(value=>DAILY_DETAIL_LABELS[key][value]).filter(Boolean)]).filter(([,values])=>values.length),tcmLabels=[tcm.cold_sensation==='yes'?'明显怕冷':null,tcm.warmth_relief==='yes'?'热敷后缓解':null,tcm.nausea==='yes'?'恶心':null,tcm.diarrhea==='yes'?'腹泻':null,tcm.body_heaviness==='yes'?'沉重困倦':null,tcm.bloating==='yes'?'腹胀':null,tcm.poor_appetite==='yes'?'食欲差':null].filter(Boolean); return `<section class="day-status-card"><div class="day-status-heading"><strong>身体状态记录</strong><span>${escapeDaily(date)}</span></div><div class="day-status-ratings">${ratings.map(([label, value]) => `<div><small>${label}</small><strong>${escapeDaily(value)}</strong></div>`).join('')}</div>${menstrual.map(([label,value])=>`<div class="day-status-row"><strong>${escapeDaily(label)}</strong><span>${escapeDaily(value)}</span></div>`).join('')}${bedtime ? `<div class="day-status-row"><strong>入睡时间</strong><span>${escapeDaily(bedtime)}入睡</span></div>` : ''}${bowel ? `<div class="day-status-row"><strong>排便</strong><span>${escapeDaily(bowel)}</span></div>` : ''}${locations.length ? `<div class="day-status-row"><strong>疼痛部位</strong><span>${locations.map(escapeDaily).join('、')}</span></div>` : ''}${detailRows.map(([label,values])=>`<div class="day-status-row"><strong>${escapeDaily(label)}</strong><span>${values.map(escapeDaily).join('、')}</span></div>`).join('')}${tcmLabels.length?`<div class="day-status-row"><strong>体感观察</strong><span>${tcmLabels.map(escapeDaily).join('、')}</span></div>`:''}${symptoms.length ? `<div class="day-status-row"><strong>其他感受</strong><span>${symptoms.map(escapeDaily).join('、')}</span></div>` : ''}</section>`; }
+function statusCard(date, log) { if (!log) return '<section class="day-status-card empty"><strong>身体状态</strong><p>这一天还没有记录身体状态。</p></section>'; const care=buildCareContext({ log, record_date:date }),context=care.context,ratings = [['情绪', tagged(log, '情绪：') || DAILY_LABELS[Number(log.mood) - 1] || '—'], ['精力', `${log.energy || '—'}/5`], ['睡眠', `${log.sleep || '—'}/5`], ['活动', `${log.activity || '—'}/5`], ['压力', `${log.stress || '—'}/5`], ['疼痛', `${painFive(log) ?? '—'}/5`]], locations = painParts(log), symptoms = visibleSymptoms(log,care).filter((item) => !item.startsWith('情绪：') && !item.startsWith('运动：') && !item.startsWith('社交：') && !item.startsWith('社交强度：') && !item.startsWith('社交影响：')), bedtime = tagged(log, '入睡：'), menstrual=menstrualRows(log),details=care.details,bowel=details.bowel?DAILY_DETAIL_LABELS.bowel[details.bowel]:tagged(log,'排便：'),detailRows=[['睡眠表现','sleep_issue'],['疼痛性质','pain_nature'],['疼痛反应','pain_response'],['寒热水湿','body_sense']].map(([label,key])=>[label,(details[key]||[]).map(value=>DAILY_DETAIL_LABELS[key][value]).filter(Boolean)]).filter(([,values])=>values.length),tcmLabels=[context.cold_sensation===true?'明显怕冷':null,context.pain_response?.warmth_relief===true?'热敷后缓解':null,context.nausea===true?'恶心':null,context.diarrhea===true?'腹泻':null,context.body_heaviness===true?'沉重困倦':null,context.bloating===true?'腹胀':null,context.appetite_low===true?'食欲差':null].filter(Boolean); return `<section class="day-status-card"><div class="day-status-heading"><strong>身体状态记录</strong><span>${escapeDaily(date)}</span></div><div class="day-status-ratings">${ratings.map(([label, value]) => `<div><small>${label}</small><strong>${escapeDaily(value)}</strong></div>`).join('')}</div>${menstrual.map(([label,value])=>`<div class="day-status-row"><strong>${escapeDaily(label)}</strong><span>${escapeDaily(value)}</span></div>`).join('')}${bedtime ? `<div class="day-status-row"><strong>入睡时间</strong><span>${escapeDaily(bedtime)}入睡</span></div>` : ''}${bowel ? `<div class="day-status-row"><strong>排便</strong><span>${escapeDaily(bowel)}</span></div>` : ''}${locations.length ? `<div class="day-status-row"><strong>疼痛部位</strong><span>${locations.map(escapeDaily).join('、')}</span></div>` : ''}${detailRows.map(([label,values])=>`<div class="day-status-row"><strong>${escapeDaily(label)}</strong><span>${values.map(escapeDaily).join('、')}</span></div>`).join('')}${tcmLabels.length?`<div class="day-status-row"><strong>体感观察</strong><span>${tcmLabels.map(escapeDaily).join('、')}</span></div>`:''}${symptoms.length ? `<div class="day-status-row"><strong>其他感受</strong><span>${symptoms.map(escapeDaily).join('、')}</span></div>` : ''}</section>`; }
 
 export function enhanceDayDialog(date) { const dialog = document.querySelector('#dayDialog'), body = document.querySelector('#dayDialogBody'); if (!dialog?.open || !body) return; [...body.children].filter((element) => element.tagName === 'P' && !element.classList.contains('period-overlap-note')).forEach((element) => element.remove()); body.querySelector('.day-status-card')?.remove(); const log = readDailyLogs()[date]; body.insertAdjacentHTML('beforeend', statusCard(date, log)); const editButton = document.querySelector('#dayEditLog'); if (editButton) editButton.textContent = log ? '编辑身体状态' : '记录身体状态'; }
 
@@ -118,14 +118,14 @@ function phaseForDailyDate(date, context = dailyContext) {
 }
 function phaseName(key) { return ({ period: '月经期', follicular: '卵泡期', ovulation: '排卵估算期', pms: '黄体期', unknown: '未确定阶段' })[key] || '未确定阶段'; }
 function symptomLabels(log = {}) {
-  const labels = [...visibleSymptoms(log), ...painParts(log).map((part) => `疼痛·${part}`)];
-  const bodySense = readTcmObservations(log.symptomTags);
-  if (bodySense.nausea === 'yes') labels.push('恶心');
-  if (bodySense.diarrhea === 'yes') labels.push('腹泻');
-  if (bodySense.cold_sensation === 'yes') labels.push('明显怕冷');
-  if (bodySense.body_heaviness === 'yes') labels.push('身体沉重');
-  if (bodySense.bloating === 'yes') labels.push('腹胀');
-  if (bodySense.poor_appetite === 'yes') labels.push('食欲差');
+  const care = buildCareContext({ log }), labels = [...visibleSymptoms(log, care), ...painParts(log).map((part) => `疼痛·${part}`)];
+  const bodySense = care.context;
+  if (bodySense.nausea === true) labels.push('恶心');
+  if (bodySense.diarrhea === true) labels.push('腹泻');
+  if (bodySense.cold_sensation === true) labels.push('明显怕冷');
+  if (bodySense.body_heaviness === true) labels.push('身体沉重');
+  if (bodySense.bloating === true) labels.push('腹胀');
+  if (bodySense.appetite_low === true) labels.push('食欲差');
   if (tagged(log, '入睡：') === '23:00后') labels.push('23点后入睡');
   if (tagged(log, '排便：') === '未排便') labels.push('未排便');
   return [...new Set(labels)];
@@ -162,12 +162,12 @@ function recommendedActions(factors) {
   }).filter(Boolean).sort((a, b) => b.severity - a.severity);
 }
 function bodySenseAction(log = {}) {
-  const bodySense = readTcmObservations(log.symptomTags);
-  if (bodySense.diarrhea === 'yes') return { id: 'diarrhea-care', severity: 8, reason: '今天明确记录了腹泻', text: '少量多次补水并选择清淡少量食物，今天暂停油腻辛辣和高强度运动' };
-  if (bodySense.nausea === 'yes') return { id: 'nausea-care', severity: 7, reason: '今天明确记录了恶心', text: '少量分次进食，饭后保持坐直，先避开油腻浓味' };
-  if (bodySense.bloating === 'yes') return { id: 'bloating-care', severity: 6, reason: '今天明确记录了腹胀', text: '把一餐分小份慢慢吃，饭后舒缓走动10分钟' };
-  if (bodySense.poor_appetite === 'yes') return { id: 'appetite-care', severity: 5, reason: '今天明确记录了食欲差', text: '先选择少量、熟软且容易接受的食物，不必勉强一次吃完' };
-  if (bodySense.body_heaviness === 'yes') return { id: 'heaviness-care', severity: 4, reason: '今天明确记录了沉重困倦', text: '先安排10分钟轻柔走动或伸展，再根据体感决定是否继续活动' };
+  const bodySense = buildCareContext({ log }).context;
+  if (bodySense.diarrhea === true) return { id: 'diarrhea-care', severity: 8, reason: '今天明确记录了腹泻', text: '少量多次补水并选择清淡少量食物，今天暂停油腻辛辣和高强度运动' };
+  if (bodySense.nausea === true) return { id: 'nausea-care', severity: 7, reason: '今天明确记录了恶心', text: '少量分次进食，饭后保持坐直，先避开油腻浓味' };
+  if (bodySense.bloating === true) return { id: 'bloating-care', severity: 6, reason: '今天明确记录了腹胀', text: '把一餐分小份慢慢吃，饭后舒缓走动10分钟' };
+  if (bodySense.appetite_low === true) return { id: 'appetite-care', severity: 5, reason: '今天明确记录了食欲差', text: '先选择少量、熟软且容易接受的食物，不必勉强一次吃完' };
+  if (bodySense.body_heaviness === true) return { id: 'heaviness-care', severity: 4, reason: '今天明确记录了沉重困倦', text: '先安排10分钟轻柔走动或伸展，再根据体感决定是否继续活动' };
   return null;
 }
 function statusActions(factors) {

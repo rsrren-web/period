@@ -63,6 +63,12 @@ assert.ok(draining.current_discomforts.some((item) => item.metric === 'social_af
 const menstrual = buildCareContext({ log: { menstrual_status: 'on_period', flow_level: 'heavy', clot_level: 'medium', fieldStatus: { menstrual_status: 'reported', flow_level: 'reported', clot_level: 'reported' } }, record_date: '2026-09-01' });
 assert.ok(menstrual.current_discomforts.some((item) => item.metric === 'flow_level'));
 assert.ok(menstrual.current_discomforts.some((item) => item.metric === 'clot_level'));
+const identity = buildCareContext({ log: { mood: 2, primaryEmotion: '焦虑', clot_presence: 'no', fieldStatus: { mood: 'reported', primaryEmotion: 'reported', clot_presence: 'reported' } }, record_date: '2026-09-01' });
+assert.equal(identity.context.mood, 2, '情绪分数必须进入统一上下文');
+assert.equal(identity.context.primary_emotion, '焦虑', '主要情绪必须保留原始中文语义');
+assert.equal(identity.context.anxiety, true);
+assert.equal(identity.context.clot_presence, false, '明确无血块必须区别于未记录');
+assert.equal(identity.evidence.clot_presence[0].value, false);
 
 const persistentPain = evaluateIntervention({
   id: 'TEST_PAIN', status: 'active', availability: 'ready', category: 'test',

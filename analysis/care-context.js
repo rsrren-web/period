@@ -83,9 +83,9 @@ function carePatterns(context) {
 }
 
 export const CARE_CONTEXT_RECORDED_FIELDS = Object.freeze([
-  'stress', 'energy', 'sleep_quality', 'activity_level', 'social_intensity', 'social_aftereffect', 'late_sleep',
-  'menstrual_status', 'menstruating', 'flow_level', 'blood_color', 'clot_level',
-  'irritability', 'anxiety',
+  'mood', 'stress', 'energy', 'sleep_quality', 'activity_level', 'social_intensity', 'social_aftereffect', 'late_sleep',
+  'menstrual_status', 'menstruating', 'flow_level', 'blood_color', 'clot_presence', 'clot_level',
+  'primary_emotion', 'irritability', 'anxiety',
   ...Object.keys(TCM_OBSERVATION_FIELDS), ...Object.keys(DETAIL_CANONICAL),
   'diarrhea', 'pain_level', 'pain_locations', 'pain_quality.distending', 'pain_quality.stabbing', 'pain_quality.dull',
   'pain_quality.dragging', 'pain_quality.cold', 'pain_response.warmth_relief', 'pain_response.pressure_relief',
@@ -101,7 +101,7 @@ export function buildCareContext({ log = {}, record_date, phase = {}, health_eve
     intervention_history, deviations: {}, persistence: {}, patterns, pain: {}, pain_quality: {}, pain_response: {}
   };
 
-  const scores = { stress: 'stress', energy: 'energy', sleep: 'sleep_quality', activity: 'activity_level', socialIntensity: 'social_intensity' };
+  const scores = { mood: 'mood', stress: 'stress', energy: 'energy', sleep: 'sleep_quality', activity: 'activity_level', socialIntensity: 'social_intensity' };
   for (const [source, field] of Object.entries(scores)) {
     const value = numeric(log, source);
     if (value === null) continue;
@@ -128,6 +128,10 @@ export function buildCareContext({ log = {}, record_date, phase = {}, health_eve
   }
   for (const field of ['flow_level', 'blood_color']) if (recorded(log, field) && log[field]) { context[field] = log[field]; addEvidence(evidence, field, log[field], field); }
   if (['heavy', 'very_heavy'].includes(context.flow_level)) addDiscomfort(discomforts, 'flow_level', true, 'flow_level', record_date);
+  if (recorded(log, 'clot_presence') && ['yes', 'no'].includes(log.clot_presence)) {
+    context.clot_presence = log.clot_presence === 'yes';
+    addEvidence(evidence, 'clot_presence', context.clot_presence, 'clot_presence');
+  }
   if (recorded(log, 'clot_level') && log.clot_level) {
     context.clot_level = { small: 1, medium: 2, large: 3 }[log.clot_level] ?? null;
     addEvidence(evidence, 'clot_level', context.clot_level, 'clot_level');
@@ -181,8 +185,8 @@ export function buildCareContext({ log = {}, record_date, phase = {}, health_eve
   if (context.diarrhea === true) { context.contraindication.diarrhea = true; addDiscomfort(discomforts, 'diarrhea', true, 'daily_record', record_date); }
 
   if (recorded(log, 'primaryEmotion') && log.primaryEmotion) {
-    context.irritability = log.primaryEmotion === '生气' ? 1 : 0; context.anxiety = log.primaryEmotion === '焦虑';
-    addEvidence(evidence, 'primary_emotion', log.primaryEmotion, 'primaryEmotion');
+    context.primary_emotion = log.primaryEmotion; context.irritability = log.primaryEmotion === '生气' ? 1 : 0; context.anxiety = log.primaryEmotion === '焦虑';
+    addEvidence(evidence, 'primary_emotion', context.primary_emotion, 'primaryEmotion');
     addEvidence(evidence, 'irritability', context.irritability, 'primaryEmotion');
     addDiscomfort(discomforts, 'irritability', context.irritability, 'primaryEmotion', record_date);
   }

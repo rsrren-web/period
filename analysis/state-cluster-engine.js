@@ -1,4 +1,4 @@
-import { readTcmObservations } from '../tcm-observation-model.js';
+import { buildCareContext } from './care-context.js';
 
 const DAY = 86_400_000;
 const addDays = (date, amount) => new Date(Date.parse(`${date}T12:00:00Z`) + amount * DAY).toISOString().slice(0, 10);
@@ -7,20 +7,27 @@ const fingerprint = (value) => { let hash = 2166136261; for (const char of JSON.
 const confidenceRank = Object.freeze({ stable: 3, moderate: 2, exploratory: 1 });
 
 const FEATURES = Object.freeze([
-  { key: 'bedtime_late', label: '23点后入睡', icon: '🌙', test: (log) => log.bedtime == null ? null : log.bedtime === 'after_23' },
+  { key: 'bedtime_late', label: '23点后入睡', icon: '🌙', context: 'late_sleep' },
   { key: 'mood_low', label: '情绪较低', icon: '🌧️', test: (log) => log.mood == null ? null : Number(log.mood) <= 2 },
   { key: 'energy_low', label: '精力较低', icon: '🔋', test: (log) => log.energy == null ? null : Number(log.energy) <= 2 },
   { key: 'stress_high', label: '压力较高', icon: '😣', test: (log) => log.stress == null ? null : Number(log.stress) >= 4 },
   { key: 'sleep_low', label: '睡眠较差', icon: '😴', test: (log) => log.sleep == null ? null : Number(log.sleep) <= 2 },
   { key: 'pain_present', label: '身体疼痛', icon: '🩹', test: (log) => log.pain == null ? null : Number(log.pain) > 0 },
   { key: 'activity_low', label: '活动较少', icon: '🛋️', test: (log) => log.activity == null ? null : Number(log.activity) <= 2 },
-  { key: 'bowel_no', label: '没有排便', icon: '🚽', test: (log) => typeof log.bowelMovement === 'boolean' ? !log.bowelMovement : null },
-  { key: 'bloating_high', label: '腹胀', icon: '🫧', tcm: 'bloating' },
-  { key: 'nausea_present', label: '恶心', icon: '🤢', tcm: 'nausea' },
-  { key: 'diarrhea_present', label: '腹泻', icon: '🚻', tcm: 'diarrhea' },
-  { key: 'appetite_low', label: '食欲较差', icon: '🍚', tcm: 'poor_appetite' },
-  { key: 'body_heaviness', label: '身体沉重', icon: '🪨', tcm: 'body_heaviness' },
-  { key: 'cold_sensation', label: '明显怕冷', icon: '🥶', tcm: 'cold_sensation' }
+  { key: 'bowel_no', label: '没有排便', icon: '🚽', context: 'no_bowel_movement' },
+  { key: 'bloating_high', label: '腹胀', icon: '🫧', context: 'bloating' },
+  { key: 'nausea_present', label: '恶心', icon: '🤢', context: 'nausea' },
+  { key: 'diarrhea_present', label: '腹泻', icon: '🚻', context: 'diarrhea' },
+  { key: 'appetite_low', label: '食欲较差', icon: '🍚', context: 'appetite_low' },
+  { key: 'body_heaviness', label: '身体沉重', icon: '🪨', context: 'body_heaviness' },
+  { key: 'cold_sensation', label: '明显怕冷', icon: '🥶', context: 'cold_sensation' },
+  { key: 'cold_hands_feet', label: '手脚冷', icon: '🧊', context: 'cold_hands_feet' },
+  { key: 'sleep_fragmentation', label: '夜间易醒', icon: '🌘', context: 'sleep_fragmentation' },
+  { key: 'unrefreshed_sleep', label: '睡够仍累', icon: '🥱', context: 'unrefreshed_sleep' },
+  { key: 'stool_hard', label: '排便干硬', icon: '🚽', context: 'stool_hard' },
+  { key: 'stool_loose', label: '排便稀软', icon: '🚽', context: 'stool_loose' },
+  { key: 'pain_cold', label: '冷痛', icon: '❄️', context: 'pain_quality.cold' },
+  { key: 'pain_distending', label: '胀痛', icon: '🫧', context: 'pain_quality.distending' }
 ]);
 
 function combinations(values, size, start = 0, selected = [], output = []) {
@@ -31,13 +38,19 @@ function combinations(values, size, start = 0, selected = [], output = []) {
   return output;
 }
 
-export function stateFeaturesForLog(log) {
+const contextValue = (context, path) => path.split('.').reduce((value, part) => value?.[part], context);
+
+export function stateFeaturesForLog(log, recordDate) {
   if (!log) return FEATURES.map(({ key, label, icon }) => ({ key, label, icon, state: null }));
-  const tcm = readTcmObservations(log.symptomTags);
-  return FEATURES.map((feature) => ({ key: feature.key, label: feature.label, icon: feature.icon, state: feature.tcm ? tcm[feature.tcm] === null ? null : tcm[feature.tcm] === 'yes' : feature.test(log) }));
+  const care = buildCareContext({ log, record_date: recordDate }), evidence = care.evidence;
+  return FEATURES.map((feature) => {
+    if (!feature.context) return { key: feature.key, label: feature.label, icon: feature.icon, state: feature.test(log) };
+    const value = contextValue(care.context, feature.context), isKnown = Array.isArray(evidence[feature.context]) && evidence[feature.context].length > 0;
+    return { key: feature.key, label: feature.label, icon: feature.icon, state: isKnown ? value === true : null };
+  });
 }
 
-function activeFeatures(log) { return stateFeaturesForLog(log).filter((feature) => feature.state === true); }
+function activeFeatures(log, date) { return stateFeaturesForLog(log, date).filter((feature) => feature.state === true); }
 
 function cycleStarts(periods, asOf) {
   return [...new Set((periods || []).filter((period) => period?.type === 'period' && period.status !== 'deleted' && period.start <= asOf).map((period) => period.start))].sort();
@@ -78,7 +91,7 @@ export function analyzeStateClusters({ logs = {}, periods = [], as_of, config = 
   for (const date of dates) {
     if (!logs[date]) continue;
     eligibleDates.push(date);
-    activeByDate.set(date, activeFeatures(logs[date]));
+    activeByDate.set(date, activeFeatures(logs[date], date));
   }
   const candidates = new Map();
   for (const date of eligibleDates) {
