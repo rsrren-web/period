@@ -1,7 +1,6 @@
 import {
   ACUPOINTS,
   CARE_PRACTICES,
-  CONSTITUTION_OBSERVATIONS,
   FOOD_RECIPES,
   KNOWLEDGE_SOURCES,
   PHASE_THEORY,
@@ -12,6 +11,7 @@ import { loadInterventionLibrary } from './analysis/intervention-engine.js';
 import { runAnalysis } from './analysis/analysis-orchestrator.js';
 import { selectDailyNourishment } from './analysis/daily-nourishment.js';
 import { buildCareContext } from './analysis/care-context.js';
+import { analyzeTcmStates } from './analysis/tcm-state-engine.js';
 import { hasInterventionFeedbackToday, interventionHistoryBeforeToday, readInterventionUsage } from './intervention-feedback.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -80,15 +80,10 @@ function choose(items, phaseKey, signals, recentIdsKey) {
   return selected;
 }
 
-function constitutionHint(recent) {
-  const signalCount = (signal) => {
-    const direct = recent.counts.get(signal) || 0;
-    const mapped = STATUS_SIGNAL_RULES.filter((rule) => rule.signals.includes(signal)).map((rule) => Math.max(...rule.tags.map((tag) => recent.counts.get(tag) || 0), 0));
-    return Math.max(direct, ...mapped, 0);
-  };
-  const score = (profile) => profile.signals.reduce((sum, signal) => sum + signalCount(signal), 0);
-  const match = CONSTITUTION_OBSERVATIONS.map((profile) => ({ profile, total: score(profile) })).filter(({ profile, total }) => total >= profile.needs).sort((a, b) => b.total - a.total)[0];
-  return match ? { ...match.profile, total: match.total } : null;
+function recentStateSummary(states) {
+  const active = states.filter((item) => item.active).sort((a, b) => b.score - a.score || b.supportingDays - a.supportingDays).slice(0, 3);
+  if (!active.length) { const validDays = Math.max(0, ...states.map((item) => item.validDays)); return `<section class="recent-tcm-state"><div><strong>${validDays < 3 ? '近期中医状态仍在收集' : '近期没有明显状态变化'}</strong><span>${validDays < 3 ? '记录至少3天后开始观察' : '已同时计算支持与反向记录'}</span></div></section>`; }
+  return `<section class="recent-tcm-state"><div><strong>近期中医状态</strong><span>最近14天 · 不是长期体质</span></div><ul>${active.map((item) => `<li><span aria-hidden="true">${esc(item.icon)}</span><b>${esc(item.name)}</b><small>${item.supportingDays}/${item.validDays}个相关记录日</small></li>`).join('')}</ul></section>`;
 }
 
 function sourceNames(ids = []) {
@@ -191,7 +186,7 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   if (!root) return;
   const recent = recentContext(logs), signals = signalsFor(log, recent), theory = PHASE_THEORY[phase.key] || PHASE_THEORY.follicular, bodySense = buildCareContext({ log, record_date: phase.date, phase }).context;
   const nourishment = selectDailyNourishment({ recipes: FOOD_RECIPES, phase_key: phase.key, record_date: phase.date || todayIso(), signals });
-  const constitution = constitutionHint(recent), evidence = recentEvidence(recent, signals);
+  const recentStates = analyzeTcmStates({ logs, as_of: phase.date || todayIso() }), evidence = recentEvidence(recent, signals);
   const practicalReason = {
     period: '正在经期，今天优先缓解不适、减少额外消耗。',
     follicular: '月经刚结束，今天以恢复精力、逐步增加活动为主。',
@@ -218,7 +213,7 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
   root.innerHTML = `
     <section class="tcm-reasoning"><p>${esc(practicalReason)}</p>${practicalEvidence.length ? `<ul>${practicalEvidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : ''}</section>
     ${bodySenseAction}
-    ${constitution ? `<details class="constitution-hint"><summary><span>体质观察线索</span><strong>${esc(constitution.name)} · ${constitution.total}次线索</strong></summary><div><p>${esc(constitution.explanation)}</p><p><strong>边界：</strong>${esc(constitution.avoid)}</p><small>这里只是近7天的感受倾向，不是体质诊断。</small></div></details>` : ''}
+    ${recentStateSummary(recentStates)}
     <div class="traditional-plan">
       <section class="traditional-layer" aria-label="每日阶段食养">
         <header class="traditional-layer-heading"><strong>每日阶段食养</strong><span>固定1项 · 茶饮或食谱</span></header>

@@ -188,6 +188,7 @@ export function buildCareContext({ log = {}, record_date, phase = {}, health_eve
     context.primary_emotion = log.primaryEmotion; context.irritability = log.primaryEmotion === '生气' ? 1 : 0; context.anxiety = log.primaryEmotion === '焦虑';
     addEvidence(evidence, 'primary_emotion', context.primary_emotion, 'primaryEmotion');
     addEvidence(evidence, 'irritability', context.irritability, 'primaryEmotion');
+    addEvidence(evidence, 'anxiety', context.anxiety, 'primaryEmotion');
     addDiscomfort(discomforts, 'irritability', context.irritability, 'primaryEmotion', record_date);
   }
   if (recorded(log, 'bowelMovement') && typeof log.bowelMovement === 'boolean' && details.bowel === null) {

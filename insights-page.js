@@ -98,12 +98,25 @@ function renderInterventions(data) {
   const root = document.querySelector('#insightsInterventions');
   if (root) root.innerHTML = data.interventionResponses.length ? data.interventionResponses.map((item) => `<article class="intervention-response-card"><div><strong>${esc(item.interventionName)}</strong><span>${esc(item.dataLabel)}</span></div><p>使用 ${item.uses} 次 · 记录有帮助 ${item.improvementCount} 次 · 有帮助 ${pct(item.helpfulRate)}</p>${item.meanDelta === null ? '' : `<p>不适评分平均下降 ${item.meanDelta > 0 ? '+' : ''}${item.meanDelta}</p>`}</article>`).join('') : empty('还没有足够的调养反馈', '在首页调养建议中记录效果；同一方案至少3次后才开始汇总。');
 }
+function renderTcmStates(data) {
+  const root = document.querySelector('#insightsTcmStates');
+  if (!root) return;
+  const trendLabels = { rising: '比前7天增加', falling: '比前7天减少', stable: '与前7天接近', insufficient: '趋势仍在收集' };
+  const confidenceLabels = { high: '记录较充分', moderate: '初步可用', exploratory: '初步观察', insufficient: '继续记录' };
+  const active = (data.tcmStates || []).filter((item) => item.active).sort((a, b) => b.score - a.score || b.supportingDays - a.supportingDays);
+  if (active.length) {
+    root.innerHTML = active.slice(0, 4).map((item) => `<article class="tcm-state-card"><header><span aria-hidden="true">${esc(item.icon)}</span><div><h3>${esc(item.name)}</h3><small>${item.supportingDays}/${item.validDays} 个相关记录日 · ${esc(confidenceLabels[item.confidence])}</small></div><em class="tcm-state-trend trend-${esc(item.trend)}">${esc(trendLabels[item.trend])}</em></header><div class="tcm-state-evidence">${item.supportingEvidence.slice(0, 3).map((part) => `<span>${esc(part.label)} · ${part.count}天</span>`).join('')}</div><details><summary>为什么</summary><p>${esc(item.explanation)}</p><p><strong>支持：</strong>${item.supportingEvidence.map((part) => `${esc(part.label)} ${part.count}天`).join('、') || '暂无'}</p><p><strong>反向信息：</strong>${item.contradictingEvidence.map((part) => `${esc(part.label)} ${part.count}天`).join('、') || '暂无明确反向记录'}</p></details></article>`).join('');
+    return;
+  }
+  const best = [...(data.tcmStates || [])].sort((a, b) => b.validDays - a.validDays)[0], validDays = best?.validDays || 0, collecting = validDays < 3;
+  root.innerHTML = `<div class="insights-empty tcm-state-empty"><strong>${collecting ? '近期状态还在收集' : '近期没有形成明显状态'}</strong><p>${collecting ? `最近14天有 ${validDays} 天记录了相关项目。至少记录3天，并让同类表现重复2天后，才会显示近期状态。` : `最近14天已有 ${validDays} 天相关记录；支持信息与反向信息会一起计算，目前没有达到展示门槛。`}</p><button type="button" class="soft compact" data-view="today">去记录今天的状态</button></div>`;
+}
 function renderTcm(data, actions) {
   const section = document.querySelector('#insightsTcmSection');
   const root = document.querySelector('#insightsTcmClusters');
   if (!section || !root) return;
-  section.hidden = !data.tcmClusters.length;
-  if (data.tcmClusters.length) root.innerHTML = data.tcmClusters.map((item) => card(item, actions, false)).join('');
+  section.hidden = false;
+  root.innerHTML = data.tcmClusters.length ? data.tcmClusters.map((item) => card(item, actions, false)).join('') : empty('还没有跨周期重复模式', '继续记录具体体感；至少覆盖两个完整周期后，这里才会显示反复出现的组合。');
 }
 function renderQuality(data) {
   const root = document.querySelector('#insightsDataQuality');
@@ -111,7 +124,7 @@ function renderQuality(data) {
 }
 function addOneDay(value) { return new Date(Date.parse(`${value}T12:00:00Z`) + 86400000).toISOString().slice(0, 10); }
 function renderPage(data, actions) {
-  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderTemporalClusters(data); renderInterventions(data); renderTcm(data, actions); renderQuality(data);
+  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderTemporalClusters(data); renderInterventions(data); renderTcmStates(data); renderTcm(data, actions); renderQuality(data);
   const stamp = document.querySelector('#insightsGeneratedAt');
   if (stamp) stamp.textContent = `更新于 ${new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' }).format(new Date(data.generatedAt))}`;
 }

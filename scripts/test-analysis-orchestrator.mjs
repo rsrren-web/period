@@ -25,6 +25,8 @@ const started = performance.now(), first = runAnalysis(input, { calculated_at: '
 assert.equal(first.schema_version, 2);
 assert.equal(first.performance.mode, 'full');
 assert.ok(first.core.baselines.id.startsWith('baseline:'));
+assert.equal(first.core.tcm_states.length, 7, '统一分析快照必须包含7类近期中医状态');
+assert.ok(first.explanations.some((item) => item.kind === 'tcm.recent_state'), '近期状态必须进入可解释性链路');
 assert.ok(first.explanations.length > 0 && first.explanations.every((item) => item.schema_version === 1));
 assert.ok(elapsed < 1500, `120日分析应快速完成，实际 ${elapsed.toFixed(0)}ms`);
 

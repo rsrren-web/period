@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "ranking": {
     "weights": { "effect": 0.35, "confidence": 0.25, "cycles": 0.15, "recency": 0.10, "actionability": 0.15 },
     "top_insight_min": 0.58,

@@ -24,7 +24,7 @@ export function createInsightsPageData({ logs = {}, periods = [], as_of, next_st
   const quality = Object.values(qualityReport);
   const metrics = Object.fromEntries(quality.map((item) => [item.metric, item]));
   return Object.freeze({
-    generatedAt: analysis.generated_at, topInsights: top, nextCycleWindows, phaseProfiles, stateClusters, temporalClusters,
+    generatedAt: analysis.generated_at, topInsights: top, nextCycleWindows, phaseProfiles, stateClusters, temporalClusters, tcmStates: analysis.core.tcm_states,
     associations: { sameDay: associations.filter((item) => item.observation.supportingData.relation === 'same_day'), previousToToday: associations.filter((item) => item.observation.supportingData.relation === 'previous_day'), todayToNextDay: associations.filter((item) => item.observation.supportingData.relation === 'next_day') },
     interventionResponses: analysis.intervention_responses,
     tcmClusters: allRanked.filter((item) => item.type === 'tcm_cluster' && item.status === 'active'),

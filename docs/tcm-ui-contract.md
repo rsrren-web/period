@@ -9,7 +9,7 @@
 | sleep detail | 每日记录弹窗 | `detail:sleep_issue:*`、`sleep`、`bedtime` | `sleep_onset_difficulty`、`sleep_fragmentation`、`dream_disturbed_sleep`、`early_waking`、`unrefreshed_sleep` | 统一 careContext、推荐、数据质量、多状态趋势 | Today → 每日记录 → 睡眠与排便 | Today、趋势 | 可明确无所列睡眠表现；未操作为未记录 | daily detail、careContext、state cluster | 已统一接入 |
 | bowel detail | 每日记录弹窗 | `detail:bowel:*`、`bowelMovement` | `bowel_normal`、`stool_hard`、`stool_loose`、`stool_sticky`、`diarrhea`、`no_bowel_movement` | careContext、持续事件、推荐 | Today → 每日记录 → 睡眠与排便 | Today、趋势 | 单选包含“未排便”；不选择为未记录 | daily detail、recommendation | 已接通 |
 | menstrual detail | 经期日期 + 每日记录弹窗 | `menstrual_status`、`flow_level`、`blood_color`、`clot_*` | `menstrual_status`、`flow_level`、`blood_color`、`clot_level` | 周期模型、careContext、推荐、趋势 | Today 首页设置日期；经期日弹窗记录表现 | Today、日历、趋势 | 非经期隐藏；历史扩展枚举保留兼容 | menstrual UI、sync | 已接通 |
-| 近期中医状态 | 待建 TcmStateEngine | 派生，不写回每日记录 | 7 个 `TcmState` | Today、趋势、推荐 | 来源于每日记录 | Today 1–3 项；趋势常驻模块 | 无数据时显示用途、进度和记录入口 | 待建 state tests | 未实现 |
+| 近期中医状态 | `tcm-state-engine` | 派生，不写回每日记录 | 7 个 `TcmState`，含支持证据、反证、频率、趋势和可信度 | Today、趋势；尚未进入推荐排序 | 来源于每日记录 | Today 最多3项；趋势常驻模块 | 无数据时显示用途、有效记录天数、门槛和记录入口 | state engine、orchestrator、UI contract | 已接通；推荐接入待下一阶段 |
 | TCM pattern/cluster | `tcm-cluster-engine` | 派生分析快照 | 当前 5 个 legacy cluster | 趋势；尚未真实影响推荐 | 来源于每日记录 | 趋势 TCM 区域 | 数据不足时目前隐藏，需改为进度空状态 | cluster tests | 部分接通 |
 | 周期特异性 | 待建 PatternEngine | 派生分析快照 | `phase_specificity` | 趋势、推荐 | 来源于周期和每日记录 | 趋势“周期特异性” | 无重复时显示继续记录 | 待建 | 未实现 |
 | 长期体质 | 待建 ConstitutionProfile | 待定 profile schema | `constitutionBaseline`、`constitutionEvidence90d` | 推荐低权重、趋势 | More → 调养档案 | 趋势“长期体质” | 无人工基线时明确“尚未建立” | 待建 migration/UI | 未实现 |
@@ -33,7 +33,7 @@
 
 1. 未触碰字段保持 `null/not_recorded`，明确“没有”与未记录不同。
 2. ✅ 所有分析、建议和详情展示消费者读取 `tcm:*`、`detail:*` 时统一经过 `buildCareContext()`；表单模型只负责读写存储编码。
-3. 近期状态、跨周期 pattern、长期体质和调养决策在代码与 UI 中严格分层。
+3. 进行中：近期状态已独立为 `TcmState` 并移除“近7天体质”命名；跨周期 pattern、长期体质和调养决策仍保持独立，后续阶段继续接通。
 4. pattern 必须真实影响推荐和解释。
 5. 反馈、安全档案和长期体质进入备份、导入、同步、迁移和去重。
 6. 数据不足时展示进度与记录入口，不隐藏用户可见功能。

@@ -1338,6 +1338,34 @@ body { min-width: 320px; line-height: 1.6 }
 .association-group>.insight-v1-card+.insight-v1-card { margin-top: 10px }
 
 .state-cluster-list { display: grid; gap: 12px }
+.tcm-state-overview { padding: 18px; border: 1px solid var(--soft-line); border-radius: 22px; background: linear-gradient(145deg,#fff 0%,#f7faf9 100%) }
+.tcm-state-list { display: grid; gap: 11px; margin-top: 12px }
+.tcm-state-card { padding: 15px; border: 1px solid var(--soft-line); border-radius: 17px; background: var(--surface) }
+.tcm-state-card>header { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px }
+.tcm-state-card>header>span { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: var(--surface-muted) }
+.tcm-state-card h3 { margin: 0; font-size: .98rem }
+.tcm-state-card header small { display: block; margin-top: 3px; color: var(--ink-muted) }
+.tcm-state-trend { padding: 4px 8px; border-radius: 999px; color: var(--ink-muted); background: var(--surface-muted); font-size: var(--text-micro); font-style: normal; font-weight: 750 }
+.tcm-state-trend.trend-rising { color: #8a395b; background: #f9e7ef }
+.tcm-state-trend.trend-falling { color: #2f7066; background: #e5f4f0 }
+.tcm-state-evidence { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px }
+.tcm-state-evidence span { padding: 6px 9px; border-radius: 999px; color: var(--ink); background: var(--surface-muted); font-size: var(--text-caption) }
+.tcm-state-card details { margin-top: 11px }
+.tcm-state-card details p { margin: 8px 0 0; color: var(--ink-muted); font-size: var(--text-caption); line-height: 1.6 }
+.tcm-state-empty .soft { margin-top: 10px }
+.recent-tcm-state { margin-top: 12px; padding: 13px 14px; border: 1px solid var(--soft-line); border-radius: 15px; background: #f7faf9 }
+.recent-tcm-state>div { display: flex; justify-content: space-between; gap: 10px }
+.recent-tcm-state>div span { color: var(--ink-muted); font-size: var(--text-micro) }
+.recent-tcm-state ul { display: grid; gap: 7px; margin: 10px 0 0; padding: 0; list-style: none }
+.recent-tcm-state li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 7px }
+.recent-tcm-state li small { color: var(--ink-muted) }
+@media (max-width:520px) {
+  .tcm-state-card>header { grid-template-columns: auto 1fr }
+  .tcm-state-trend { grid-column: 2; justify-self: start }
+  .recent-tcm-state>div { display: grid }
+  .recent-tcm-state li { grid-template-columns: auto 1fr }
+  .recent-tcm-state li small { grid-column: 2 }
+}
 .state-cluster-card { padding: 17px; border: 1px solid var(--soft-line); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow-soft) }
 .state-cluster-card>header { display: flex; align-items: center; justify-content: space-between; gap: 10px }
 .state-cluster-card>header>span { padding: 4px 9px; border-radius: 999px; color: #7d3c5a; background: #f9e7ef; font-size: var(--text-caption); font-weight: 800 }
@@ -1400,6 +1428,7 @@ body { min-width: 320px; line-height: 1.6 }
 
 @media (min-width:720px) {
   .state-cluster-list { grid-template-columns: repeat(2,minmax(0,1fr)) }
+  .tcm-state-list { grid-template-columns: repeat(2,minmax(0,1fr)) }
   .temporal-cluster-list { grid-template-columns: repeat(2,minmax(0,1fr)) }
 }
 .insights-method-note { margin: -5px 0 12px; color: var(--ink-muted) }

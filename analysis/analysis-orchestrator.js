@@ -4,6 +4,7 @@ import { metricCompletionReport } from './data-quality-engine.js';
 import { buildRecommendationEvidence } from './recommendation-pipeline.js';
 import { generateRecommendations } from './recommendation-engine.js';
 import { analyzeTcmClusters } from './tcm-cluster-engine.js';
+import { analyzeTcmStates } from './tcm-state-engine.js';
 import { buildInsights } from './insight-builder.js';
 import { aggregateInterventionResponses } from './intervention-response-aggregator.js';
 import { createExplanation, explanationFromEvent, explanationFromPattern } from './explanation-object.js';
@@ -56,6 +57,22 @@ function tcmExplanation(cluster, calculatedAt) {
   });
 }
 
+function tcmStateExplanation(state, calculatedAt) {
+  return createExplanation({
+    id: `tcm-state:${state.id}`,
+    kind: 'tcm.recent_state',
+    metric: state.id,
+    direction: state.trend,
+    scope: state.window,
+    evidence: [...state.supportingEvidence.map((item) => ({ feature: item.label, count: item.count, score: item.score })), ...state.contradictingEvidence.map((item) => ({ feature: item.label, count: item.count, score: item.score }))],
+    quality_level: state.confidence === 'high' ? 'good' : state.confidence === 'moderate' ? 'usable' : state.confidence === 'exploratory' ? 'limited' : 'insufficient',
+    confidence_level: state.confidence,
+    reasons: state.insufficientDataReason ? [state.insufficientDataReason] : [],
+    source_ids: [state.id],
+    calculated_at: calculatedAt
+  });
+}
+
 function buildSignatures(input) {
   const records = analysisFingerprint({ logs: input.logs, periods: input.periods, as_of: input.as_of });
   const knowledge = analysisFingerprint({ insights: input.config?.version, tcm: input.tcm_rules?.version, actions: input.observation_actions });
@@ -70,15 +87,17 @@ function calculateCore(input, signatures, calculatedAt, previous) {
   const baselines = profiled('baselines',()=>createBaselineSnapshot({ logs: input.logs, periods: input.periods, as_of: baselineAsOf, calculated_at: calculatedAt, phaseForDate: input.phase_for_date, current_phase: input.phase?.key || input.current_phase }));
   const priorEvents = previous?.core?.health_events || [];
   const evidence = profiled('recommendation-evidence',()=>buildRecommendationEvidence({ logs: input.logs, periods: input.periods, phase: input.phase || {}, record_date: input.as_of, baseline_snapshot: baselines, prior_events: priorEvents, phase_for_date: input.phase_for_date }));
+  const tcmStates = profiled('tcm-states',()=>analyzeTcmStates({ logs: input.logs, as_of: input.as_of }));
   const tcmClusters = profiled('tcm-clusters',()=>analyzeTcmClusters({ logs: input.logs, periods: input.periods, as_of: input.as_of, rules_config: input.tcm_rules }));
   const rawInsights = profiled('insight-builder',()=>buildInsights({ logs: input.logs, periods: input.periods, as_of: input.as_of, next_start: input.next_start, prediction_confidence: input.prediction_confidence, config: input.config, observation_actions: input.observation_actions, tcm_clusters: tcmClusters }));
   const explanations = profiled('explanations',()=>[
     ...evidence.health_events.map(explanationFromEvent),
     ...evidence.patterns.filter((item) => item.status !== 'insufficient').map((item) => explanationFromPattern(item, calculatedAt)),
+    ...tcmStates.map((item) => tcmStateExplanation(item, calculatedAt)),
     ...tcmClusters.map((item) => tcmExplanation(item, calculatedAt)),
     ...rawInsights.map((item) => insightExplanation(item, calculatedAt))
   ]);
-  return Object.freeze({ quality, baselines, health_events: evidence.health_events, patterns: evidence.patterns, target_window: evidence.target_window, tcm_clusters: tcmClusters, raw_insights: rawInsights, explanations });
+  return Object.freeze({ quality, baselines, health_events: evidence.health_events, patterns: evidence.patterns, target_window: evidence.target_window, tcm_states: tcmStates, tcm_clusters: tcmClusters, raw_insights: rawInsights, explanations });
 }
 
 export function runAnalysis(input = {}, options = {}) {

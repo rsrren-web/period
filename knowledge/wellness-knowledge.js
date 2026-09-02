@@ -37,13 +37,6 @@ export const STATUS_SIGNAL_RULES = [
   { id: 'head-pain', tags: ['疼痛部位：头部', '头部'], signals: ['头部'], note: '先补水、休息并减少屏幕刺激。' }
 ];
 
-export const CONSTITUTION_OBSERVATIONS = [
-  { id: 'cold-leaning', name: '偏寒感受倾向', signals: ['怕冷', '温热后舒服'], needs: 3, explanation: '近期多次记录怕冷或温热后更舒服，只表示当下感受倾向，不能替代望闻问切。', avoid: '若同时口干、咽痛、胃灼热、热敷后更痛，不按偏寒处理。' },
-  { id: 'heat-leaning', name: '偏热感受倾向', signals: ['怕热/潮热', '口干', '热敷后更痛'], needs: 3, explanation: '近期反复出现热感或口干，建议减少过热刺激；不能据此判断具体证型。', avoid: '突然发热、持续潮热或影响睡眠时应记录并考虑专业评估。' },
-  { id: 'stagnation-leaning', name: '情志郁滞线索', signals: ['焦虑', '生气', '腹胀', '乳房胀痛/触痛'], needs: 3, explanation: '压力、情绪与胀感在近一周多次同现，传统上可从情志与气机角度理解，现代上仍只视为个人相关模式。', avoid: '不据此自行服用疏肝类中药或经方。' },
-  { id: 'fatigue-leaning', name: '恢复不足线索', signals: ['疲倦', '嗜睡', '23点后入睡'], needs: 3, explanation: '近一周睡眠或精力记录提示恢复不足，先从睡眠、进食和活动节律调整，不直接归为“气血虚”。', avoid: '持续明显乏力、心悸、气短或影响日常生活时应专业评估。' }
-];
-
 export const FOOD_RECIPES = [
   {
     id: 'millet-yam', title: '小米山药粥', phases: ['period'], signals: ['low-appetite', 'neutral'], priority: 5,
