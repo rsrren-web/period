@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 71,
-  "updatedAt": "2026-09-02T02:18:53.790Z",
+  "revision": 72,
+  "updatedAt": "2026-09-02T02:19:02.924Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -21,15 +21,6 @@
       "source": "本设备",
       "status": "confirmed",
       "updatedAt": "2026-08-16T18:39:29.764Z"
-    },
-    {
-      "id": "3e7f805b-d1b7-499e-b6e0-9d37cfa3942c",
-      "start": "2026-09-01",
-      "end": "2026-09-01",
-      "type": "period",
-      "source": "本设备",
-      "status": "confirmed",
-      "updatedAt": "2026-09-02T02:18:52.861Z"
     }
   ],
   "logs": {
@@ -2854,9 +2845,9 @@
       ],
       "temperature": null,
       "menstrual_status": "not_on_period",
-      "cycle_day": 1,
+      "cycle_day": 24,
       "cycle_day_source": "auto_calculated",
-      "cycle_day_anchor_start": "2026-09-01",
+      "cycle_day_anchor_start": "2026-08-09",
       "flow_level": null,
       "blood_color": null,
       "clot_presence": "not_recorded",
@@ -2904,7 +2895,8 @@
       "a7661526-44c2-4109-9b31-e3bf7714a018": "2026-08-03T06:06:31.279Z",
       "2187ea72-3ac3-4d97-a3a7-a57929954dff": "2026-08-16T18:39:52.492Z",
       "f893963c-59df-4ed2-955e-d874468f9e23": "2026-09-01T02:27:42.826Z",
-      "4dddac10-cab8-4955-9b2b-df585cf6e5f9": "2026-09-01T05:04:08.952Z"
+      "4dddac10-cab8-4955-9b2b-df585cf6e5f9": "2026-09-01T05:04:08.952Z",
+      "3e7f805b-d1b7-499e-b6e0-9d37cfa3942c": "2026-09-02T02:19:01.931Z"
     },
     "logs": {}
   },
@@ -2983,6 +2975,7 @@
     "0ea0ec39-b285-49db-a3e4-663ecf81042d",
     "c458d001-f21e-44a0-ad5c-052630cbc503",
     "3d40f9f4-94b2-479d-80fc-b7d5c6030203",
-    "036f7f0e-da27-472e-9c3b-ae2b3c85dae8"
+    "036f7f0e-da27-472e-9c3b-ae2b3c85dae8",
+    "582587c7-3cff-4cf5-895c-5433217ab5fb"
   ]
 }
