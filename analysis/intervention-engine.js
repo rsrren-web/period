@@ -148,10 +148,13 @@ function contextualBoosts(context, matchedFeatures) {
   const persistenceMatches = [];
   let persistenceBoost = 0;
   for (const [metric, state] of Object.entries(context.persistence || {})) {
-    if (!state?.active || !matchedFields.has(metric)) continue;
+    const matchingFields = metric === 'pain_max'
+      ? [...matchedFields].filter((field) => field.startsWith('pain.'))
+      : matchedFields.has(metric) ? [metric] : [];
+    if (!state?.active || !matchingFields.length) continue;
     const boost = state.consecutive_days >= 7 ? 2 : 1;
     persistenceBoost += boost;
-    persistenceMatches.push({ metric, consecutive_days: state.consecutive_days, event_id: state.event_id, boost });
+    persistenceMatches.push({ metric, matched_fields: matchingFields, consecutive_days: state.consecutive_days, event_id: state.event_id, boost });
   }
   return {
     combination_boost: Math.min(4, combinationBoost), persistence_boost: Math.min(3, persistenceBoost),

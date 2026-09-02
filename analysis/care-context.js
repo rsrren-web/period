@@ -85,6 +85,7 @@ function carePatterns(context) {
 export const CARE_CONTEXT_RECORDED_FIELDS = Object.freeze([
   'stress', 'energy', 'sleep_quality', 'activity_level', 'social_intensity', 'social_aftereffect', 'late_sleep',
   'menstrual_status', 'menstruating', 'flow_level', 'blood_color', 'clot_level',
+  'irritability', 'anxiety',
   ...Object.keys(TCM_OBSERVATION_FIELDS), ...Object.keys(DETAIL_CANONICAL),
   'diarrhea', 'pain_level', 'pain_locations', 'pain_quality.distending', 'pain_quality.stabbing', 'pain_quality.dull',
   'pain_quality.dragging', 'pain_quality.cold', 'pain_response.warmth_relief', 'pain_response.pressure_relief',
@@ -109,10 +110,15 @@ export function buildCareContext({ log = {}, record_date, phase = {}, health_eve
   const coreDiscomforts = [
     ['stress', Number(context.stress) >= 4],
     ['energy', Number(context.energy) <= 2],
-    ['sleep_quality', Number(context.sleep_quality) <= 2]
+    ['sleep_quality', Number(context.sleep_quality) <= 2],
+    ['activity_level', Number(context.activity_level) <= 1]
   ];
   coreDiscomforts.forEach(([field, active]) => addDiscomfort(discomforts, field, active, field, record_date));
-  if (recorded(log, 'socialEffect') && log.socialEffect) { context.social_aftereffect = log.socialEffect; addEvidence(evidence, 'social_aftereffect', log.socialEffect, 'socialEffect'); }
+  if (recorded(log, 'socialEffect') && log.socialEffect) {
+    context.social_aftereffect = log.socialEffect;
+    addEvidence(evidence, 'social_aftereffect', log.socialEffect, 'socialEffect');
+    addDiscomfort(discomforts, 'social_aftereffect', log.socialEffect === 'draining', 'socialEffect', record_date);
+  }
   if (recorded(log, 'bedtime') && log.bedtime) { context.late_sleep = log.bedtime === 'after_23'; addEvidence(evidence, 'late_sleep', context.late_sleep, 'bedtime'); }
 
   if (recorded(log, 'menstrual_status') && log.menstrual_status) {
@@ -121,7 +127,12 @@ export function buildCareContext({ log = {}, record_date, phase = {}, health_eve
     addEvidence(evidence, 'menstrual_status', context.menstrual_status, 'menstrual_status');
   }
   for (const field of ['flow_level', 'blood_color']) if (recorded(log, field) && log[field]) { context[field] = log[field]; addEvidence(evidence, field, log[field], field); }
-  if (recorded(log, 'clot_level') && log.clot_level) { context.clot_level = { small: 1, medium: 2, large: 3 }[log.clot_level] ?? null; addEvidence(evidence, 'clot_level', context.clot_level, 'clot_level'); }
+  if (['heavy', 'very_heavy'].includes(context.flow_level)) addDiscomfort(discomforts, 'flow_level', true, 'flow_level', record_date);
+  if (recorded(log, 'clot_level') && log.clot_level) {
+    context.clot_level = { small: 1, medium: 2, large: 3 }[log.clot_level] ?? null;
+    addEvidence(evidence, 'clot_level', context.clot_level, 'clot_level');
+    addDiscomfort(discomforts, 'clot_level', context.clot_level, 'clot_level', record_date);
+  }
   context.cycle_phase = PHASES[phase.key] || null;
   context.cycle_day = Number.isInteger(log.cycle_day) ? log.cycle_day : Number.isInteger(phase.cycleDay) ? phase.cycleDay : null;
 
@@ -170,8 +181,10 @@ export function buildCareContext({ log = {}, record_date, phase = {}, health_eve
   if (context.diarrhea === true) { context.contraindication.diarrhea = true; addDiscomfort(discomforts, 'diarrhea', true, 'daily_record', record_date); }
 
   if (recorded(log, 'primaryEmotion') && log.primaryEmotion) {
-    context.irritability = log.primaryEmotion === '生气'; context.anxiety = log.primaryEmotion === '焦虑';
+    context.irritability = log.primaryEmotion === '生气' ? 1 : 0; context.anxiety = log.primaryEmotion === '焦虑';
     addEvidence(evidence, 'primary_emotion', log.primaryEmotion, 'primaryEmotion');
+    addEvidence(evidence, 'irritability', context.irritability, 'primaryEmotion');
+    addDiscomfort(discomforts, 'irritability', context.irritability, 'primaryEmotion', record_date);
   }
   if (recorded(log, 'bowelMovement') && typeof log.bowelMovement === 'boolean' && details.bowel === null) {
     context.no_bowel_movement = !log.bowelMovement;

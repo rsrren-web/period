@@ -47,7 +47,13 @@ export const ANALYSIS_CONFIG = Object.freeze({
       sleep_onset_difficulty: Object.freeze({ operator: 'eq', value: true }),
       sleep_fragmentation: Object.freeze({ operator: 'eq', value: true }),
       early_waking: Object.freeze({ operator: 'eq', value: true }),
-      unrefreshed_sleep: Object.freeze({ operator: 'eq', value: true })
+      unrefreshed_sleep: Object.freeze({ operator: 'eq', value: true }),
+      dream_disturbed_sleep: Object.freeze({ operator: 'eq', value: true }),
+      cold_hands_feet: Object.freeze({ operator: 'eq', value: true }),
+      subjective_puffiness: Object.freeze({ operator: 'eq', value: true }),
+      head_heaviness: Object.freeze({ operator: 'eq', value: true }),
+      nausea: Object.freeze({ operator: 'eq', value: true }),
+      'pain_quality.cold': Object.freeze({ operator: 'eq', value: true })
     })
   }),
   patterns: Object.freeze({
@@ -99,7 +105,13 @@ export const METRIC_DEFINITIONS = Object.freeze({
   sleep_onset_difficulty: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'sleep_onset', type: 'boolean' }),
   sleep_fragmentation: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'waking', type: 'boolean' }),
   early_waking: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'early_waking', type: 'boolean' }),
-  unrefreshed_sleep: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'unrefreshed', type: 'boolean' })
+  unrefreshed_sleep: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'unrefreshed', type: 'boolean' }),
+  dream_disturbed_sleep: Object.freeze({ source: 'detail_multi', field: 'sleep_issue', value: 'dreamy', type: 'boolean' }),
+  cold_hands_feet: Object.freeze({ source: 'detail_multi', field: 'body_sense', value: 'cold_hands_feet', type: 'boolean' }),
+  subjective_puffiness: Object.freeze({ source: 'detail_multi', field: 'body_sense', value: 'edema', type: 'boolean' }),
+  head_heaviness: Object.freeze({ source: 'detail_multi', field: 'body_sense', value: 'head_heavy', type: 'boolean' }),
+  nausea: Object.freeze({ source: 'tcm', field: 'nausea', type: 'presence' }),
+  'pain_quality.cold': Object.freeze({ source: 'detail_multi', field: 'pain_nature', value: 'cold', type: 'boolean' })
 });
 
 export const BASELINE_METRICS = Object.freeze([

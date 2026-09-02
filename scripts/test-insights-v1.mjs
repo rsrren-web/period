@@ -52,11 +52,15 @@ assert.match(traditional, /interventionHistoryBeforeToday\(interventionUsage\)/,
 assert.doesNotMatch(traditional, /buildRecommendationEvidence\(/, '首页不得保留独立的重复分析入口');
 assert.equal(tcmRules.minimum_cycles, 2);
 assert.doesNotMatch(html, /traditional-care\.js|personal-insights\.js|insights-page\.js/, '大型功能模块不得阻塞首屏');
-assert.match(html, /app\.js\?v=103/);
+const appVersion = html.match(/app\.js\?v=(\d+)/)?.[1];
+const styleVersion = html.match(/styles\.css\?v=(\d+)/)?.[1];
+const cacheVersion = serviceWorker.match(/period-helper-v(\d+)/)?.[1];
+assert.ok(appVersion, '页面必须提供可更新的 app.js 版本');
+assert.equal(styleVersion, appVersion, '页面脚本与样式版本必须一致');
+assert.equal(cacheVersion, appVersion, 'Service Worker 缓存版本必须与页面版本一致');
 assert.match(app, /import\('\.\/insights-page\.js'\)/, '趋势页必须按需加载');
 assert.match(app, /import\('\.\/traditional-care\.js'\)/, '传统调养必须按需加载');
-assert.match(serviceWorker, /period-helper-v103/);
-assert.match(worker, /version:'v103'/, 'Worker 健康检查版本必须与页面发布版本一致');
+assert.match(worker, /version:'v\d+'/,'Worker 健康检查必须暴露独立部署版本');
 assert.match(insightsPage, /renderStateClusters/, '趋势页必须渲染多状态组合卡片');
 assert.match(html, /id="insightsStateClusters"/, '趋势页必须提供状态组合视觉区域');
 assert.match(html, /details class="insights-more-section state-cluster-section"/, '次要趋势必须默认折叠');

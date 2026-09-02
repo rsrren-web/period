@@ -111,6 +111,7 @@ const CATEGORY_META = Object.freeze({
 });
 const METRIC_NAMES = Object.freeze({
   stress: '压力', energy: '精力', sleep_quality: '睡眠', activity_level: '活动', social_intensity: '社交强度', pain_max: '疼痛',
+  social_aftereffect: '社交后感到耗竭', irritability: '生气', flow_level: '经量偏多', clot_level: '血块记录',
   'pain.head': '头部疼痛', breast_tenderness: '乳房不适', 'pain.neck_shoulder': '肩颈不适', stomach_discomfort: '胃部不适',
   'pain.lower_abdomen': '小腹不适', 'pain.lower_back': '腰背不适', 'pain.legs': '腿部不适', 'pain.feet': '足部不适', body_stiffness: '身体僵硬',
   nausea: '恶心', diarrhea: '腹泻', cold_sensation: '明显怕冷', bloating: '腹胀', appetite_low: '食欲较差', poor_appetite: '食欲较差',

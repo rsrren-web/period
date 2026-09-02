@@ -49,4 +49,27 @@ const bowelResult = generateRecommendations({ today_record: { bowelMovement: fal
 assert.equal(bowelResult.status, 'RECOMMENDATIONS', '连续未排便事件必须与知识库 canonical 字段正确衔接');
 assert.ok(bowelResult.recommendations.some((item) => item.intervention_id === 'TCM_ACU_018'));
 
+const activity = buildCareContext({ log: { activity: 1, fieldStatus: { activity: 'reported' } }, record_date: '2026-09-01' });
+assert.ok(activity.current_discomforts.some((item) => item.metric === 'activity_level'));
+const anger = buildCareContext({ log: { primaryEmotion: '生气', fieldStatus: { primaryEmotion: 'reported' } }, record_date: '2026-09-01' });
+assert.ok(anger.current_discomforts.some((item) => item.metric === 'irritability'));
+assert.equal(anger.evidence.irritability[0].source, 'primaryEmotion');
+assert.equal(anger.context.irritability, 1, '知识库数值条件不得接收布尔类型');
+const angerResult = generateRecommendations({ today_record: { primaryEmotion: '生气', fieldStatus: { primaryEmotion: 'reported' } }, record_date: '2026-09-01', intervention_library: library, phase: { key: 'pms', cycleDay: 24 } });
+assert.equal(angerResult.status, 'RECOMMENDATIONS');
+assert.ok(angerResult.recommendations.every((item) => item.why_matched.some((reason) => reason.field === 'irritability')));
+const draining = buildCareContext({ log: { socialEffect: 'draining', fieldStatus: { socialEffect: 'reported' } }, record_date: '2026-09-01' });
+assert.ok(draining.current_discomforts.some((item) => item.metric === 'social_aftereffect'));
+const menstrual = buildCareContext({ log: { menstrual_status: 'on_period', flow_level: 'heavy', clot_level: 'medium', fieldStatus: { menstrual_status: 'reported', flow_level: 'reported', clot_level: 'reported' } }, record_date: '2026-09-01' });
+assert.ok(menstrual.current_discomforts.some((item) => item.metric === 'flow_level'));
+assert.ok(menstrual.current_discomforts.some((item) => item.metric === 'clot_level'));
+
+const persistentPain = evaluateIntervention({
+  id: 'TEST_PAIN', status: 'active', availability: 'ready', category: 'test',
+  matching: { hard_requirements: [], scoring_features: [{ condition: { field: 'pain.lower_abdomen', operator: '>=', value: 1 }, weight: 2 }], minimum_score: 3, exclusions: [] },
+  recommendation_policy: { recommendation_priority: 1, cooldown_hours: 0, max_daily_uses: 1, requires_current_state: false, requires_personal_pattern: false }
+}, { pain: { lower_abdomen: 2 }, persistence: { pain_max: { active: true, consecutive_days: 3, event_id: 'pain-event' } }, safety_event: { active: false } });
+assert.equal(persistentPain.eligible, true, '持续疼痛事件应复用原有 persistence 加权到具体疼痛部位');
+assert.equal(persistentPain.persistence_boost, 1);
+
 console.log('Care context mapping, neutral activity change, weighted scoring and legacy compatibility passed.');
