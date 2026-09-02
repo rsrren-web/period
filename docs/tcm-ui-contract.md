@@ -1,0 +1,39 @@
+# TCM 功能—UI 合同
+
+本文件是个人中医观察与调养系统的实现合同。面向用户的能力必须形成“记录或配置 → 本地保存 → 设备同步 → 标准化 → 分析 → UI 解释 → 可执行操作 → 反馈学习”的闭环。中医状态和模式只用于整理个人记录，不构成诊断。
+
+| 功能 | 数据生产者 | 存储字段 | 标准化 feature | 分析/推荐消费者 | 记录或配置入口 | 结果入口 | 用户操作与空状态 | 测试 | 当前状态 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 每日 TCM 体感 | 每日记录弹窗 | `tcm:*` | `cold_sensation`、`warmth_relief`、`nausea`、`diarrhea`、`bloating`、`appetite_low`、`body_heaviness` | careContext、推荐；cluster 尚未统一 | Today → 每日记录 → 身体体感 | Today 调养、趋势 TCM | 可明确“没有以上体感”；未操作为未记录 | daily semantics、careContext | 部分接通 |
+| pain detail | 每日记录弹窗 | `detail:pain_nature:*`、`detail:pain_response:*`、`painLocations`、`pain` | `pain_quality.*`、`pain_response.*`、`pain.*` | careContext、推荐；cluster 尚未统一 | Today → 每日记录 → 疼痛 | Today、当天详情、趋势 | 可明确无疼痛表现；未操作为未记录 | daily detail、careContext | 部分接通 |
+| sleep detail | 每日记录弹窗 | `detail:sleep_issue:*`、`sleep`、`bedtime` | `sleep_onset_difficulty`、`sleep_fragmentation`、`dream_disturbed_sleep`、`early_waking`、`unrefreshed_sleep` | careContext、推荐、趋势 | Today → 每日记录 → 睡眠与排便 | Today、趋势 | 可明确无所列睡眠表现；未操作为未记录 | daily detail、careContext | 部分接通 |
+| bowel detail | 每日记录弹窗 | `detail:bowel:*`、`bowelMovement` | `bowel_normal`、`stool_hard`、`stool_loose`、`stool_sticky`、`diarrhea`、`no_bowel_movement` | careContext、持续事件、推荐 | Today → 每日记录 → 睡眠与排便 | Today、趋势 | 单选包含“未排便”；不选择为未记录 | daily detail、recommendation | 已接通 |
+| menstrual detail | 经期日期 + 每日记录弹窗 | `menstrual_status`、`flow_level`、`blood_color`、`clot_*` | `menstrual_status`、`flow_level`、`blood_color`、`clot_level` | 周期模型、careContext、推荐、趋势 | Today 首页设置日期；经期日弹窗记录表现 | Today、日历、趋势 | 非经期隐藏；历史扩展枚举保留兼容 | menstrual UI、sync | 已接通 |
+| 近期中医状态 | 待建 TcmStateEngine | 派生，不写回每日记录 | 7 个 `TcmState` | Today、趋势、推荐 | 来源于每日记录 | Today 1–3 项；趋势常驻模块 | 无数据时显示用途、进度和记录入口 | 待建 state tests | 未实现 |
+| TCM pattern/cluster | `tcm-cluster-engine` | 派生分析快照 | 当前 5 个 legacy cluster | 趋势；尚未真实影响推荐 | 来源于每日记录 | 趋势 TCM 区域 | 数据不足时目前隐藏，需改为进度空状态 | cluster tests | 部分接通 |
+| 周期特异性 | 待建 PatternEngine | 派生分析快照 | `phase_specificity` | 趋势、推荐 | 来源于周期和每日记录 | 趋势“周期特异性” | 无重复时显示继续记录 | 待建 | 未实现 |
+| 长期体质 | 待建 ConstitutionProfile | 待定 profile schema | `constitutionBaseline`、`constitutionEvidence90d` | 推荐低权重、趋势 | More → 调养档案 | 趋势“长期体质” | 无人工基线时明确“尚未建立” | 待建 migration/UI | 未实现 |
+| 调养推荐 | RecommendationEngine + intervention 库 | 派生 | `CareRecommendation` | Today renderer | 自动生成 | Today 针对性调养 | 无证据不推荐；安全未知需说明 | recommendation tests | 部分接通 |
+| 推荐解释 | RecommendationEngine | `why_matched` 等派生数据 | evidence、state、pattern、phase、history | Today renderer | 无单独入口 | 建议卡“为什么” | 目前主要解释今日字段，待扩展 | explanation tests | 部分接通 |
+| 固定阶段食养 | DailyNourishment | 不保存推荐 | phase nourishment | Today renderer | 自动生成 | Today 每日阶段食养 | 当前无反馈入口 | nourishment tests | 部分接通 |
+| 调养反馈 | 反馈弹窗 | 独立 `period-intervention-usage-v1` | 总体有效率 | 推荐排序、趋势 | Today 建议卡 | 趋势“对我有效” | 同日去重；尚无 context 和安全不适 | feedback tests | 部分接通 |
+| 个人效果排序 | InterventionEngine | 读取独立反馈 | `feedback_adjustment` | 推荐排序 | 来源于反馈 | 趋势 + 推荐理由待完善 | 3 次开始使用，5 次前标记数据少 | intervention tests | 部分接通 |
+| 安全信息和禁忌 | intervention exclusions；无完整用户生产者 | 尚无统一 profile | `safety_event`、`contraindication.*`、`medication.*` | InterventionEngine | 待建 More → 调养安全信息 | 建议卡安全提醒 | 未知字段目前未可靠阻断高风险建议 | safety tests | 未实现/高风险 |
+| 导入导出及同步 | App + Worker | schemaVersion 3 state | periods、logs、settings | 全应用 | More → 备份/同步 | More 同步状态 | feedback、未来 profile 尚未进入统一 state | sync/device tests | 部分接通 |
+
+## 字段处置规则
+
+- 当前 UI 生产：每日表单和经期编辑器能明确产生的字段。
+- 可可靠推导：如 `bowel_days_since_last`、`post_menstrual_days`，必须由统一 context 计算并保留证据。
+- 历史/导入兼容：`very_heavy`、`brown`、`other`、`medium` clot 暂不扩充当前精简 UI，不得删除历史值。
+- external/profile：怀孕、过敏、用药相互作用等必须进入安全档案或明确 external；未知不能静默视为安全。
+- retired：没有可靠生产者、也没有产品入口的规则字段必须暂停对应规则，不允许永久不可命中。
+
+## 分阶段完成条件
+
+1. 未触碰字段保持 `null/not_recorded`，明确“没有”与未记录不同。
+2. 所有 `tcm:*`、`detail:*` 统一经过 `buildCareContext()`。
+3. 近期状态、跨周期 pattern、长期体质和调养决策在代码与 UI 中严格分层。
+4. pattern 必须真实影响推荐和解释。
+5. 反馈、安全档案和长期体质进入备份、导入、同步、迁移和去重。
+6. 数据不足时展示进度与记录入口，不隐藏用户可见功能。

@@ -665,6 +665,9 @@ summary strong { font-size: var(--font-body); line-height: 1.45 }
 .core-score .score-picker { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 5px; margin: 0 }
 .core-score .score-picker span { margin: auto; border-radius: 50%; font-size: var(--font-caption) }
 .core-score output { font-size: var(--font-caption); font-weight: 700; text-align: right }
+.explicit-none-choice { margin-top: 9px }
+.explicit-none-choice label,.none-option { grid-column: 1 / -1 }
+.explicit-none-choice span,.none-option span { border-style: dashed }
 .supplemental-records { border: 1px solid var(--soft-line); border-radius: var(--radius-inner); background: var(--surface) }
 .supplemental-records summary { min-height: 58px; padding: 12px 14px }
 .supplemental-records summary>span:first-child { display: grid; gap: 2px }
