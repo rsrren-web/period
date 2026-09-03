@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import { evaluateIntervention } from '../analysis/intervention-engine.js';
+import { interventionEffectivenessByContext } from '../analysis/intervention-response-aggregator.js';
+import { safetyContextFromProfile } from '../analysis/safety-profile.js';
+
+const intervention={id:'care-1',status:'active',availability:'ready',category:'tea',matching:{hard_requirements:[],scoring_features:[{condition:{field:'pain.lower_abdomen',operator:'>=',value:1},weight:5}],minimum_score:1,exclusions:[{field:'pregnancy_status',operator:'in',value:['known','possible']},{field:'medication.herb_interaction_review_required',operator:'==',value:true}]},recommendation_policy:{recommendation_priority:50,prefer_if_personally_helpful:true}};
+const context={pain:{lower_abdomen:4},cycle_phase:'menstrual',matched_signals:['pain.lower_abdomen'],evidence:{'pain.lower_abdomen':[{}]},tcm_states:[],tcm_patterns:[],current_state_available:true};
+const entries=Array.from({length:3},(_,index)=>({feedback_id:`f${index}`,context_version:1,intervention_id:'care-1',cycle_phase:'menstrual',matched_signals:['pain.lower_abdomen'],matched_states:[],matched_patterns:[],helpful:true,used_at:`2026-08-0${index+1}T10:00:00.000Z`}));
+assert.equal(interventionEffectivenessByContext(entries,context).quality,'usable');
+assert.equal(evaluateIntervention(intervention,context,{history:entries,now:'2026-09-03T10:00:00.000Z'}).feedback_adjustment,12,'相似情境达到3次后才应提高排序');
+const different=entries.map((item)=>({...item,cycle_phase:'early_follicular',matched_signals:['sleep_quality']}));
+assert.equal(evaluateIntervention(intervention,context,{history:different,now:'2026-09-03T10:00:00.000Z'}).feedback_adjustment,0,'不同情境不得影响排序');
+const unhelpfulDifferent=different.map((item)=>({...item,helpful:false}));
+assert.equal(evaluateIntervention({...intervention,recommendation_policy:{...intervention.recommendation_policy,deprioritize_after_unhelpful_uses:3}},context,{history:unhelpfulDifferent,now:'2026-09-03T10:00:00.000Z'}).deprioritized,false,'不同情境的无效反馈不得降低当前排序');
+const unknown=safetyContextFromProfile({});
+assert.equal(evaluateIntervention(intervention,{...context,...unknown},{history:[]}).eligible,false,'安全信息未知时不得推荐需要妊娠或用药核对的方案');
+const safe=safetyContextFromProfile({pregnancyStatus:'not_pregnant',herbMedicationReview:'no',severeReflux:'no',localSkinStatus:'clear'});
+assert.equal(evaluateIntervention(intervention,{...context,...safe},{history:[]}).eligible,true,'已明确安全信息时应恢复正常匹配');
+const pregnant=safetyContextFromProfile({pregnancyStatus:'pregnant',herbMedicationReview:'no',severeReflux:'no',localSkinStatus:'clear'});
+assert.equal(evaluateIntervention(intervention,{...context,...pregnant},{history:[]}).eligible,false,'明确妊娠时必须命中排除规则');
+console.log('Care feedback context and safety closure tests passed.');

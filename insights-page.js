@@ -96,7 +96,7 @@ function renderTemporalClusters(data) {
 }
 function renderInterventions(data) {
   const root = document.querySelector('#insightsInterventions');
-  if (root) root.innerHTML = data.interventionResponses.length ? data.interventionResponses.map((item) => `<article class="intervention-response-card"><div><strong>${esc(item.interventionName)}</strong><span>${esc(item.dataLabel)}</span></div><p>使用 ${item.uses} 次 · 记录有帮助 ${item.improvementCount} 次 · 有帮助 ${pct(item.helpfulRate)}</p>${item.meanDelta === null ? '' : `<p>不适评分平均下降 ${item.meanDelta > 0 ? '+' : ''}${item.meanDelta}</p>`}</article>`).join('') : empty('还没有足够的调养反馈', '在首页调养建议中记录效果；同一方案至少3次后才开始汇总。');
+  if (root) root.innerHTML = data.interventionResponses.length ? data.interventionResponses.map((item) => `<article class="intervention-response-card"><div><strong>${esc(item.interventionName)}</strong><span>${esc(item.dataLabel)}</span></div><p>使用 ${item.uses} 次 · 记录有帮助 ${item.improvementCount} 次 · 有帮助 ${pct(item.helpfulRate)}</p>${item.meanDelta === null ? '' : `<p>不适评分平均下降 ${item.meanDelta > 0 ? '+' : ''}${item.meanDelta}</p>`}${item.contexts?.length ? `<p><strong>曾在哪些情境使用：</strong>${item.contexts.map(esc).join('；')}</p>` : ''}${item.adverseEffects ? `<p class="field-hint">其中 ${item.adverseEffects} 次记录了不适；建议暂停并核对方案。</p>` : ''}</article>`).join('') : empty('还没有足够的调养反馈', '在首页调养建议中记录效果；同一方案至少3次后才开始汇总。');
 }
 function renderTcmStates(data) {
   const root = document.querySelector('#insightsTcmStates');

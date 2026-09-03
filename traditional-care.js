@@ -13,6 +13,7 @@ import { selectDailyNourishment } from './analysis/daily-nourishment.js';
 import { buildCareContext } from './analysis/care-context.js';
 import { analyzeTcmStates } from './analysis/tcm-state-engine.js';
 import { hasInterventionFeedbackToday, interventionHistoryBeforeToday, readInterventionUsage } from './intervention-feedback.js';
+import { safetyContextFromProfile } from './analysis/safety-profile.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const addDays = (date, amount) => { const next = new Date(`${date}T12:00:00`); next.setDate(next.getDate() + amount); return next.toISOString().slice(0, 10); };
@@ -90,8 +91,10 @@ function sourceNames(ids = []) {
   return ids.map((id) => KNOWLEDGE_SOURCES.find((source) => source.id === id)?.title).filter(Boolean).join('、');
 }
 
-function foodCard(item) {
-  return `<details class="traditional-card traditional-tea"><summary><div class="traditional-card-head"><span aria-hidden="true">食</span><div><small>今日食养</small><h3>${esc(item.title)}</h3></div></div><span class="traditional-expand">查看食谱</span></summary><div class="traditional-detail"><dl class="recipe-details"><div><dt>食材</dt><dd>${esc(item.ingredients)}</dd></div><div><dt>做法</dt><dd>${esc(item.steps)}</dd></div><div><dt>为什么今天推荐</dt><dd>${esc(item.why)}</dd></div><div><dt>先换一个</dt><dd>${esc(item.skip)}</dd></div><div><dt>知识来源</dt><dd>${esc(sourceNames(item.sources))}</dd></div></dl></div></details>`;
+function feedbackContext(value) { return esc(encodeURIComponent(JSON.stringify(value))); }
+function foodCard(item, phase, signals) {
+  const id = `daily-nourishment:${item.id}`, recorded = hasInterventionFeedbackToday(id), context = { cycle_phase: phase.key, cycle_day: phase.cycleDay, matched_signals: [...signals], matched_states: [], matched_patterns: [] };
+  return `<details class="traditional-card traditional-tea"><summary><div class="traditional-card-head"><span aria-hidden="true">食</span><div><small>今日食养</small><h3>${esc(item.title)}</h3></div></div><span class="traditional-expand">查看食谱</span></summary><div class="traditional-detail"><dl class="recipe-details"><div><dt>食材</dt><dd>${esc(item.ingredients)}</dd></div><div><dt>做法</dt><dd>${esc(item.steps)}</dd></div><div><dt>为什么今天推荐</dt><dd>${esc(item.why)}</dd></div><div><dt>先换一个</dt><dd>${esc(item.skip)}</dd></div><div><dt>知识来源</dt><dd>${esc(sourceNames(item.sources))}</dd></div></dl><button type="button" class="intervention-feedback-button soft${recorded?' is-recorded':''}" data-intervention-feedback="${esc(id)}" data-intervention-name="${esc(item.title)}" data-intervention-target="cycle_phase" data-feedback-context="${feedbackContext(context)}" ${recorded?'disabled':''}>${recorded?'今天已记录 ✓':'记录这次效果'}</button></div></details>`;
 }
 
 function practiceCard(kind, item) {
@@ -171,21 +174,26 @@ function interventionCard(recommendation) {
   const item = recommendation.intervention, [icon, label] = CATEGORY_META[item.category] || ['养', '今日建议'];
   const target = recommendation.reason?.metric || item.targets?.[0] || 'general';
   const recorded = hasInterventionFeedbackToday(item.id);
-  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${recommendationContext(recommendation)}${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft${recorded ? ' is-recorded' : ''}" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}" ${recorded ? `disabled aria-label="${esc(item.name)}今天已记录效果"` : ''}>${recorded ? '今天已记录 ✓' : '记录这次效果'}</button></div></details>`;
+  const context = { cycle_phase: recommendation.cycle_phase || null, cycle_day: recommendation.cycle_day || null, matched_signals: (recommendation.why_matched || []).map((entry) => entry.field).filter(Boolean), matched_states: (recommendation.matched_states || []).map((entry) => entry.state_id).filter(Boolean), matched_patterns: (recommendation.matched_patterns || []).map((entry) => entry.pattern_id).filter(Boolean) };
+  const safetyNote = recommendation.unknown_safety_fields?.length ? '<p class="field-hint">部分安全信息尚未确认；使用前请先核对配料、用药与自身情况。</p>' : '';
+  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${recommendationContext(recommendation)}${interventionMethod(item)}</dl>${safetyNote}<button type="button" class="intervention-feedback-button soft${recorded ? ' is-recorded' : ''}" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}" data-feedback-context="${feedbackContext(context)}" ${recorded ? `disabled aria-label="${esc(item.name)}今天已记录效果"` : ''}>${recorded ? '今天已记录 ✓' : '记录这次效果'}</button></div></details>`;
 }
 
-async function renderEngineRecommendations({ root, token, phase, log, logs, constitutionProfile }) {
+async function renderEngineRecommendations({ root, token, phase, log, logs, constitutionProfile, safetyProfile }) {
   try {
     const { library, config, tcmRules, observationActions } = await loadAnalysisResources();
     if (token !== recommendationRenderToken || !root.isConnected) return;
     const interventionUsage = readInterventionUsage();
-    const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: interventionHistoryBeforeToday(interventionUsage), intervention_library: library, constitution_profile: constitutionProfile, phase }, { previous_snapshot: latestAnalysisSnapshot });
+    const safetyContext = safetyContextFromProfile(safetyProfile);
+    const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: interventionHistoryBeforeToday(interventionUsage), intervention_library: library, constitution_profile: constitutionProfile, phase, safety: { active: false }, contraindication: safetyContext.contraindication, medication: safetyContext.medication, safety_context: safetyContext }, { previous_snapshot: latestAnalysisSnapshot });
     latestAnalysisSnapshot = analysis;
     const result = analysis.recommendations;
     if (token !== recommendationRenderToken) return;
     root.innerHTML = result.status === 'RECOMMENDATIONS'
       ? result.recommendations.map(interventionCard).join('')
-      : `<div class="traditional-no-recommendation"><strong>今天没有需要额外匹配的调养项目</strong><p>当前没有达到门槛的偏离、连续状态、个人规律或明确不适，因此不为填满页面随机推荐。</p></div>`;
+      : result.reasons?.includes('SAFETY_PROFILE_REQUIRED')
+        ? '<div class="traditional-no-recommendation"><strong>先完善调养安全信息</strong><p>相关方案需要先确认妊娠、用药复核或局部皮肤情况；未知不会被当作安全。</p><button type="button" class="soft compact" data-view="more">去完善安全信息</button></div>'
+        : `<div class="traditional-no-recommendation"><strong>今天没有需要额外匹配的调养项目</strong><p>当前没有达到门槛的偏离、连续状态、个人规律或明确不适，因此不为填满页面随机推荐。</p></div>`;
   } catch {
     if (token === recommendationRenderToken) root.innerHTML = `<div class="traditional-no-recommendation"><strong>暂时无法生成数据建议</strong><p>知识库或分析数据尚未载入；不会使用随机内容替代。</p></div>`;
   }
@@ -205,10 +213,10 @@ function recentEvidence(recent, signals) {
   return lines.slice(0, 3);
 }
 
-globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}, constitutionProfile = null) => {
+globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}, constitutionProfile = null, safetyProfile = null) => {
   const root = document.querySelector('#tcmAdvice');
   if (!root) return;
-  const recent = recentContext(logs), signals = signalsFor(log, recent), theory = PHASE_THEORY[phase.key] || PHASE_THEORY.follicular, bodySense = buildCareContext({ log, record_date: phase.date, phase }).context;
+  const recent = recentContext(logs), signals = signalsFor(log, recent), theory = PHASE_THEORY[phase.key] || PHASE_THEORY.follicular, safetyContext = safetyContextFromProfile(safetyProfile), bodySense = { ...buildCareContext({ log, record_date: phase.date, phase, safety: { active: false }, contraindication: safetyContext.contraindication, medication: safetyContext.medication }).context, ...safetyContext };
   const nourishment = selectDailyNourishment({ recipes: FOOD_RECIPES, phase_key: phase.key, record_date: phase.date || todayIso(), signals });
   const recentStates = analyzeTcmStates({ logs, as_of: phase.date || todayIso() }), evidence = recentEvidence(recent, signals);
   const practicalReason = {
@@ -241,7 +249,7 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}, constitutionPr
     <div class="traditional-plan">
       <section class="traditional-layer" aria-label="每日阶段食养">
         <header class="traditional-layer-heading"><strong>每日阶段食养</strong><span>固定1项 · 茶饮或食谱</span></header>
-        ${nourishment ? foodCard(nourishment) : '<div class="traditional-no-recommendation"><strong>今天暂时没有阶段食谱</strong><p>不会用温水或随机内容占位。</p></div>'}
+        ${nourishment ? foodCard(nourishment, phase, signals) : '<div class="traditional-no-recommendation"><strong>今天暂时没有阶段食谱</strong><p>不会用温水或随机内容占位。</p></div>'}
       </section>
       <section class="traditional-layer" aria-label="针对性调养">
         <header class="traditional-layer-heading"><strong>针对性调养</strong><span>有证据才显示 · 最多2项</span></header>
@@ -249,6 +257,6 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}, constitutionPr
       </section>
     </div>`;
   const planRoot = typeof root.querySelector === 'function' ? root.querySelector('[data-recommendation-plan]') : null;
-  if (planRoot) renderEngineRecommendations({ root: planRoot, token, phase, log, logs, constitutionProfile });
+  if (planRoot) renderEngineRecommendations({ root: planRoot, token, phase, log, logs, constitutionProfile, safetyProfile });
 };
 

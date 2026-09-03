@@ -57,7 +57,7 @@ const base = {
 };
 const first = { ...base, id: 'A', recommendation_policy: { ...base.recommendation_policy, recommendation_priority: 60 } };
 const second = { ...base, id: 'B' };
-const context = { consent: true, stress: 4, contraindication: { blocked: false }, safety_event: { active: false } };
+const context = { consent: true, stress: 4, cycle_phase: 'late_luteal', evidence: { stress: [{}] }, contraindication: { blocked: false }, safety_event: { active: false } };
 
 assert.equal(evaluateIntervention(first, context, { now: '2026-08-14T12:00:00Z' }).eligible, true);
 assert.equal(evaluateIntervention(first, { ...context, contraindication: { blocked: true } }).eligible, false);
@@ -77,9 +77,9 @@ assert.ok(cooldown.exclusion_reasons.some((reason) => reason.code === 'cooldown_
 const deprioritized = rankInterventions([first, second], context, {
   now: '2026-08-14T12:00:00Z',
   history: [
-    { intervention_id: 'A', used_at: '2026-08-10T08:00:00Z', helpful: false },
-    { intervention_id: 'A', used_at: '2026-08-11T08:00:00Z', helpful: false },
-    { intervention_id: 'A', used_at: '2026-08-12T08:00:00Z', helpful: false }
+    { intervention_id: 'A', context_version: 1, cycle_phase: 'late_luteal', matched_signals: ['stress'], used_at: '2026-08-10T08:00:00Z', helpful: false },
+    { intervention_id: 'A', context_version: 1, cycle_phase: 'late_luteal', matched_signals: ['stress'], used_at: '2026-08-11T08:00:00Z', helpful: false },
+    { intervention_id: 'A', context_version: 1, cycle_phase: 'late_luteal', matched_signals: ['stress'], used_at: '2026-08-12T08:00:00Z', helpful: false }
   ]
 });
 assert.deepEqual(deprioritized.candidates.map((item) => item.intervention_id), ['B', 'A'], 'repeatedly unhelpful intervention must be deprioritized');

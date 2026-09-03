@@ -26,6 +26,12 @@ assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-bad-constituti
 const olderProfile={...constitutionProfile,baseline:{...constitutionProfile.baseline,yang_deficiency:'low'},updatedAt:'2026-08-01T12:00:00.000Z'};
 const mergedProfile=mergeState({...v3State,settings:{...v3State.settings,constitutionProfile}}, {...v3State,settings:{...v3State.settings,constitutionProfile:olderProfile}}, 'constitution-merge');
 assert.equal(mergedProfile.settings.constitutionProfile.baseline.yang_deficiency,'moderate','较旧设备不得覆盖较新的长期体质档案');
+const safetyProfile={version:1,pregnancyStatus:'not_pregnant',herbMedicationReview:'no',severeReflux:'no',localSkinStatus:'clear',allergies:'',updatedAt:at};
+const feedback={feedback_id:'feedback-1',context_version:1,record_date:'2026-07-19',cycle_phase:'menstrual',cycle_day:2,matched_signals:['pain.lower_abdomen'],matched_states:[],matched_patterns:[],intervention_id:'TCM_TEA_001',intervention_name:'生姜红枣饮',target:'pain.lower_abdomen',recommendation_id:null,source_event_id:null,source_pattern_id:null,helpful:true,before:4,after:2,adverse_effect:false,used_at:at,updated_at:at};
+assert.doesNotThrow(()=>validatePayload({schemaVersion:3,mutationId:'v3-care-data',state:{...v3State,interventionUsage:[feedback],settings:{...v3State.settings,safetyProfile}}}));
+const mergedCare=mergeState({...v3State,interventionUsage:[feedback],settings:{...v3State.settings,safetyProfile}}, {...v3State,interventionUsage:[{...feedback,helpful:false,updated_at:'2026-07-01T00:00:00.000Z'}],settings:{...v3State.settings,safetyProfile:{...safetyProfile,updatedAt:'2026-08-01T00:00:00.000Z'}}}, 'care-merge');
+assert.equal(mergedCare.interventionUsage.length,1,'相同反馈 ID 不得跨设备重复');
+assert.equal(mergedCare.interventionUsage[0].helpful,true,'较旧反馈不得覆盖较新反馈');
 assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-invalid-flow',state:{...v3State,logs:{'2026-07-19':{...v3Log,menstrual_status:'not_on_period',flow_level:'medium'}}}}));
 assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-missing-spotting-context',state:{...v3State,logs:{'2026-07-19':{...v3Log,menstrual_status:'spotting_only',spotting_context:null}}}}));
 assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-invalid-clot-level',state:{...v3State,logs:{'2026-07-19':{...v3Log,menstrual_status:'on_period',clot_presence:'no',clot_level:'large'}}}}));

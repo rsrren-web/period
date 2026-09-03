@@ -82,7 +82,8 @@ function buildSignatures(input) {
   const knowledge = analysisFingerprint({ insights: input.config?.version, tcm: input.tcm_rules?.version, actions: input.observation_actions });
   const feedback = analysisFingerprint(input.intervention_usage || []);
   const constitution = analysisFingerprint(input.constitution_profile || {});
-  return Object.freeze({ records, knowledge, feedback, constitution, core: analysisFingerprint({ records, knowledge, constitution }), recommendations: analysisFingerprint({ records, knowledge, feedback, constitution, library: input.intervention_library?.library?.version || null, phase: input.phase || null }) });
+  const safety = analysisFingerprint(input.safety_context || {});
+  return Object.freeze({ records, knowledge, feedback, constitution, safety, core: analysisFingerprint({ records, knowledge, constitution }), recommendations: analysisFingerprint({ records, knowledge, feedback, constitution, safety, library: input.intervention_library?.library?.version || null, phase: input.phase || null }) });
 }
 
 function calculateCore(input, signatures, calculatedAt, previous) {
@@ -119,6 +120,7 @@ export function runAnalysis(input = {}, options = {}) {
       today_record: normalized.logs[normalized.as_of], record_date: normalized.as_of, health_events: core.health_events,
       patterns: core.patterns, tcm_states: core.tcm_states, tcm_patterns: core.tcm_clusters,
       constitution_profile: core.constitution_profile,
+      safety: normalized.safety, contraindication: normalized.contraindication, medication: normalized.medication, safety_context: normalized.safety_context,
       intervention_library: normalized.intervention_library, phase: normalized.phase || {}, intervention_history: normalized.intervention_usage
     });
   }

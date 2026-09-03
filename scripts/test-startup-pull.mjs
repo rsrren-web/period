@@ -16,6 +16,7 @@ function harness(initial,{pending='',timeout=2500}={}){
     navigator:{onLine:true},SYNC_URL:'https://sync.test',STORE_KEY:'state',SYNC_PENDING_KEY:'period-helper-sync-pending-v1',
     state:initial,settings:{lifeStage:'regular',ownerNotify:true,partnerNotify:true},
     migrateDailyLogs:value=>value||{},
+    mergeInterventionUsage:(left=[],right=[])=>[...left,...right],
     localStorage:{getItem:key=>store.get(key)||'',setItem:(key,value)=>store.set(key,value)},
     fetch:(url,options)=>{requests.push({url,options});options.signal.addEventListener('abort',()=>{aborted=true});return fetchPromise},
     markPerformanceStart(){},markPerformanceEnd(){},setSync(){},safeLog(){},alertSystem(){},

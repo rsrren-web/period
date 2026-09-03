@@ -1,4 +1,5 @@
 import { ANALYSIS_CONFIG } from './analysis-config.js';
+import { interventionEffectivenessByContext } from './intervention-response-aggregator.js';
 
 const MISSING = Symbol('missing');
 
@@ -85,7 +86,7 @@ function normalizedHistory(history, interventionId) {
     entry && (entry.intervention_id === interventionId || entry.id === interventionId));
 }
 
-function historyStats(intervention, history, now) {
+function historyStats(intervention, history, now, context = {}) {
   const entries = normalizedHistory(history, intervention.id);
   const times = entries.map((entry) => asTime(entry.occurred_at || entry.used_at || entry.recommended_at || entry.date)).filter(finite);
   const lastUsedAt = times.length ? Math.max(...times) : null;
@@ -101,17 +102,21 @@ function historyStats(intervention, history, now) {
   const paired = entries.filter((entry) => finite(Number(entry.before)) && finite(Number(entry.after)));
   const improvements = paired.map((entry) => Number(entry.before) - Number(entry.after));
   const meanImprovement = improvements.length ? improvements.reduce((sum, value) => sum + value, 0) / improvements.length : null;
-  const responseUsable = outcomes.length >= ANALYSIS_CONFIG.feedback.minimum_uses;
+  const currentContext = { cycle_phase: context.cycle_phase, matched_signals: Object.keys(context.evidence || {}), matched_states: (context.tcm_states || []).filter((item) => item.active).map((item) => item.id), matched_patterns: (context.tcm_patterns || []).filter((item) => item.status === 'detected').map((item) => item.cluster_id) };
+  const contextual = interventionEffectivenessByContext(entries, currentContext), responseUsable = contextual.quality !== 'insufficient';
   const cooldownHours = Math.max(0, Number(intervention.recommendation_policy?.cooldown_hours) || 0);
   const elapsedHours = lastUsedAt === null ? Number.POSITIVE_INFINITY : Math.max(0, (now - lastUsedAt) / 3600000);
   return {
     uses: entries.length,
     daily_uses: dailyUses,
-    helpful_uses: helpful,
-    unhelpful_uses: unhelpful,
-    helpful_rate: responseUsable ? helpful / outcomes.length : null,
-    response_sample_size: outcomes.length,
-    response_quality: outcomes.length >= ANALYSIS_CONFIG.feedback.stable_uses ? 'stable' : responseUsable ? 'usable' : 'insufficient',
+    helpful_uses: contextual.helpfulUses,
+    unhelpful_uses: contextual.sampleSize - contextual.helpfulUses,
+    helpful_rate: responseUsable ? contextual.helpfulRate : null,
+    response_sample_size: contextual.sampleSize,
+    response_quality: contextual.quality,
+    overall_response_sample_size: outcomes.length,
+    context_uses: contextual.uses,
+    adverse_effects: contextual.adverseEffects,
     mean_discomfort_improvement: meanImprovement,
     last_used_at: lastUsedAt === null ? null : new Date(lastUsedAt).toISOString(),
     cooldown_hours: cooldownHours,
@@ -239,7 +244,7 @@ export function evaluateIntervention(intervention, context = {}, options = {}) {
   const now = asTime(options.now) ?? Date.now();
   const policy = intervention?.recommendation_policy || {};
   const matching = intervention?.matching || {};
-  const history = historyStats(intervention || {}, options.history ?? context.intervention_history, now);
+  const history = historyStats(intervention || {}, options.history ?? context.intervention_history, now, context);
   const blocked = [];
   if (intervention?.status !== 'active') blocked.push({ code: 'inactive' });
   if (intervention?.availability !== 'ready') blocked.push({ code: 'unavailable' });
@@ -249,6 +254,9 @@ export function evaluateIntervention(intervention, context = {}, options = {}) {
 
   const exclusionChecks = (matching.exclusions || []).map((condition) => ({ condition, ...evaluateCondition(condition, context) }));
   for (const check of exclusionChecks) if (check.matched) blocked.push({ code: 'exclusion_matched', condition: check.condition, actual: check.actual });
+  const safetyFields = /^(pregnancy_status|state\.pregnancy|medication\.|local_skin_|acute_local_infection|contraindication\.(active_severe_reflux|severe_reflux|pregnancy_known_or_possible))/;
+  const unknownSafety = exclusionChecks.filter((check) => check.missing && safetyFields.test(check.condition?.field || ''));
+  if (Object.prototype.hasOwnProperty.call(context, 'safety_profile_complete')) for (const check of unknownSafety) blocked.push({ code: 'unknown_safety', condition: check.condition });
 
   const hardRequirementChecks = (matching.hard_requirements || []).map((condition) => ({ condition, ...evaluateCondition(condition, context) }));
   for (const check of hardRequirementChecks) if (!check.matched) blocked.push({ code: check.missing ? 'hard_requirement_missing' : 'hard_requirement_failed', condition: check.condition, actual: check.actual });
@@ -286,7 +294,7 @@ export function evaluateIntervention(intervention, context = {}, options = {}) {
     hard_requirement_checks: hardRequirementChecks,
     exclusion_checks: exclusionChecks,
     exclusion_reasons: blocked,
-    unknown_safety_fields: exclusionChecks.filter((check) => check.missing && /^(contraindication|medication|state)\./.test(check.condition?.field || '')).map((check) => check.condition.field),
+    unknown_safety_fields: exclusionChecks.filter((check) => check.missing && /^(contraindication|medication|state|pregnancy_status|local_skin_|acute_local_infection)/.test(check.condition?.field || '')).map((check) => check.condition.field),
     recommendation_priority: priority,
     effective_priority: priority + feedbackAdjustment - (deprioritized ? 100 : 0),
     personally_helpful_rate: history.helpful_rate,
