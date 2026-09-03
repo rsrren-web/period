@@ -20,6 +20,12 @@ assert.throws(()=>validatePayload({schemaVersion:2,mutationId:'v2-invalid-enum',
 const v3Log=migrateDailyLog(v2Log);
 const v3State={...v2State,schemaVersion:3,logs:{'2026-07-19':v3Log}};
 assert.doesNotThrow(()=>validatePayload({schemaVersion:3,mutationId:'v3-valid',state:v3State}));
+const constitutionProfile={version:1,baseline:{balanced:null,qi_deficiency:null,yang_deficiency:'moderate',yin_deficiency:null,phlegm_damp:null,damp_heat:null,blood_stasis:null,qi_stagnation:null,inherited_special:null},source:'manual',assessedAt:'2026-08-20',editable:true,updatedAt:'2026-08-20T12:00:00.000Z'};
+assert.doesNotThrow(()=>validatePayload({schemaVersion:3,mutationId:'v3-constitution',state:{...v3State,settings:{...v3State.settings,constitutionProfile}}}));
+assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-bad-constitution',state:{...v3State,settings:{...v3State.settings,constitutionProfile:{...constitutionProfile,baseline:{...constitutionProfile.baseline,yang_deficiency:'diagnosed'}}}}}));
+const olderProfile={...constitutionProfile,baseline:{...constitutionProfile.baseline,yang_deficiency:'low'},updatedAt:'2026-08-01T12:00:00.000Z'};
+const mergedProfile=mergeState({...v3State,settings:{...v3State.settings,constitutionProfile}}, {...v3State,settings:{...v3State.settings,constitutionProfile:olderProfile}}, 'constitution-merge');
+assert.equal(mergedProfile.settings.constitutionProfile.baseline.yang_deficiency,'moderate','较旧设备不得覆盖较新的长期体质档案');
 assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-invalid-flow',state:{...v3State,logs:{'2026-07-19':{...v3Log,menstrual_status:'not_on_period',flow_level:'medium'}}}}));
 assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-missing-spotting-context',state:{...v3State,logs:{'2026-07-19':{...v3Log,menstrual_status:'spotting_only',spotting_context:null}}}}));
 assert.throws(()=>validatePayload({schemaVersion:3,mutationId:'v3-invalid-clot-level',state:{...v3State,logs:{'2026-07-19':{...v3Log,menstrual_status:'on_period',clot_presence:'no',clot_level:'large'}}}}));

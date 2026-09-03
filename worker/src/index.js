@@ -14,7 +14,7 @@ export default {
     const url=new URL(request.url);
     const requestId=crypto.randomUUID().slice(0,8);
     try{
-      if(url.pathname==='/health'&&request.method==='GET')return reply({ok:true,service:'period-sync',version:'v103'},200,cors);
+      if(url.pathname==='/health'&&request.method==='GET')return reply({ok:true,service:'period-sync',version:'v113'},200,cors);
       if(url.pathname==='/status'&&request.method==='GET'){
         const expiresAt=env.GITHUB_TOKEN_EXPIRES_AT||null;
         const daysRemaining=expiresAt?Math.ceil((Date.parse(`${expiresAt}T23:59:59Z`)-Date.now())/DAY):null;
@@ -186,6 +186,13 @@ function validateTombstones(value){
   for(const [key,at] of Object.entries(value.periods)){assertString(key,'删除ID',100,{allowEmpty:false});assertTimestamp(at,'删除时间')}
   for(const [date,at] of Object.entries(value.logs)){assertDate(date,'删除日期');assertTimestamp(at,'删除时间')}
 }
+const CONSTITUTION_IDS=['balanced','qi_deficiency','yang_deficiency','yin_deficiency','phlegm_damp','damp_heat','blood_stasis','qi_stagnation','inherited_special'];
+function validateConstitutionProfile(value){
+  assertObject(value,'长期体质档案');if(value.version!==1)throw clientError('长期体质档案版本无效');if(value.source!=='manual'||value.editable!==true)throw clientError('长期体质档案来源无效');
+  assertObject(value.baseline,'长期体质基线');for(const key of Object.keys(value.baseline))if(!CONSTITUTION_IDS.includes(key))throw clientError('长期体质基线包含未知字段');
+  for(const id of CONSTITUTION_IDS)assertNullableEnum(value.baseline[id]??null,'长期体质程度',['low','moderate','high']);
+  if(value.assessedAt!==null)assertDate(value.assessedAt,'长期体质评估');if(value.updatedAt!==null)assertTimestamp(value.updatedAt,'长期体质更新时间');
+}
 function validatePayload(payload){
   assertObject(payload,'同步数据');if(![1,2,3].includes(payload.schemaVersion))throw clientError('同步版本不支持');assertString(payload.mutationId,'变更ID',100,{allowEmpty:false});assertObject(payload.state,'记录');
   if(!Array.isArray(payload.state.periods)||payload.state.periods.length>1000)throw clientError('经期记录数量超过限制');
@@ -195,12 +202,14 @@ function validatePayload(payload){
   assertObject(payload.state.settings||{},'设置');const settings=payload.state.settings||{};
   if(settings.lifeStage!==undefined&&!['menarche','regular','perimenopause'].includes(settings.lifeStage))throw clientError('使用阶段无效');
   for(const key of ['ownerNotify','partnerNotify'])if(settings[key]!==undefined&&typeof settings[key]!=='boolean')throw clientError('通知设置类型无效');
+  if(settings.constitutionProfile!==undefined)validateConstitutionProfile(settings.constitutionProfile);
 }
 function daysBetween(a,b){return Math.round((Date.parse(`${b}T12:00:00Z`)-Date.parse(`${a}T12:00:00Z`))/DAY)}
 function emptyState(){return {schemaVersion:3,revision:0,updatedAt:null,periods:[],logs:{},tombstones:{periods:{},logs:{}},settings:{lifeStage:'regular',ownerNotify:true,partnerNotify:true},appliedMutations:[]}}
 function normalizeState(value){const empty=emptyState(),logs=migrateDailyLogs(value?.logs);return {...empty,...value,schemaVersion:3,periods:Array.isArray(value?.periods)?value.periods:[],logs,tombstones:{periods:value?.tombstones?.periods||{},logs:value?.tombstones?.logs||{}},settings:{...empty.settings,...value?.settings},appliedMutations:Array.isArray(value?.appliedMutations)?value.appliedMutations:[]}}
 function periodKey(period){return period.id||`${period.start}|${period.type||'period'}`}
 function newer(a,b){return String(a||'')>=String(b||'')}
+function mergeSettings(base={},next={}){const merged={...base,...next},left=base.constitutionProfile,right=next.constitutionProfile;merged.constitutionProfile=!right?left:!left||newer(right.updatedAt,left.updatedAt)?right:left;return merged}
 function mergeTombstones(a={},b={}){const out={...a};for(const [key,at] of Object.entries(b))if(!out[key]||newer(at,out[key]))out[key]=at;return out}
 function mergeState(remote,incoming,mutationId){
   const base=normalizeState(remote),next=normalizeState(incoming);if(base.appliedMutations.includes(mutationId))return base;
@@ -210,7 +219,7 @@ function mergeState(remote,incoming,mutationId){
   for(const [key,period] of periodMap)if(tombstones.periods[key]&&newer(tombstones.periods[key],period.updatedAt))periodMap.delete(key);
   const logs={...base.logs};for(const [date,log] of Object.entries(next.logs)){const old=logs[date];if(!old||newer(log.updatedAt,old.updatedAt))logs[date]=log}
   for(const [date,log] of Object.entries(logs))if(tombstones.logs[date]&&newer(tombstones.logs[date],log.updatedAt))delete logs[date];
-  return {...base,schemaVersion:3,revision:Number(base.revision||0)+1,updatedAt:new Date().toISOString(),periods:[...periodMap.values()].sort((a,b)=>a.start.localeCompare(b.start)),logs,tombstones,settings:{...base.settings,...next.settings},appliedMutations:[...base.appliedMutations.slice(-99),mutationId]};
+  return {...base,schemaVersion:3,revision:Number(base.revision||0)+1,updatedAt:new Date().toISOString(),periods:[...periodMap.values()].sort((a,b)=>a.start.localeCompare(b.start)),logs,tombstones,settings:mergeSettings(base.settings,next.settings),appliedMutations:[...base.appliedMutations.slice(-99),mutationId]};
 }
 async function mergeAndWrite(env,payload){
   for(let attempt=0;attempt<3;attempt++){

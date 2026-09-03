@@ -3,7 +3,7 @@ import { analysisFingerprint } from './analysis-orchestrator.js';
 const CACHE_KEY = 'period-insights-cache-v2';
 
 function signature(input, configVersion) {
-  return analysisFingerprint({ configVersion, logs: input.logs || {}, periods: input.periods || [], asOf: input.as_of, nextStart: input.next_start || null, predictionConfidence: input.prediction_confidence || null, interventionUsage: input.intervention_usage || [] });
+  return analysisFingerprint({ configVersion, logs: input.logs || {}, periods: input.periods || [], asOf: input.as_of, nextStart: input.next_start || null, predictionConfidence: input.prediction_confidence || null, interventionUsage: input.intervention_usage || [], constitutionProfile: input.constitution_profile || null });
 }
 
 export function readInsightsSnapshot(input, configVersion, storage = globalThis.localStorage) {

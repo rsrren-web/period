@@ -5,6 +5,7 @@ import { buildRecommendationEvidence } from './recommendation-pipeline.js';
 import { generateRecommendations } from './recommendation-engine.js';
 import { analyzeTcmClusters } from './tcm-cluster-engine.js';
 import { analyzeTcmStates } from './tcm-state-engine.js';
+import { analyzeConstitutionProfile } from './constitution-profile.js';
 import { buildInsights } from './insight-builder.js';
 import { aggregateInterventionResponses } from './intervention-response-aggregator.js';
 import { createExplanation, explanationFromEvent, explanationFromPattern } from './explanation-object.js';
@@ -80,7 +81,8 @@ function buildSignatures(input) {
   const records = analysisFingerprint({ logs: input.logs, periods: input.periods, as_of: input.as_of });
   const knowledge = analysisFingerprint({ insights: input.config?.version, tcm: input.tcm_rules?.version, actions: input.observation_actions });
   const feedback = analysisFingerprint(input.intervention_usage || []);
-  return Object.freeze({ records, knowledge, feedback, core: analysisFingerprint({ records, knowledge }), recommendations: analysisFingerprint({ records, knowledge, feedback, library: input.intervention_library?.library?.version || null, phase: input.phase || null }) });
+  const constitution = analysisFingerprint(input.constitution_profile || {});
+  return Object.freeze({ records, knowledge, feedback, constitution, core: analysisFingerprint({ records, knowledge, constitution }), recommendations: analysisFingerprint({ records, knowledge, feedback, constitution, library: input.intervention_library?.library?.version || null, phase: input.phase || null }) });
 }
 
 function calculateCore(input, signatures, calculatedAt, previous) {
@@ -92,6 +94,7 @@ function calculateCore(input, signatures, calculatedAt, previous) {
   const evidence = profiled('recommendation-evidence',()=>buildRecommendationEvidence({ logs: input.logs, periods: input.periods, phase: input.phase || {}, record_date: input.as_of, baseline_snapshot: baselines, prior_events: priorEvents, phase_for_date: input.phase_for_date }));
   const tcmStates = profiled('tcm-states',()=>analyzeTcmStates({ logs: input.logs, as_of: input.as_of }));
   const tcmClusters = profiled('tcm-clusters',()=>analyzeTcmClusters({ logs: input.logs, periods: input.periods, as_of: input.as_of, rules_config: input.tcm_rules }));
+  const constitutionProfile = profiled('constitution-profile',()=>analyzeConstitutionProfile({ profile: input.constitution_profile, logs: input.logs, as_of: input.as_of }));
   const rawInsights = profiled('insight-builder',()=>buildInsights({ logs: input.logs, periods: input.periods, as_of: input.as_of, next_start: input.next_start, prediction_confidence: input.prediction_confidence, config: input.config, observation_actions: input.observation_actions, tcm_clusters: tcmClusters }));
   const explanations = profiled('explanations',()=>[
     ...evidence.health_events.map(explanationFromEvent),
@@ -100,7 +103,7 @@ function calculateCore(input, signatures, calculatedAt, previous) {
     ...tcmClusters.map((item) => tcmExplanation(item, calculatedAt)),
     ...rawInsights.map((item) => insightExplanation(item, calculatedAt))
   ]);
-  return Object.freeze({ quality, baselines, health_events: evidence.health_events, patterns: evidence.patterns, target_window: evidence.target_window, tcm_states: tcmStates, tcm_clusters: tcmClusters, raw_insights: rawInsights, explanations });
+  return Object.freeze({ quality, baselines, health_events: evidence.health_events, patterns: evidence.patterns, target_window: evidence.target_window, tcm_states: tcmStates, tcm_clusters: tcmClusters, constitution_profile: constitutionProfile, raw_insights: rawInsights, explanations });
 }
 
 export function runAnalysis(input = {}, options = {}) {
@@ -115,6 +118,7 @@ export function runAnalysis(input = {}, options = {}) {
     recommendations = previous?._dependency_signatures?.recommendations === signatures.recommendations && previous.recommendations ? previous.recommendations : generateRecommendations({
       today_record: normalized.logs[normalized.as_of], record_date: normalized.as_of, health_events: core.health_events,
       patterns: core.patterns, tcm_states: core.tcm_states, tcm_patterns: core.tcm_clusters,
+      constitution_profile: core.constitution_profile,
       intervention_library: normalized.intervention_library, phase: normalized.phase || {}, intervention_history: normalized.intervention_usage
     });
   }

@@ -68,10 +68,16 @@ assert.match(app, /import\('\.\/traditional-care\.js'\)/, '传统调养必须按
 assert.match(worker, /version:'v\d+'/,'Worker 健康检查必须暴露独立部署版本');
 assert.match(insightsPage, /renderStateClusters/, '趋势页必须渲染多状态组合卡片');
 assert.match(insightsPage, /renderTcmStates/, '趋势页必须渲染近期中医状态');
+assert.match(insightsPage, /renderConstitution/, '趋势页必须渲染长期体质档案及空状态');
 assert.match(insightsPage, /tcmPatternCard/, '趋势页必须用独立模式卡展示跨周期TCM模式');
 assert.match(insightsPage, /phaseSpecificity/, 'TCM模式卡必须展示周期特异性');
 assert.match(insightsPage, /contradictingFeatures/, 'TCM模式卡必须展示反向证据');
 assert.match(html, /id="insightsTcmStates"/, '趋势页必须提供常驻的近期中医状态区域');
+assert.match(html, /id="insightsConstitutionProfile"/, '趋势页必须提供长期体质结果入口');
+assert.match(html, /id="constitutionProfileForm"/, '更多页面必须提供长期体质人工编辑入口');
+assert.match(app, /constitutionProfile:settings\.constitutionProfile/, '长期体质档案必须进入设备同步 payload');
+assert.match(worker, /validateConstitutionProfile/, '同步服务必须校验长期体质档案');
+assert.match(traditional, /matched_constitutions/, 'Today 推荐解释必须能够展示长期倾向依据');
 assert.doesNotMatch(html, /details[^>]+tcm-state-overview/, '近期中医状态不得默认折叠隐藏');
 assert.match(insightsPage, /section\.hidden = false/, '无成熟TCM组合时也必须保留功能入口和空状态');
 assert.match(traditional, /近期中医状态/, 'Today 调养区域必须展示近期状态或收集进度');

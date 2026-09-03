@@ -1,4 +1,4 @@
-const CACHE='period-helper-v112';
+const CACHE='period-helper-v113';
 const REQUIRED_ASSETS=[
   './',
   './index.html',
@@ -13,6 +13,7 @@ const REQUIRED_ASSETS=[
   './analysis/data-quality-engine.js',
   './analysis/baseline-engine.js',
   './analysis/baseline-snapshot-store.js',
+  './analysis/constitution-profile.js',
   './wellness-engine.js',
   './intervention-feedback.js',
   './app.js'

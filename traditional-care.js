@@ -143,9 +143,11 @@ function recommendationContext(recommendation) {
   const patterns = (recommendation.matched_patterns || []).map((item) => item.name).filter(Boolean);
   const phase = (recommendation.matched_patterns || []).find((item) => item.phase_boost)?.phase_specificity?.label;
   const history = recommendation.personal_history || {};
+  const constitutions = (recommendation.matched_constitutions || []).map((item) => item.name).filter(Boolean);
   if (states.length) rows.push(`<div><dt>近期状态</dt><dd>${states.slice(0, 2).map(esc).join('、')}</dd></div>`);
   if (patterns.length) rows.push(`<div><dt>重复模式</dt><dd>${patterns.slice(0, 2).map(esc).join('、')}</dd></div>`);
   if (phase) rows.push(`<div><dt>周期原因</dt><dd>${esc(phase)}，与今天的周期阶段一致。</dd></div>`);
+  if (constitutions.length) rows.push(`<div><dt>长期倾向</dt><dd>${constitutions.slice(0, 2).map(esc).join('、')}只作低权重参考；不会压过今天的记录。</dd></div>`);
   if (history.response_sample_size >= 3) rows.push(`<div><dt>个人效果</dt><dd>过去记录 ${history.response_sample_size} 次，其中 ${history.helpful_uses} 次有帮助${history.response_quality === 'stable' ? '，数据较稳定' : '，仍在积累'}。</dd></div>`);
   if ((recommendation.contradicting_signals || []).length) rows.push('<div><dt>反向信息</dt><dd>已降低匹配权重；不会忽略与你当前记录相反的表现。</dd></div>');
   return rows.join('');
@@ -172,12 +174,12 @@ function interventionCard(recommendation) {
   return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${recommendationContext(recommendation)}${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft${recorded ? ' is-recorded' : ''}" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}" ${recorded ? `disabled aria-label="${esc(item.name)}今天已记录效果"` : ''}>${recorded ? '今天已记录 ✓' : '记录这次效果'}</button></div></details>`;
 }
 
-async function renderEngineRecommendations({ root, token, phase, log, logs }) {
+async function renderEngineRecommendations({ root, token, phase, log, logs, constitutionProfile }) {
   try {
     const { library, config, tcmRules, observationActions } = await loadAnalysisResources();
     if (token !== recommendationRenderToken || !root.isConnected) return;
     const interventionUsage = readInterventionUsage();
-    const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: interventionHistoryBeforeToday(interventionUsage), intervention_library: library, phase }, { previous_snapshot: latestAnalysisSnapshot });
+    const analysis = runAnalysis({ logs, periods: phase.ps || [], as_of: phase.date || todayIso(), next_start: phase.next, prediction_confidence: phase.confidence, config, tcm_rules: tcmRules, observation_actions: observationActions, intervention_usage: interventionHistoryBeforeToday(interventionUsage), intervention_library: library, constitution_profile: constitutionProfile, phase }, { previous_snapshot: latestAnalysisSnapshot });
     latestAnalysisSnapshot = analysis;
     const result = analysis.recommendations;
     if (token !== recommendationRenderToken) return;
@@ -203,7 +205,7 @@ function recentEvidence(recent, signals) {
   return lines.slice(0, 3);
 }
 
-globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
+globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}, constitutionProfile = null) => {
   const root = document.querySelector('#tcmAdvice');
   if (!root) return;
   const recent = recentContext(logs), signals = signalsFor(log, recent), theory = PHASE_THEORY[phase.key] || PHASE_THEORY.follicular, bodySense = buildCareContext({ log, record_date: phase.date, phase }).context;
@@ -247,6 +249,6 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}) => {
       </section>
     </div>`;
   const planRoot = typeof root.querySelector === 'function' ? root.querySelector('[data-recommendation-plan]') : null;
-  if (planRoot) renderEngineRecommendations({ root: planRoot, token, phase, log, logs });
+  if (planRoot) renderEngineRecommendations({ root: planRoot, token, phase, log, logs, constitutionProfile });
 };
 

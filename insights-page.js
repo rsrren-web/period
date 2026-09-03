@@ -123,13 +123,28 @@ function renderTcm(data) {
   section.hidden = false;
   root.innerHTML = data.tcmClusters.length ? data.tcmClusters.map(tcmPatternCard).join('') : empty('还没有跨周期重复模式', '继续记录具体体感；至少覆盖两个完整周期后，这里才会显示反复出现的组合。');
 }
+function renderConstitution(data) {
+  const root = document.querySelector('#insightsConstitutionProfile');
+  if (!root) return;
+  const profile = data.constitutionProfile;
+  if (!profile?.established) {
+    root.innerHTML = `<div class="insights-empty"><strong>尚未建立长期体质基线</strong><p>长期体质不会根据最近几天自动判断。请在“更多 → 长期体质倾向”中录入已有问卷或专业评估结果。</p><button type="button" class="soft compact" data-view="more">去建立调养档案</button></div>`;
+    return;
+  }
+  const levels = { low: '轻微', moderate: '较明显', high: '很明显' }, changes = { increased: '最近14天相关表现增加', decreased: '最近14天相关表现减少', stable: '最近14天与此前接近', insufficient: '近期变化仍在收集' };
+  root.innerHTML = `<div class="constitution-summary-list">${profile.active.map((item) => {
+    const evidence = item.evidence90d, parts = evidence.supportingEvidence || [];
+    const evidenceText = evidence.confidence === 'manual_only' ? '此类不从每日记录推断' : evidence.validDays < 10 ? `过去90天仅有 ${evidence.validDays} 个相关记录日，证据仍少` : `过去90天 ${evidence.supportingDays}/${evidence.validDays} 个相关记录日出现支持表现`;
+    return `<article class="constitution-summary-card"><header><strong>${esc(item.name)}</strong><span>${esc(levels[item.level])} · 人工基线</span></header><p>${esc(evidenceText)}；${esc(changes[item.recentDifference.direction])}。</p><details><summary>为什么</summary><p>${esc(item.description)}</p><p><strong>90天支持记录：</strong>${parts.map((part) => `${esc(part.label)} ${part.count}天`).join('、') || '暂无可用的日常支持记录'}</p><p>这些记录只用于与人工基线对照，不会自动修改或诊断体质。</p></details></article>`;
+  }).join('')}</div>`;
+}
 function renderQuality(data) {
   const root = document.querySelector('#insightsDataQuality');
   if (root) root.innerHTML = Object.values(data.dataQualitySummary.metrics).map((item) => `<div class="quality-row"><span>${esc(labels[item.metric] || item.metric)}</span><strong>${item.valid_days}/${item.total_days} 天</strong><small>${pct(item.completion_rate)} · ${esc(item.quality_level)}</small></div>`).join('');
 }
 function addOneDay(value) { return new Date(Date.parse(`${value}T12:00:00Z`) + 86400000).toISOString().slice(0, 10); }
 function renderPage(data, actions) {
-  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderTemporalClusters(data); renderInterventions(data); renderTcmStates(data); renderTcm(data); renderQuality(data);
+  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderTemporalClusters(data); renderInterventions(data); renderTcmStates(data); renderConstitution(data); renderTcm(data); renderQuality(data);
   const stamp = document.querySelector('#insightsGeneratedAt');
   if (stamp) stamp.textContent = `更新于 ${new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' }).format(new Date(data.generatedAt))}`;
 }
@@ -139,7 +154,7 @@ globalThis.renderInsightsV1 = async (context) => {
   const token = ++renderToken;
   const now = new Date();
   const asOf = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const input = { logs: context?.logs || {}, periods: context?.periods || [], as_of: asOf, next_start: context?.next, prediction_confidence: context?.predictionConfidence, intervention_usage: readInterventionUsage() };
+  const input = { logs: context?.logs || {}, periods: context?.periods || [], as_of: asOf, next_start: context?.next, prediction_confidence: context?.predictionConfidence, intervention_usage: readInterventionUsage(), constitution_profile: context?.constitutionProfile || null };
   try {
     const { config, tcmRules, observationActions } = await loadResources();
     if (token !== renderToken || context?.isCurrent?.() === false) return false;

@@ -1350,6 +1350,20 @@ body { min-width: 320px; line-height: 1.6 }
 .tcm-state-trend.trend-falling { color: #2f7066; background: #e5f4f0 }
 .tcm-state-evidence { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px }
 .tcm-state-evidence span { padding: 6px 9px; border-radius: 999px; color: var(--ink); background: var(--surface-muted); font-size: var(--text-caption) }
+.constitution-profile-panel { margin-top: 14px }
+.constitution-profile-panel > summary { cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; list-style: none }
+.constitution-profile-panel > summary span:first-child { display: grid; gap: 2px }
+.constitution-profile-form { display: grid; gap: 14px; margin-top: 16px }
+.constitution-profile-form > p { margin: 0; color: var(--ink-muted) }
+.constitution-profile-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px }
+.constitution-profile-grid label { display: grid; gap: 6px; padding: 10px; border-radius: 14px; background: var(--surface-muted) }
+.constitution-profile-grid label span { font-weight: 650 }
+.constitution-summary-list { display: grid; gap: 10px }
+.constitution-summary-card { padding: 13px 14px; border-radius: 16px; background: var(--surface-muted) }
+.constitution-summary-card header { display: flex; justify-content: space-between; gap: 10px; align-items: baseline }
+.constitution-summary-card p { margin: 6px 0 0; color: var(--ink-muted) }
+.constitution-summary-card details { margin-top: 8px }
+@media (max-width: 520px) { .constitution-profile-grid { grid-template-columns: 1fr } }
 .tcm-state-card details { margin-top: 11px }
 .tcm-state-card details p { margin: 8px 0 0; color: var(--ink-muted); font-size: var(--text-caption); line-height: 1.6 }
 .tcm-state-empty .soft { margin-top: 10px }

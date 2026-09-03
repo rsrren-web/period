@@ -125,9 +125,9 @@ function noRecommendation(gate, date, evaluatedAt, extraReasons = []) {
   return Object.freeze({ status: 'NO_RECOMMENDATION', recommendations: [], gate, reasons, explanations: [createExplanation({ id: `recommendation:none:${date}`, kind: 'recommendation.gate', scope: { date }, quality_level: 'limited', confidence_level: 'low', reasons, calculated_at: evaluatedAt })], valid_for_date: date, evaluated_at: evaluatedAt });
 }
 
-export function generateRecommendations({ today_record, record_date, health_events = [], patterns = [], tcm_states = [], tcm_patterns = [], intervention_library, phase = {}, safety, contraindication, medication, intervention_history = [], now = new Date().toISOString() } = {}) {
+export function generateRecommendations({ today_record, record_date, health_events = [], patterns = [], tcm_states = [], tcm_patterns = [], constitution_profile = null, intervention_library, phase = {}, safety, contraindication, medication, intervention_history = [], now = new Date().toISOString() } = {}) {
   if (!intervention_library) throw new TypeError('intervention_library is required');
-  const adapted = adaptRecommendationContext({ today_record, record_date, phase, health_events, patterns, tcm_states, tcm_patterns, safety, contraindication, medication, intervention_history });
+  const adapted = adaptRecommendationContext({ today_record, record_date, phase, health_events, patterns, tcm_states, tcm_patterns, constitution_profile, safety, contraindication, medication, intervention_history });
   const cycleDay = adapted.context.cycle_day;
   const gate = evaluateRecommendationGate({ today_record, health_events, patterns, tcm_states, tcm_patterns, intervention_library, current_discomforts: adapted.current_discomforts, cycle_day: cycleDay });
   if (!gate.passed) return noRecommendation(gate, record_date, now);
@@ -159,8 +159,9 @@ export function generateRecommendations({ today_record, record_date, health_even
       persistence_matches: item.candidate.persistence_matches,
       matched_states: item.candidate.state_matches,
       matched_patterns: item.candidate.tcm_pattern_matches,
+      matched_constitutions: item.candidate.constitution_matches,
       contradicting_signals: item.candidate.contradiction_matches,
-      score_components: Object.freeze({ today_match: item.candidate.base_score, same_day_combination: item.candidate.combination_boost, persistence: item.candidate.persistence_boost, recent_state: item.candidate.recent_state_boost, tcm_pattern: item.candidate.tcm_pattern_boost, contradiction: -item.candidate.contradiction_penalty, personal_effectiveness: item.candidate.feedback_adjustment }),
+      score_components: Object.freeze({ today_match: item.candidate.base_score, same_day_combination: item.candidate.combination_boost, persistence: item.candidate.persistence_boost, recent_state: item.candidate.recent_state_boost, tcm_pattern: item.candidate.tcm_pattern_boost, constitution_support: item.candidate.constitution_support_boost, contradiction: -item.candidate.contradiction_penalty, personal_effectiveness: item.candidate.feedback_adjustment }),
       personal_history: item.candidate.history,
       unknown_safety_fields: item.candidate.unknown_safety_fields,
       intervention: item.candidate.intervention
@@ -169,7 +170,7 @@ export function generateRecommendations({ today_record, record_date, health_even
     if (selected.length >= ANALYSIS_CONFIG.recommendations.max_items) break;
   }
   if (!selected.length) return noRecommendation(gate, record_date, now, ['NO_INTERVENTION_PASSED_MATCHING_AND_EXCLUSIONS']);
-  const explanations = selected.map((item) => createExplanation({ id: item.recommendation_id, kind: 'recommendation.match', metric: item.reason.metric, scope: { date: record_date, cycle_phase: phase.key || null }, evidence: item.supporting_evidence, quality_level: 'usable', confidence_level: item.source_pattern_id || item.source_state_id ? 'medium' : 'low', source_ids: [item.source_event_id, item.source_pattern_id, item.source_state_id, item.intervention_id], calculated_at: now }));
+  const explanations = selected.map((item) => createExplanation({ id: item.recommendation_id, kind: 'recommendation.match', metric: item.reason.metric, scope: { date: record_date, cycle_phase: phase.key || null }, evidence: item.supporting_evidence, quality_level: 'usable', confidence_level: item.source_pattern_id || item.source_state_id ? 'medium' : 'low', source_ids: [item.source_event_id, item.source_pattern_id, item.source_state_id, ...(item.matched_constitutions || []).map((entry) => entry.constitution_id), item.intervention_id], calculated_at: now }));
   return Object.freeze({ status: 'RECOMMENDATIONS', recommendations: selected, gate, reasons: [], explanations, valid_for_date: record_date, evaluated_at: now });
 }
 

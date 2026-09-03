@@ -12,14 +12,14 @@
 | 近期中医状态 | `tcm-state-engine` | 派生，不写回每日记录 | 7 个 `TcmState`，含支持证据、反证、频率、趋势和可信度 | Today、趋势、推荐排序与解释 | 来源于每日记录 | Today 最多3项；趋势常驻模块 | 无数据时显示用途、有效记录天数、门槛和记录入口 | state engine、recommendation、orchestrator、UI contract | 已闭环接通 |
 | TCM pattern/cluster | `tcm-cluster-engine` | 派生分析快照 | 9 个 `TcmPattern`，含支持条件、反证、加权分数、组成项、近期出现和跨周期支持 | 趋势、推荐排序与解释 | 来源于每日记录 | 趋势 → 反复模式 | 无成熟结果时常驻显示继续记录；有结果时可展开支持与反向证据 | pattern engine、recommendation、orchestrator、UI contract | 已闭环接通 |
 | 周期特异性 | `tcm-cluster-engine` | 派生分析快照 | `phase_specificity`：经期、经前5天、经后恢复期、全周期或未集中 | 趋势、推荐阶段加权 | 来源于周期和每日记录 | 趋势 → 反复模式；Today 推荐“周期原因” | 每个已识别模式显示主要周期位置；与今天一致时小幅加权 | pattern phase、recommendation tests | 已接通 |
-| 长期体质 | 待建 ConstitutionProfile | 待定 profile schema | `constitutionBaseline`、`constitutionEvidence90d` | 推荐低权重、趋势 | More → 调养档案 | 趋势“长期体质” | 无人工基线时明确“尚未建立” | 待建 migration/UI | 未实现 |
+| 长期体质 | 用户人工录入 + `constitution-profile` 90天证据分析 | `settings.constitutionProfile` v1：`baseline`、`source`、`assessedAt`、`editable`、`updatedAt` | 九类 `ConstitutionProfile` baseline、`evidence90d`、`recentDifference` | 推荐低权重排序、趋势 | More → 调养档案 → 长期体质倾向 | 趋势 → 我的体质倾向档案；Today 建议“长期倾向” | 无人工基线时明确“尚未建立”并提供入口；日常记录不自动诊断或改写 | constitution、recommendation、sync、UI contract | 已闭环接通 |
 | 调养推荐 | RecommendationEngine + intervention 库 | 派生 | `CareRecommendation` | Today renderer | 自动生成 | Today 针对性调养 | 无证据不推荐；当天记录优先于近期状态和跨周期模式 | recommendation、TCM ranking tests | state/pattern/persistence/phase 已接通；安全档案待后续阶段 |
 | 推荐解释 | RecommendationEngine | `why_matched`、`matched_states`、`matched_patterns`、`score_components` 等派生数据 | today、state、pattern、phase、history、contradiction | Today renderer | 无单独入口 | 建议卡“为什么”、近期状态、重复模式、周期原因、个人效果 | 反向信息参与扣分且在卡片说明 | explanation、TCM recommendation tests | 已接通；context feedback 待后续阶段 |
 | 固定阶段食养 | DailyNourishment | 不保存推荐 | phase nourishment | Today renderer | 自动生成 | Today 每日阶段食养 | 当前无反馈入口 | nourishment tests | 部分接通 |
 | 调养反馈 | 反馈弹窗 | 独立 `period-intervention-usage-v1` | 总体有效率 | 推荐排序、趋势 | Today 建议卡 | 趋势“对我有效” | 同日去重；尚无 context 和安全不适 | feedback tests | 部分接通 |
 | 个人效果排序 | InterventionEngine | 读取独立反馈 | `feedback_adjustment` | 推荐排序 | 来源于反馈 | 趋势 + 推荐理由待完善 | 3 次开始使用，5 次前标记数据少 | intervention tests | 部分接通 |
 | 安全信息和禁忌 | intervention exclusions；无完整用户生产者 | 尚无统一 profile | `safety_event`、`contraindication.*`、`medication.*` | InterventionEngine | 待建 More → 调养安全信息 | 建议卡安全提醒 | 未知字段目前未可靠阻断高风险建议 | safety tests | 未实现/高风险 |
-| 导入导出及同步 | App + Worker | schemaVersion 3 state | periods、logs、settings | 全应用 | More → 备份/同步 | More 同步状态 | feedback、未来 profile 尚未进入统一 state | sync/device tests | 部分接通 |
+| 导入导出及同步 | App + Worker | schemaVersion 3 state | periods、logs、settings（含 `constitutionProfile`） | 全应用 | More → 备份/同步 | More 同步状态 | 长期体质已支持导出、导入、设备同步和按 `updatedAt` 合并；feedback 尚未进入统一 state | sync/device tests | 长期体质已接通；feedback 待后续阶段 |
 
 ## 字段处置规则
 
@@ -33,7 +33,7 @@
 
 1. 未触碰字段保持 `null/not_recorded`，明确“没有”与未记录不同。
 2. ✅ 所有分析、建议和详情展示消费者读取 `tcm:*`、`detail:*` 时统一经过 `buildCareContext()`；表单模型只负责读写存储编码。
-3. ✅ 近期状态已独立为 `TcmState`；跨周期 pattern 已扩展为 9 类并加入反证、周期特异性和跨周期验证；长期体质和调养决策仍保持独立。
+3. ✅ 近期状态已独立为 `TcmState`；跨周期 pattern 已扩展为 9 类；长期体质使用独立人工基线和90天证据，不由近期状态替代。
 4. ✅ state/pattern 已真实影响推荐排序和解释；当天记录优先，反向证据扣分，周期集中与今天一致时小幅加权。
-5. 反馈、安全档案和长期体质进入备份、导入、同步、迁移和去重。
+5. ✅ 长期体质已进入备份、导入、同步和按更新时间合并；反馈与安全档案留待后续阶段。
 6. 数据不足时展示进度与记录入口，不隐藏用户可见功能。

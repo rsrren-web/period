@@ -180,8 +180,8 @@ function contextualBoosts(context, matchedFeatures, intervention) {
     persistenceBoost += boost;
     persistenceMatches.push({ metric, matched_fields: matchingFields, consecutive_days: state.consecutive_days, event_id: state.event_id, boost });
   }
-  const stateMatches = [], patternMatches = [], contradictionMatches = [];
-  let recentStateBoost = 0, tcmPatternBoost = 0, contradictionPenalty = 0;
+  const stateMatches = [], patternMatches = [], constitutionMatches = [], contradictionMatches = [];
+  let recentStateBoost = 0, tcmPatternBoost = 0, constitutionSupportBoost = 0, contradictionPenalty = 0;
   for (const state of context.tcm_states || []) {
     if (!state?.active) continue;
     const fields = fieldOverlap(candidateFields, (state.supportingEvidence || []).map((item) => item.field).filter(Boolean));
@@ -215,12 +215,23 @@ function contextualBoosts(context, matchedFeatures, intervention) {
       contradictionMatches.push({ source_type: 'tcm_pattern', source_id: pattern.cluster_id, fields: opposed, penalty });
     }
   }
+  for (const constitution of context.constitution_profile?.active || []) {
+    if (!['moderate', 'high'].includes(constitution?.level)) continue;
+    const evidence = constitution.evidence90d || {};
+    const fields = fieldOverlap(candidateFields, evidence.definitionFields || []);
+    if (!fields.length) continue;
+    const observedFields = fieldOverlap(candidateFields, (evidence.supportingEvidence || []).map((item) => item.field));
+    const boost = Math.min(1, (constitution.level === 'high' ? 0.75 : 0.5) + (observedFields.length && evidence.validDays >= 10 ? 0.25 : 0));
+    constitutionSupportBoost += boost;
+    constitutionMatches.push({ constitution_id: constitution.id, name: constitution.name, level: constitution.level, fields, observed_fields: observedFields, evidence_confidence: evidence.confidence, boost });
+  }
   return {
     combination_boost: Math.min(4, combinationBoost), persistence_boost: Math.min(3, persistenceBoost),
     recent_state_boost: Math.min(4, recentStateBoost), tcm_pattern_boost: Math.min(4, tcmPatternBoost),
+    constitution_support_boost: Math.min(2, constitutionSupportBoost),
     contradiction_penalty: Math.min(4, contradictionPenalty),
     combination_matches: combinationMatches, persistence_matches: persistenceMatches,
-    state_matches: stateMatches, tcm_pattern_matches: patternMatches, contradiction_matches: contradictionMatches
+    state_matches: stateMatches, tcm_pattern_matches: patternMatches, constitution_matches: constitutionMatches, contradiction_matches: contradictionMatches
   };
 }
 
@@ -249,7 +260,7 @@ export function evaluateIntervention(intervention, context = {}, options = {}) {
   const matchedFeatures = scoringChecks.filter((feature) => feature.matched);
   const baseScore = matchedFeatures.reduce((sum, feature) => sum + feature.weight, 0);
   const boosts = contextualBoosts(context, matchedFeatures, intervention);
-  const score = baseScore + boosts.combination_boost + boosts.persistence_boost + boosts.recent_state_boost + boosts.tcm_pattern_boost - boosts.contradiction_penalty;
+  const score = baseScore + boosts.combination_boost + boosts.persistence_boost + boosts.recent_state_boost + boosts.tcm_pattern_boost + boosts.constitution_support_boost - boosts.contradiction_penalty;
   const minimumScore = Number(matching.minimum_score) || 0;
   if (score < minimumScore) blocked.push({ code: 'minimum_score_not_met', score, minimum_score: minimumScore });
   if (policy.requires_current_state && !currentStateAvailable(context, matchedFeatures, options)) blocked.push({ code: 'current_state_required' });
