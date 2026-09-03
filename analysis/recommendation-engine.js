@@ -36,7 +36,10 @@ function supportedTemporal(pattern) {
   return pattern?.pattern_type === 'temporal_association' && pattern.status === 'detected' && supportedConfidence(pattern);
 }
 
-export function evaluateRecommendationGate({ today_record, health_events = [], patterns = [], intervention_library, current_discomforts = [], cycle_day } = {}) {
+const canonicalTcmField = (field) => ({ warmth_relief: 'pain_response.warmth_relief', lower_abdomen_pain: 'pain.lower_abdomen', breast_chest_pain: 'breast_tenderness', neck_shoulder_pain: 'pain.neck_shoulder', sleep: 'sleep_quality', activity: 'activity_level' })[field] || field;
+const supportingFields = (item) => (item?.supportingEvidence || item?.constituent_features || []).map((evidence) => canonicalTcmField(evidence.field)).filter(Boolean);
+
+export function evaluateRecommendationGate({ today_record, health_events = [], patterns = [], tcm_states = [], tcm_patterns = [], intervention_library, current_discomforts = [], cycle_day } = {}) {
   const triggers = [];
   for (const event of health_events.filter(validEvent)) triggers.push({
     trigger_type: 'health_event', source_event_id: event.event_id, source_pattern_id: null,
@@ -51,11 +54,25 @@ export function evaluateRecommendationGate({ today_record, health_events = [], p
     trigger_type: 'cycle_pattern', source_event_id: null, source_pattern_id: pattern.pattern_id,
     metric: pattern.metric, source_priority: ANALYSIS_CONFIG.recommendations.source_priority.cycle_pattern, evidence: pattern
   });
+  for (const state of tcm_states.filter((item) => item?.active && item.confidence !== 'insufficient')) {
+    const related = supportingFields(state).filter((metric) => librarySupportsMetric(intervention_library, metric));
+    if (related.length) triggers.push({
+      trigger_type: 'recent_state', source_event_id: null, source_pattern_id: null, source_state_id: state.id,
+      metric: state.id, related_metrics: related, source_priority: ANALYSIS_CONFIG.recommendations.source_priority.recent_state, evidence: state
+    });
+  }
+  for (const pattern of tcm_patterns.filter((item) => item?.status === 'detected')) {
+    const related = supportingFields(pattern).filter((metric) => librarySupportsMetric(intervention_library, metric));
+    if (related.length) triggers.push({
+      trigger_type: 'tcm_pattern', source_event_id: null, source_pattern_id: pattern.cluster_id,
+      metric: pattern.cluster_id, related_metrics: related, source_priority: ANALYSIS_CONFIG.recommendations.source_priority.tcm_pattern, evidence: pattern
+    });
+  }
   for (const item of current_discomforts) if (librarySupportsMetric(intervention_library, item.metric)) triggers.push({
     trigger_type: 'current_discomfort', source_event_id: null, source_pattern_id: null,
     metric: item.metric, source_priority: ANALYSIS_CONFIG.recommendations.source_priority.current_discomfort, evidence: item
   });
-  const unique = [...new Map(triggers.map((trigger) => [`${trigger.trigger_type}:${trigger.source_event_id || trigger.source_pattern_id || trigger.metric}`, trigger])).values()];
+  const unique = [...new Map(triggers.map((trigger) => [`${trigger.trigger_type}:${trigger.source_event_id || trigger.source_pattern_id || trigger.source_state_id || trigger.metric}`, trigger])).values()];
   return {
     passed: unique.length > 0,
     status: unique.length ? 'PASSED' : 'NO_RECOMMENDATION',
@@ -63,6 +80,7 @@ export function evaluateRecommendationGate({ today_record, health_events = [], p
     reasons: unique.length ? [] : [
       'NO_VALID_DEVIATION_OR_PERSISTENCE',
       'NO_ACTIVE_SUPPORTED_PATTERN',
+      'NO_ACTIVE_TCM_STATE_OR_PATTERN',
       'NO_EXPLICIT_MAPPED_DISCOMFORT'
     ],
     record_present: Boolean(today_record)
@@ -70,7 +88,10 @@ export function evaluateRecommendationGate({ today_record, health_events = [], p
 }
 
 function triggerMatchesCandidate(trigger, candidate) {
-  const fields = new Set(candidate.matched_features.map((feature) => feature.condition.field));
+  const fields = new Set([
+    ...candidate.scoring_checks.map((feature) => feature.condition.field),
+    ...(candidate.intervention?.observation?.primary_metrics || [])
+  ]);
   if (fields.has(trigger.metric)) return true;
   if (trigger.related_metrics?.some((metric) => fields.has(metric))) return true;
   if (trigger.metric === 'pain_max' && [...fields].some((field) => field.startsWith('pain.'))) return true;
@@ -95,7 +116,7 @@ function whyMatched(candidate, fieldEvidence = {}) {
 }
 
 function recommendationId(date, interventionId, trigger) {
-  const source = trigger.source_event_id || trigger.source_pattern_id || `${trigger.trigger_type}:${trigger.metric}`;
+  const source = trigger.source_event_id || trigger.source_pattern_id || trigger.source_state_id || `${trigger.trigger_type}:${trigger.metric}`;
   return `recommendation:${date}:${interventionId}:${source}`;
 }
 
@@ -104,13 +125,13 @@ function noRecommendation(gate, date, evaluatedAt, extraReasons = []) {
   return Object.freeze({ status: 'NO_RECOMMENDATION', recommendations: [], gate, reasons, explanations: [createExplanation({ id: `recommendation:none:${date}`, kind: 'recommendation.gate', scope: { date }, quality_level: 'limited', confidence_level: 'low', reasons, calculated_at: evaluatedAt })], valid_for_date: date, evaluated_at: evaluatedAt });
 }
 
-export function generateRecommendations({ today_record, record_date, health_events = [], patterns = [], intervention_library, phase = {}, safety, contraindication, medication, intervention_history = [], now = new Date().toISOString() } = {}) {
+export function generateRecommendations({ today_record, record_date, health_events = [], patterns = [], tcm_states = [], tcm_patterns = [], intervention_library, phase = {}, safety, contraindication, medication, intervention_history = [], now = new Date().toISOString() } = {}) {
   if (!intervention_library) throw new TypeError('intervention_library is required');
-  const adapted = adaptRecommendationContext({ today_record, record_date, phase, health_events, patterns, safety, contraindication, medication, intervention_history });
+  const adapted = adaptRecommendationContext({ today_record, record_date, phase, health_events, patterns, tcm_states, tcm_patterns, safety, contraindication, medication, intervention_history });
   const cycleDay = adapted.context.cycle_day;
-  const gate = evaluateRecommendationGate({ today_record, health_events, patterns, intervention_library, current_discomforts: adapted.current_discomforts, cycle_day: cycleDay });
+  const gate = evaluateRecommendationGate({ today_record, health_events, patterns, tcm_states, tcm_patterns, intervention_library, current_discomforts: adapted.current_discomforts, cycle_day: cycleDay });
   if (!gate.passed) return noRecommendation(gate, record_date, now);
-  const ranking = rankInterventions(intervention_library, adapted.context, { now, history: intervention_history, currentStateAvailable: adapted.context.current_state_available, personalPatternAvailable: gate.triggers.some((trigger) => trigger.trigger_type === 'personal_pattern') });
+  const ranking = rankInterventions(intervention_library, adapted.context, { now, history: intervention_history, currentStateAvailable: adapted.context.current_state_available, personalPatternAvailable: gate.triggers.some((trigger) => ['personal_pattern', 'tcm_pattern'].includes(trigger.trigger_type)) });
   const linked = ranking.candidates.map((candidate) => ({ candidate, evidence: evidenceRank(candidate, gate.triggers) })).filter((item) => item.evidence.length);
   linked.sort((left, right) => right.evidence[0].source_priority - left.evidence[0].source_priority ||
     right.candidate.score - left.candidate.score || right.candidate.effective_priority - left.candidate.effective_priority ||
@@ -126,15 +147,21 @@ export function generateRecommendations({ today_record, record_date, health_even
       recommendation_id: recommendationId(record_date, item.candidate.intervention_id, primary),
       source_event_id: primary.source_event_id,
       source_pattern_id: primary.source_pattern_id,
+      source_state_id: primary.source_state_id || null,
       intervention_id: item.candidate.intervention_id,
       reason: Object.freeze({ code: primary.trigger_type.toUpperCase(), metric: primary.metric, evidence_type: primary.trigger_type, observed_value: primary.evidence?.value ?? null }),
       priority,
-      supporting_evidence: item.evidence.map((evidence) => ({ type: evidence.trigger_type, id: evidence.source_event_id || evidence.source_pattern_id || null, metric: evidence.metric })),
+      supporting_evidence: item.evidence.map((evidence) => ({ type: evidence.trigger_type, id: evidence.source_event_id || evidence.source_pattern_id || evidence.source_state_id || null, metric: evidence.metric })),
       match_score: item.candidate.score,
       base_match_score: item.candidate.base_score,
       why_matched: whyMatched(item.candidate, adapted.evidence),
       combination_matches: item.candidate.combination_matches,
       persistence_matches: item.candidate.persistence_matches,
+      matched_states: item.candidate.state_matches,
+      matched_patterns: item.candidate.tcm_pattern_matches,
+      contradicting_signals: item.candidate.contradiction_matches,
+      score_components: Object.freeze({ today_match: item.candidate.base_score, same_day_combination: item.candidate.combination_boost, persistence: item.candidate.persistence_boost, recent_state: item.candidate.recent_state_boost, tcm_pattern: item.candidate.tcm_pattern_boost, contradiction: -item.candidate.contradiction_penalty, personal_effectiveness: item.candidate.feedback_adjustment }),
+      personal_history: item.candidate.history,
       unknown_safety_fields: item.candidate.unknown_safety_fields,
       intervention: item.candidate.intervention
     }));
@@ -142,7 +169,7 @@ export function generateRecommendations({ today_record, record_date, health_even
     if (selected.length >= ANALYSIS_CONFIG.recommendations.max_items) break;
   }
   if (!selected.length) return noRecommendation(gate, record_date, now, ['NO_INTERVENTION_PASSED_MATCHING_AND_EXCLUSIONS']);
-  const explanations = selected.map((item) => createExplanation({ id: item.recommendation_id, kind: 'recommendation.match', metric: item.reason.metric, scope: { date: record_date }, evidence: item.supporting_evidence, quality_level: 'usable', confidence_level: item.source_pattern_id ? 'medium' : 'low', source_ids: [item.source_event_id, item.source_pattern_id, item.intervention_id], calculated_at: now }));
+  const explanations = selected.map((item) => createExplanation({ id: item.recommendation_id, kind: 'recommendation.match', metric: item.reason.metric, scope: { date: record_date, cycle_phase: phase.key || null }, evidence: item.supporting_evidence, quality_level: 'usable', confidence_level: item.source_pattern_id || item.source_state_id ? 'medium' : 'low', source_ids: [item.source_event_id, item.source_pattern_id, item.source_state_id, item.intervention_id], calculated_at: now }));
   return Object.freeze({ status: 'RECOMMENDATIONS', recommendations: selected, gate, reasons: [], explanations, valid_for_date: record_date, evaluated_at: now });
 }
 

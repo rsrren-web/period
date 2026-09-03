@@ -75,6 +75,9 @@ assert.match(html, /id="insightsTcmStates"/, '趋势页必须提供常驻的近�
 assert.doesNotMatch(html, /details[^>]+tcm-state-overview/, '近期中医状态不得默认折叠隐藏');
 assert.match(insightsPage, /section\.hidden = false/, '无成熟TCM组合时也必须保留功能入口和空状态');
 assert.match(traditional, /近期中医状态/, 'Today 调养区域必须展示近期状态或收集进度');
+assert.match(traditional, /recommendationContext/, 'Today 推荐卡必须展示状态、模式、周期和个人效果上下文');
+assert.match(traditional, /matched_states/, 'Today 推荐理由必须消费近期状态');
+assert.match(traditional, /matched_patterns/, 'Today 推荐理由必须消费跨周期模式');
 assert.doesNotMatch(traditional, /体质观察线索|constitutionHint|CONSTITUTION_OBSERVATIONS/, '近7至14天记录不得继续命名为长期体质');
 assert.match(html, /id="insightsStateClusters"/, '趋势页必须提供状态组合视觉区域');
 assert.match(html, /details class="insights-more-section state-cluster-section"/, '次要趋势必须默认折叠');

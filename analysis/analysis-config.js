@@ -72,7 +72,7 @@ export const ANALYSIS_CONFIG = Object.freeze({
     supported_confidence: Object.freeze(['medium', 'high']),
     stable_confidence: 'high',
     stable_min_cycles: 3,
-    source_priority: Object.freeze({ current_discomfort: 3, health_event: 3, personal_pattern: 2, cycle_pattern: 1 }),
+    source_priority: Object.freeze({ current_discomfort: 5, health_event: 4, recent_state: 3, tcm_pattern: 2, personal_pattern: 2, cycle_pattern: 1 }),
     cycle_windows: Object.freeze({
       period: Object.freeze({ start_day: 1, end_offset: -22 }),
       follicular: Object.freeze({ start_day: 8, end_offset: -12 }),

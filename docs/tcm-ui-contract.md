@@ -9,12 +9,12 @@
 | sleep detail | 每日记录弹窗 | `detail:sleep_issue:*`、`sleep`、`bedtime` | `sleep_onset_difficulty`、`sleep_fragmentation`、`dream_disturbed_sleep`、`early_waking`、`unrefreshed_sleep` | 统一 careContext、推荐、数据质量、多状态趋势 | Today → 每日记录 → 睡眠与排便 | Today、趋势 | 可明确无所列睡眠表现；未操作为未记录 | daily detail、careContext、state cluster | 已统一接入 |
 | bowel detail | 每日记录弹窗 | `detail:bowel:*`、`bowelMovement` | `bowel_normal`、`stool_hard`、`stool_loose`、`stool_sticky`、`diarrhea`、`no_bowel_movement` | careContext、持续事件、推荐 | Today → 每日记录 → 睡眠与排便 | Today、趋势 | 单选包含“未排便”；不选择为未记录 | daily detail、recommendation | 已接通 |
 | menstrual detail | 经期日期 + 每日记录弹窗 | `menstrual_status`、`flow_level`、`blood_color`、`clot_*` | `menstrual_status`、`flow_level`、`blood_color`、`clot_level` | 周期模型、careContext、推荐、趋势 | Today 首页设置日期；经期日弹窗记录表现 | Today、日历、趋势 | 非经期隐藏；历史扩展枚举保留兼容 | menstrual UI、sync | 已接通 |
-| 近期中医状态 | `tcm-state-engine` | 派生，不写回每日记录 | 7 个 `TcmState`，含支持证据、反证、频率、趋势和可信度 | Today、趋势；尚未进入推荐排序 | 来源于每日记录 | Today 最多3项；趋势常驻模块 | 无数据时显示用途、有效记录天数、门槛和记录入口 | state engine、orchestrator、UI contract | 已接通；推荐接入待下一阶段 |
-| TCM pattern/cluster | `tcm-cluster-engine` | 派生分析快照 | 9 个 `TcmPattern`，含支持条件、反证、加权分数、组成项、近期出现和跨周期支持 | 趋势；尚未真实影响推荐 | 来源于每日记录 | 趋势 → 反复模式 | 无成熟结果时常驻显示继续记录；有结果时可展开支持与反向证据 | pattern engine、orchestrator、UI contract | 已接通；推荐接入待下一阶段 |
-| 周期特异性 | `tcm-cluster-engine` | 派生分析快照 | `phase_specificity`：经期、经前5天、经后恢复期、全周期或未集中 | 趋势；下一阶段进入推荐 | 来源于周期和每日记录 | 趋势 → 反复模式 | 每个已识别模式直接显示主要周期位置 | pattern phase tests | 已接通 |
+| 近期中医状态 | `tcm-state-engine` | 派生，不写回每日记录 | 7 个 `TcmState`，含支持证据、反证、频率、趋势和可信度 | Today、趋势、推荐排序与解释 | 来源于每日记录 | Today 最多3项；趋势常驻模块 | 无数据时显示用途、有效记录天数、门槛和记录入口 | state engine、recommendation、orchestrator、UI contract | 已闭环接通 |
+| TCM pattern/cluster | `tcm-cluster-engine` | 派生分析快照 | 9 个 `TcmPattern`，含支持条件、反证、加权分数、组成项、近期出现和跨周期支持 | 趋势、推荐排序与解释 | 来源于每日记录 | 趋势 → 反复模式 | 无成熟结果时常驻显示继续记录；有结果时可展开支持与反向证据 | pattern engine、recommendation、orchestrator、UI contract | 已闭环接通 |
+| 周期特异性 | `tcm-cluster-engine` | 派生分析快照 | `phase_specificity`：经期、经前5天、经后恢复期、全周期或未集中 | 趋势、推荐阶段加权 | 来源于周期和每日记录 | 趋势 → 反复模式；Today 推荐“周期原因” | 每个已识别模式显示主要周期位置；与今天一致时小幅加权 | pattern phase、recommendation tests | 已接通 |
 | 长期体质 | 待建 ConstitutionProfile | 待定 profile schema | `constitutionBaseline`、`constitutionEvidence90d` | 推荐低权重、趋势 | More → 调养档案 | 趋势“长期体质” | 无人工基线时明确“尚未建立” | 待建 migration/UI | 未实现 |
-| 调养推荐 | RecommendationEngine + intervention 库 | 派生 | `CareRecommendation` | Today renderer | 自动生成 | Today 针对性调养 | 无证据不推荐；安全未知需说明 | recommendation tests | 部分接通 |
-| 推荐解释 | RecommendationEngine | `why_matched` 等派生数据 | evidence、state、pattern、phase、history | Today renderer | 无单独入口 | 建议卡“为什么” | 目前主要解释今日字段，待扩展 | explanation tests | 部分接通 |
+| 调养推荐 | RecommendationEngine + intervention 库 | 派生 | `CareRecommendation` | Today renderer | 自动生成 | Today 针对性调养 | 无证据不推荐；当天记录优先于近期状态和跨周期模式 | recommendation、TCM ranking tests | state/pattern/persistence/phase 已接通；安全档案待后续阶段 |
+| 推荐解释 | RecommendationEngine | `why_matched`、`matched_states`、`matched_patterns`、`score_components` 等派生数据 | today、state、pattern、phase、history、contradiction | Today renderer | 无单独入口 | 建议卡“为什么”、近期状态、重复模式、周期原因、个人效果 | 反向信息参与扣分且在卡片说明 | explanation、TCM recommendation tests | 已接通；context feedback 待后续阶段 |
 | 固定阶段食养 | DailyNourishment | 不保存推荐 | phase nourishment | Today renderer | 自动生成 | Today 每日阶段食养 | 当前无反馈入口 | nourishment tests | 部分接通 |
 | 调养反馈 | 反馈弹窗 | 独立 `period-intervention-usage-v1` | 总体有效率 | 推荐排序、趋势 | Today 建议卡 | 趋势“对我有效” | 同日去重；尚无 context 和安全不适 | feedback tests | 部分接通 |
 | 个人效果排序 | InterventionEngine | 读取独立反馈 | `feedback_adjustment` | 推荐排序 | 来源于反馈 | 趋势 + 推荐理由待完善 | 3 次开始使用，5 次前标记数据少 | intervention tests | 部分接通 |
@@ -34,6 +34,6 @@
 1. 未触碰字段保持 `null/not_recorded`，明确“没有”与未记录不同。
 2. ✅ 所有分析、建议和详情展示消费者读取 `tcm:*`、`detail:*` 时统一经过 `buildCareContext()`；表单模型只负责读写存储编码。
 3. ✅ 近期状态已独立为 `TcmState`；跨周期 pattern 已扩展为 9 类并加入反证、周期特异性和跨周期验证；长期体质和调养决策仍保持独立。
-4. 下一阶段：pattern 必须真实影响推荐和解释。
+4. ✅ state/pattern 已真实影响推荐排序和解释；当天记录优先，反向证据扣分，周期集中与今天一致时小幅加权。
 5. 反馈、安全档案和长期体质进入备份、导入、同步、迁移和去重。
 6. 数据不足时展示进度与记录入口，不隐藏用户可见功能。

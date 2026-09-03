@@ -133,8 +133,32 @@ function personalPatternAvailable(context, matchedFeatures, options) {
   return matchedFeatures.some((feature) => feature.condition.operator === 'pattern_exists');
 }
 
-function contextualBoosts(context, matchedFeatures) {
+const canonicalTcmField = (field) => ({
+  warmth_relief: 'pain_response.warmth_relief', lower_abdomen_pain: 'pain.lower_abdomen',
+  breast_chest_pain: 'breast_tenderness', neck_shoulder_pain: 'pain.neck_shoulder',
+  sleep: 'sleep_quality', activity: 'activity_level'
+})[field] || field;
+
+function fieldOverlap(candidateFields, evidenceFields) {
+  const matches = [];
+  for (const raw of evidenceFields) {
+    const field = canonicalTcmField(raw);
+    if (candidateFields.has(field) || (field === 'pain_max' && [...candidateFields].some((item) => item.startsWith('pain.')))) matches.push(field);
+  }
+  return [...new Set(matches)];
+}
+
+function phaseSupportsPattern(pattern, cyclePhase) {
+  const expected = { menstrual: 'menstrual', pms: 'late_luteal', follicular_recovery: 'early_follicular' }[pattern?.phase_specificity?.type];
+  return Boolean(expected && expected === cyclePhase);
+}
+
+function contextualBoosts(context, matchedFeatures, intervention) {
   const matchedFields = new Set(matchedFeatures.map((feature) => feature.condition.field));
+  const candidateFields = new Set([
+    ...(intervention?.matching?.scoring_features || []).map((feature) => feature.condition?.field),
+    ...(intervention?.observation?.primary_metrics || [])
+  ].filter(Boolean));
   const combinationMatches = [];
   let combinationBoost = 0;
   for (const [patternId, pattern] of Object.entries(context.care_patterns || {})) {
@@ -156,9 +180,47 @@ function contextualBoosts(context, matchedFeatures) {
     persistenceBoost += boost;
     persistenceMatches.push({ metric, matched_fields: matchingFields, consecutive_days: state.consecutive_days, event_id: state.event_id, boost });
   }
+  const stateMatches = [], patternMatches = [], contradictionMatches = [];
+  let recentStateBoost = 0, tcmPatternBoost = 0, contradictionPenalty = 0;
+  for (const state of context.tcm_states || []) {
+    if (!state?.active) continue;
+    const fields = fieldOverlap(candidateFields, (state.supportingEvidence || []).map((item) => item.field).filter(Boolean));
+    if (fields.length) {
+      const confidenceBoost = { high: 3, moderate: 2, exploratory: 1 }[state.confidence] || 0;
+      const boost = Math.min(4, confidenceBoost + Number(fields.length >= 2));
+      recentStateBoost += boost;
+      stateMatches.push({ state_id: state.id, name: state.name, fields, confidence: state.confidence, trend: state.trend, boost });
+    }
+    const opposed = fieldOverlap(candidateFields, (state.contradictingEvidence || []).map((item) => item.field).filter(Boolean));
+    if (opposed.length) {
+      const penalty = Math.min(2, opposed.length);
+      contradictionPenalty += penalty;
+      contradictionMatches.push({ source_type: 'recent_state', source_id: state.id, fields: opposed, penalty });
+    }
+  }
+  for (const pattern of context.tcm_patterns || []) {
+    if (pattern?.status !== 'detected') continue;
+    const fields = fieldOverlap(candidateFields, (pattern.constituent_features || []).map((item) => item.field).filter(Boolean));
+    if (fields.length) {
+      const confidenceBoost = { stable: 3, moderate: 2, exploratory: 1 }[pattern.confidence_level] || 0;
+      const phaseBoost = Number(phaseSupportsPattern(pattern, context.cycle_phase));
+      const boost = Math.min(4, confidenceBoost + phaseBoost + Number(fields.length >= 2));
+      tcmPatternBoost += boost;
+      patternMatches.push({ pattern_id: pattern.cluster_id, name: pattern.display_name, fields, confidence: pattern.confidence_level, phase_specificity: pattern.phase_specificity, phase_boost: phaseBoost, boost });
+    }
+    const opposed = fieldOverlap(candidateFields, (pattern.contradicting_features || []).map((item) => item.field).filter(Boolean));
+    if (opposed.length) {
+      const penalty = Math.min(2, opposed.length);
+      contradictionPenalty += penalty;
+      contradictionMatches.push({ source_type: 'tcm_pattern', source_id: pattern.cluster_id, fields: opposed, penalty });
+    }
+  }
   return {
     combination_boost: Math.min(4, combinationBoost), persistence_boost: Math.min(3, persistenceBoost),
-    combination_matches: combinationMatches, persistence_matches: persistenceMatches
+    recent_state_boost: Math.min(4, recentStateBoost), tcm_pattern_boost: Math.min(4, tcmPatternBoost),
+    contradiction_penalty: Math.min(4, contradictionPenalty),
+    combination_matches: combinationMatches, persistence_matches: persistenceMatches,
+    state_matches: stateMatches, tcm_pattern_matches: patternMatches, contradiction_matches: contradictionMatches
   };
 }
 
@@ -186,8 +248,8 @@ export function evaluateIntervention(intervention, context = {}, options = {}) {
   });
   const matchedFeatures = scoringChecks.filter((feature) => feature.matched);
   const baseScore = matchedFeatures.reduce((sum, feature) => sum + feature.weight, 0);
-  const boosts = contextualBoosts(context, matchedFeatures);
-  const score = baseScore + boosts.combination_boost + boosts.persistence_boost;
+  const boosts = contextualBoosts(context, matchedFeatures, intervention);
+  const score = baseScore + boosts.combination_boost + boosts.persistence_boost + boosts.recent_state_boost + boosts.tcm_pattern_boost - boosts.contradiction_penalty;
   const minimumScore = Number(matching.minimum_score) || 0;
   if (score < minimumScore) blocked.push({ code: 'minimum_score_not_met', score, minimum_score: minimumScore });
   if (policy.requires_current_state && !currentStateAvailable(context, matchedFeatures, options)) blocked.push({ code: 'current_state_required' });

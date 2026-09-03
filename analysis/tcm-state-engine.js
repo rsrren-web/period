@@ -63,7 +63,7 @@ function known(care, path) {
 function summarize(matches) {
   const grouped = new Map();
   matches.forEach((item) => {
-    const current = grouped.get(item.label) || { label: item.label, count: 0, score: 0, dates: [] };
+    const current = grouped.get(item.label) || { field: item.path, label: item.label, count: 0, score: 0, dates: [] };
     current.count += 1; current.score += item.weight; current.dates.push(item.date); grouped.set(item.label, current);
   });
   return [...grouped.values()].sort((a, b) => Math.abs(b.score) - Math.abs(a.score) || b.count - a.count || a.label.localeCompare(b.label));

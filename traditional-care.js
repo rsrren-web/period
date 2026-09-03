@@ -119,14 +119,36 @@ const METRIC_NAMES = Object.freeze({
 
 function recommendationReason(recommendation) {
   const recorded = (recommendation.why_matched || []).map((item) => METRIC_NAMES[item.field]).filter(Boolean).slice(0, 3);
-  if (recorded.length >= 2) return `今天记录到${recorded.join('、')}，这些状态共同提高了这项调养的匹配度。`;
-  if (recorded.length === 1) return `今天记录到${recorded[0]}，因此优先匹配这项调养。`;
+  const states = (recommendation.matched_states || []).map((item) => item.name).filter(Boolean).slice(0, 2);
+  const patterns = (recommendation.matched_patterns || []).map((item) => item.name).filter(Boolean).slice(0, 1);
+  const parts = [];
+  if (recorded.length >= 2) parts.push(`今天记录到${recorded.join('、')}`);
+  else if (recorded.length === 1) parts.push(`今天记录到${recorded[0]}`);
+  if (states.length) parts.push(`最近14天的“${states.join('、')}”也与它相符`);
+  if (patterns.length) parts.push(`“${patterns[0]}”曾跨周期重复`);
+  if (parts.length) return `${parts.join('；')}，因此优先显示这项调养。`;
   const metric = METRIC_NAMES[recommendation.reason.metric] || '当前不适';
   if (recommendation.reason.code === 'CURRENT_DISCOMFORT') return `你今天记录了${metric}，所以优先匹配这项调养。`;
   if (recommendation.reason.code === 'HEALTH_EVENT') return `${metric}最近持续出现，或比你平时更明显。`;
   if (recommendation.reason.code === 'PERSONAL_PATTERN') return `过去记录中，${metric}在类似情况下更常出现。`;
   if (recommendation.reason.code === 'CYCLE_PATTERN') return `过去记录中，${metric}在当前周期阶段更常出现。`;
+  if (recommendation.reason.code === 'RECENT_STATE') return '最近14天的重复体感与这项调养相符。';
+  if (recommendation.reason.code === 'TCM_PATTERN') return '这项调养与已跨周期重复的状态模式相符。';
   return '这项调养与今天记录的状态相符。';
+}
+
+function recommendationContext(recommendation) {
+  const rows = [];
+  const states = (recommendation.matched_states || []).map((item) => item.name).filter(Boolean);
+  const patterns = (recommendation.matched_patterns || []).map((item) => item.name).filter(Boolean);
+  const phase = (recommendation.matched_patterns || []).find((item) => item.phase_boost)?.phase_specificity?.label;
+  const history = recommendation.personal_history || {};
+  if (states.length) rows.push(`<div><dt>近期状态</dt><dd>${states.slice(0, 2).map(esc).join('、')}</dd></div>`);
+  if (patterns.length) rows.push(`<div><dt>重复模式</dt><dd>${patterns.slice(0, 2).map(esc).join('、')}</dd></div>`);
+  if (phase) rows.push(`<div><dt>周期原因</dt><dd>${esc(phase)}，与今天的周期阶段一致。</dd></div>`);
+  if (history.response_sample_size >= 3) rows.push(`<div><dt>个人效果</dt><dd>过去记录 ${history.response_sample_size} 次，其中 ${history.helpful_uses} 次有帮助${history.response_quality === 'stable' ? '，数据较稳定' : '，仍在积累'}。</dd></div>`);
+  if ((recommendation.contradicting_signals || []).length) rows.push('<div><dt>反向信息</dt><dd>已降低匹配权重；不会忽略与你当前记录相反的表现。</dd></div>');
+  return rows.join('');
 }
 
 function interventionMethod(item) {
@@ -147,7 +169,7 @@ function interventionCard(recommendation) {
   const item = recommendation.intervention, [icon, label] = CATEGORY_META[item.category] || ['养', '今日建议'];
   const target = recommendation.reason?.metric || item.targets?.[0] || 'general';
   const recorded = hasInterventionFeedbackToday(item.id);
-  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft${recorded ? ' is-recorded' : ''}" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}" ${recorded ? `disabled aria-label="${esc(item.name)}今天已记录效果"` : ''}>${recorded ? '今天已记录 ✓' : '记录这次效果'}</button></div></details>`;
+  return `<details class="traditional-card traditional-${esc(item.category)}"><summary><div class="traditional-card-head"><span aria-hidden="true">${icon}</span><div><small>${label}</small><h3>${esc(item.name)}</h3></div></div><span class="traditional-expand">查看方法</span></summary><div class="traditional-detail"><dl><div><dt>为什么</dt><dd>${esc(recommendationReason(recommendation))}</dd></div>${recommendationContext(recommendation)}${interventionMethod(item)}</dl><button type="button" class="intervention-feedback-button soft${recorded ? ' is-recorded' : ''}" data-intervention-feedback="${esc(item.id)}" data-intervention-name="${esc(item.name)}" data-intervention-target="${esc(target)}" data-recommendation-id="${esc(recommendation.recommendation_id)}" data-source-event-id="${esc(recommendation.source_event_id || '')}" data-source-pattern-id="${esc(recommendation.source_pattern_id || '')}" ${recorded ? `disabled aria-label="${esc(item.name)}今天已记录效果"` : ''}>${recorded ? '今天已记录 ✓' : '记录这次效果'}</button></div></details>`;
 }
 
 async function renderEngineRecommendations({ root, token, phase, log, logs }) {

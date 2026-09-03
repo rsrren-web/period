@@ -114,7 +114,8 @@ export function runAnalysis(input = {}, options = {}) {
   if (normalized.intervention_library) {
     recommendations = previous?._dependency_signatures?.recommendations === signatures.recommendations && previous.recommendations ? previous.recommendations : generateRecommendations({
       today_record: normalized.logs[normalized.as_of], record_date: normalized.as_of, health_events: core.health_events,
-      patterns: core.patterns, intervention_library: normalized.intervention_library, phase: normalized.phase || {}, intervention_history: normalized.intervention_usage
+      patterns: core.patterns, tcm_states: core.tcm_states, tcm_patterns: core.tcm_clusters,
+      intervention_library: normalized.intervention_library, phase: normalized.phase || {}, intervention_history: normalized.intervention_usage
     });
   }
   const reusedSections = previous ? [previous?._dependency_signatures?.core === signatures.core ? 'core' : null, previous?._dependency_signatures?.feedback === signatures.feedback ? 'feedback' : null, previous?._dependency_signatures?.recommendations === signatures.recommendations ? 'recommendations' : null].filter(Boolean) : [];
