@@ -47,8 +47,11 @@ function tcmExplanation(cluster, calculatedAt) {
     kind: 'tcm.observation_cluster',
     metric: cluster.cluster_id,
     direction: 'neutral',
-    scope: { cycles_covered: cluster.cycles_covered },
-    evidence: cluster.constituent_features.map((item) => ({ feature: item.label, count: item.count })),
+    scope: { cycles_covered: cluster.cycles_covered, phase_specificity: cluster.phase_specificity?.type || 'insufficient' },
+    evidence: [
+      ...cluster.constituent_features.map((item) => ({ feature: item.label, count: item.count, direction: 'supporting' })),
+      ...(cluster.contradicting_features || []).map((item) => ({ feature: item.label, count: item.count, direction: 'contradicting' }))
+    ],
     quality_level: cluster.maturity === 'stable_cluster' ? 'good' : cluster.status === 'detected' ? 'usable' : 'insufficient',
     confidence_level: cluster.confidence_level,
     reasons: cluster.data_quality?.reasons || [],

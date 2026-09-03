@@ -58,9 +58,13 @@ assert.equal(temporal.causal_interpretation_allowed, false);
 assert.ok('relative_risk' in temporal && 'phase_strata' in temporal && 'missing_or_excluded_pairs' in temporal);
 
 const clusters = analyzeTcmClusters({ logs, periods, as_of: '2026-04-30', rules_config: tcmRules });
-const digestive = clusters.find((item) => item.cluster_id === 'digestive_heaviness_like');
+assert.equal(clusters.length, 9, '统一分析必须产出9类跨周期TCM模式候选');
+const digestive = clusters.find((item) => item.cluster_id === 'digestive_heaviness_pattern');
 assert.equal(digestive.status, 'detected');
 assert.equal(digestive.maturity, 'stable_cluster');
 assert.ok(digestive.cycle_evidence.length >= 3);
+const digestiveExplanation = first.explanations.find((item) => item.explanation_id === 'explanation:tcm:digestive_heaviness_pattern');
+assert.ok(digestiveExplanation?.scope.phase_specificity, '模式解释必须携带周期特异性');
+assert.ok(digestiveExplanation.evidence.every((item) => ['supporting', 'contradicting'].includes(item.direction)), '模式解释必须区分支持与反向证据');
 
 console.log(`Analysis orchestrator, anomaly, temporal, TCM and incremental tests passed in ${elapsed.toFixed(1)}ms.`);

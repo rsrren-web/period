@@ -111,12 +111,17 @@ function renderTcmStates(data) {
   const best = [...(data.tcmStates || [])].sort((a, b) => b.validDays - a.validDays)[0], validDays = best?.validDays || 0, collecting = validDays < 3;
   root.innerHTML = `<div class="insights-empty tcm-state-empty"><strong>${collecting ? '近期状态还在收集' : '近期没有形成明显状态'}</strong><p>${collecting ? `最近14天有 ${validDays} 天记录了相关项目。至少记录3天，并让同类表现重复2天后，才会显示近期状态。` : `最近14天已有 ${validDays} 天相关记录；支持信息与反向信息会一起计算，目前没有达到展示门槛。`}</p><button type="button" class="soft compact" data-view="today">去记录今天的状态</button></div>`;
 }
-function renderTcm(data, actions) {
+function tcmPatternCard(item) {
+  const support = item.observation.supportingData || {}, parts = support.constituentFeatures || [], opposed = support.contradictingFeatures || [];
+  const phase = support.phaseSpecificity || {}, recent = support.recentOccurrence || {};
+  return `<article class="insight-v1-card tcm-pattern-card"><div class="insight-v1-head"><span>${level(item)}</span><small>${item.observation.cyclesCovered} 个有相关记录的周期</small></div><h3>${esc(item.title)}</h3><div class="insight-constituents"><small>反复共同记录到</small><p>${parts.slice(0, 4).map((part) => esc(part.label)).join(' · ')}</p></div><div class="tcm-pattern-summary"><span>${esc(phase.label || '周期位置仍在收集')}</span><span>${support.cyclesSupported || 0}/${item.observation.cyclesCovered || 0} 个周期出现</span></div><details class="insight-card-detail"><summary>为什么</summary><p>${esc(support.explanation || '这是个人记录中的重复组合，不是医学诊断。')}</p><p><strong>支持：</strong>${parts.map((part) => `${esc(part.label)} ${part.count}天`).join('、') || '暂无'}</p><p><strong>反向信息：</strong>${opposed.map((part) => `${esc(part.label)} ${part.count}天`).join('、') || '暂无明确反向记录'}</p><p><strong>最近情况：</strong>近90天出现 ${recent.days_in_last_90 || 0} 天${recent.last_date ? `，最近一次为 ${dateText(recent.last_date)}` : ''}。</p><p>支持与反向记录会同时计入判断；这里描述的是动态模式，不是体质或证型。</p></details></article>`;
+}
+function renderTcm(data) {
   const section = document.querySelector('#insightsTcmSection');
   const root = document.querySelector('#insightsTcmClusters');
   if (!section || !root) return;
   section.hidden = false;
-  root.innerHTML = data.tcmClusters.length ? data.tcmClusters.map((item) => card(item, actions, false)).join('') : empty('还没有跨周期重复模式', '继续记录具体体感；至少覆盖两个完整周期后，这里才会显示反复出现的组合。');
+  root.innerHTML = data.tcmClusters.length ? data.tcmClusters.map(tcmPatternCard).join('') : empty('还没有跨周期重复模式', '继续记录具体体感；至少覆盖两个完整周期后，这里才会显示反复出现的组合。');
 }
 function renderQuality(data) {
   const root = document.querySelector('#insightsDataQuality');
@@ -124,7 +129,7 @@ function renderQuality(data) {
 }
 function addOneDay(value) { return new Date(Date.parse(`${value}T12:00:00Z`) + 86400000).toISOString().slice(0, 10); }
 function renderPage(data, actions) {
-  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderTemporalClusters(data); renderInterventions(data); renderTcmStates(data); renderTcm(data, actions); renderQuality(data);
+  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderTemporalClusters(data); renderInterventions(data); renderTcmStates(data); renderTcm(data); renderQuality(data);
   const stamp = document.querySelector('#insightsGeneratedAt');
   if (stamp) stamp.textContent = `更新于 ${new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' }).format(new Date(data.generatedAt))}`;
 }

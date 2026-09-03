@@ -68,6 +68,9 @@ assert.match(app, /import\('\.\/traditional-care\.js'\)/, '传统调养必须按
 assert.match(worker, /version:'v\d+'/,'Worker 健康检查必须暴露独立部署版本');
 assert.match(insightsPage, /renderStateClusters/, '趋势页必须渲染多状态组合卡片');
 assert.match(insightsPage, /renderTcmStates/, '趋势页必须渲染近期中医状态');
+assert.match(insightsPage, /tcmPatternCard/, '趋势页必须用独立模式卡展示跨周期TCM模式');
+assert.match(insightsPage, /phaseSpecificity/, 'TCM模式卡必须展示周期特异性');
+assert.match(insightsPage, /contradictingFeatures/, 'TCM模式卡必须展示反向证据');
 assert.match(html, /id="insightsTcmStates"/, '趋势页必须提供常驻的近期中医状态区域');
 assert.doesNotMatch(html, /details[^>]+tcm-state-overview/, '近期中医状态不得默认折叠隐藏');
 assert.match(insightsPage, /section\.hidden = false/, '无成熟TCM组合时也必须保留功能入口和空状态');
@@ -79,7 +82,7 @@ assert.match(insightsPage, /topInsights\.slice\(0, 2\)/, '首页趋势重点最�
 assert.match(insightsPage, /nextCycleWindows\.slice\(0, 2\)/, '下一周期观察最多展示两条');
 assert.match(insightsPage, /renderTemporalClusters/, '趋势页必须渲染多状态前后日关系卡片');
 assert.match(html, /今天的状态与明天有什么关系/, '趋势页必须提供前后日视觉区域');
-assert.equal(insightsConfig.version, 7, '近期中医状态与常驻UI必须刷新趋势缓存');
+assert.equal(insightsConfig.version, 8, '扩展TCM模式与周期特异性后必须刷新趋势缓存');
 for (const consumer of unifiedConsumers) {
   assert.match(consumer, /buildCareContext/, '分析与建议消费者必须通过统一健康上下文读取结构化记录');
   assert.doesNotMatch(consumer, /readTcmObservations|readDailyDetails/, '消费者不得绕过统一健康上下文重复解释结构化记录');

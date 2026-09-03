@@ -1,82 +1,189 @@
 {
-  "version": 4,
+  "version": 5,
   "minimum_cycles": 2,
-  "minimum_feature_completion": 0.60,
   "minimum_constituent_features": 2,
   "rules": [
     {
-      "id": "cold_stasis_like",
-      "display_name": "寒象 + 瘀滞样组合",
+      "id": "cold_menstrual_pattern",
+      "display_name": "经期寒冷与冷痛样模式",
+      "explanation": "观察寒冷感受、冷痛和温热反应是否在多个经期重复；不是寒证诊断。",
       "hard_requirements": [{ "field": "menstrual_context", "operator": "==", "value": true }],
-      "weighted_features": [
-        { "field": "cold_sensation", "operator": "==", "value": "yes", "weight": 3, "label": "明显怕冷" },
-        { "field": "lower_abdomen_pain", "operator": "==", "value": true, "weight": 3, "label": "小腹/盆腔疼痛" },
-        { "field": "warmth_relief", "operator": "==", "value": "yes", "weight": 2, "label": "热敷后缓解" },
-        { "field": "clot_presence", "operator": "==", "value": "yes", "weight": 2, "label": "有血块" },
-        { "field": "blood_color", "operator": "in", "value": ["dark_red", "brown"], "weight": 1, "label": "经血暗红或棕色" }
+      "supporting_conditions": [
+        { "field": "cold_sensation", "operator": "==", "value": true, "weight": 3, "label": "明显怕冷" },
+        { "field": "cold_hands_feet", "operator": "==", "value": true, "weight": 2, "label": "手脚冷" },
+        { "field": "pain_quality.cold", "operator": "==", "value": true, "weight": 3, "label": "冷痛" },
+        { "field": "warmth_relief", "operator": "==", "value": true, "weight": 2, "label": "热敷后缓解" },
+        { "field": "lower_abdomen_pain", "operator": "==", "value": true, "weight": 2, "label": "小腹不适" }
       ],
-      "minimum_score": 6,
+      "contradicting_conditions": [
+        { "field": "night_sweat", "operator": "==", "value": true, "weight": 2, "label": "夜间出汗" },
+        { "field": "cold_sensation", "operator": "==", "value": false, "weight": 1, "label": "明确没有怕冷" }
+      ],
+      "minimum_score": 5,
+      "minimum_constituents": 2,
       "intervention_tags": ["warmth", "gentle_movement", "food_level"]
     },
     {
-      "id": "qi_constraint_like",
-      "display_name": "压力 + 气机郁滞样组合",
+      "id": "blood_stasis_like_menstrual_pattern",
+      "display_name": "经期刺痛与经血变化样模式",
+      "explanation": "独立观察刺痛、暗色经血和血块是否在多个经期共同出现，不要求同时存在寒冷感受。",
+      "hard_requirements": [{ "field": "menstrual_context", "operator": "==", "value": true }],
+      "supporting_conditions": [
+        { "field": "pain_quality.stabbing", "operator": "==", "value": true, "weight": 3, "label": "刺痛" },
+        { "field": "blood_color", "operator": "in", "value": ["dark_red", "brown"], "weight": 2, "label": "经血暗红或棕色" },
+        { "field": "clot_level", "operator": ">=", "value": 2, "weight": 3, "label": "血块较明显" },
+        { "field": "lower_abdomen_pain", "operator": "==", "value": true, "weight": 1, "label": "小腹不适" }
+      ],
+      "contradicting_conditions": [
+        { "field": "blood_color", "operator": "==", "value": "light", "weight": 1, "label": "经血颜色偏淡" },
+        { "field": "clot_presence", "operator": "==", "value": false, "weight": 1, "label": "明确没有血块" }
+      ],
+      "minimum_score": 4,
+      "minimum_constituents": 2,
+      "intervention_tags": ["gentle_movement", "acupressure", "food_level"]
+    },
+    {
+      "id": "stress_distension_pattern",
+      "display_name": "情志紧张与胀感模式",
+      "explanation": "观察压力、烦躁和身体胀感是否反复共同出现，只描述个人记录中的组合。",
       "hard_requirements": [],
-      "weighted_features": [
+      "supporting_conditions": [
         { "field": "stress", "operator": ">=", "value": 4, "weight": 3, "label": "压力偏高" },
-        { "field": "emotion", "operator": "in", "value": ["焦虑", "生气"], "weight": 2, "label": "焦虑或生气" },
-        { "field": "breast_chest_pain", "operator": "==", "value": true, "weight": 2, "label": "乳房/胸部不适" },
+        { "field": "anxiety", "operator": "==", "value": true, "weight": 2, "label": "焦虑" },
+        { "field": "irritability", "operator": ">=", "value": 1, "weight": 2, "label": "烦躁或生气" },
+        { "field": "pain_quality.distending", "operator": "==", "value": true, "weight": 2, "label": "胀痛" },
+        { "field": "breast_chest_pain", "operator": "==", "value": true, "weight": 2, "label": "乳房或胸部不适" },
+        { "field": "bloating", "operator": "==", "value": true, "weight": 1, "label": "腹胀" },
         { "field": "neck_shoulder_pain", "operator": "==", "value": true, "weight": 1, "label": "肩颈不适" },
-        { "field": "bloating", "operator": "==", "value": "yes", "weight": 2, "label": "腹胀" },
         { "field": "social_effect", "operator": "==", "value": "draining", "weight": 1, "label": "社交后消耗" }
       ],
-      "minimum_score": 5,
+      "contradicting_conditions": [{ "field": "stress", "operator": "<=", "value": 2, "weight": 2, "label": "压力较低" }],
+      "minimum_score": 4,
+      "minimum_constituents": 2,
       "intervention_tags": ["breathing", "gentle_movement", "acupressure"]
     },
     {
-      "id": "digestive_heaviness_like",
-      "display_name": "消化负担 + 沉重样组合",
+      "id": "digestive_heaviness_pattern",
+      "display_name": "消化负担与沉重感模式",
+      "explanation": "观察胃口、腹胀、沉重感和排便表现是否跨周期重复共同出现。",
       "hard_requirements": [],
-      "weighted_features": [
-        { "field": "bloating", "operator": "==", "value": "yes", "weight": 3, "label": "腹胀" },
-        { "field": "poor_appetite", "operator": "==", "value": "yes", "weight": 2, "label": "食欲差" },
-        { "field": "body_heaviness", "operator": "==", "value": "yes", "weight": 2, "label": "身体沉重" },
-        { "field": "nausea", "operator": "==", "value": "yes", "weight": 2, "label": "恶心" },
-        { "field": "diarrhea", "operator": "==", "value": "yes", "weight": 2, "label": "腹泻" },
-        { "field": "energy", "operator": "<=", "value": 2, "weight": 1, "label": "精力偏低" },
-        { "field": "bowel_movement", "operator": "==", "value": false, "weight": 2, "label": "没有排便" },
-        { "field": "upper_abdomen_pain", "operator": "==", "value": true, "weight": 1, "label": "胃/上腹不适" }
+      "supporting_conditions": [
+        { "field": "bloating", "operator": "==", "value": true, "weight": 3, "label": "腹胀" },
+        { "field": "appetite_low", "operator": "==", "value": true, "weight": 2, "label": "食欲较差" },
+        { "field": "body_heaviness", "operator": "==", "value": true, "weight": 2, "label": "身体沉重" },
+        { "field": "stool_sticky", "operator": "==", "value": true, "weight": 2, "label": "排便黏滞" },
+        { "field": "stool_loose", "operator": "==", "value": true, "weight": 1, "label": "排便稀软" },
+        { "field": "nausea", "operator": "==", "value": true, "weight": 1, "label": "恶心" },
+        { "field": "head_heaviness", "operator": "==", "value": true, "weight": 1, "label": "头重" },
+        { "field": "energy", "operator": "<=", "value": 2, "weight": 1, "label": "精力偏低" }
       ],
-      "minimum_score": 5,
+      "contradicting_conditions": [
+        { "field": "bowel_normal", "operator": "==", "value": true, "weight": 1, "label": "排便正常" },
+        { "field": "stool_hard", "operator": "==", "value": true, "weight": 1, "label": "只有干硬表现" }
+      ],
+      "minimum_score": 4,
+      "minimum_constituents": 2,
       "intervention_tags": ["food_level", "walking", "gentle_movement"]
     },
     {
-      "id": "post_menstrual_deficiency_like",
-      "display_name": "经后恢复不足样组合",
+      "id": "fluid_retention_pattern",
+      "display_name": "水湿滞留样感受模式",
+      "explanation": "观察浮肿感、沉重感、头重和黏滞便是否反复共同出现，不代表液体潴留诊断。",
+      "hard_requirements": [],
+      "supporting_conditions": [
+        { "field": "subjective_puffiness", "operator": "==", "value": true, "weight": 3, "label": "浮肿感" },
+        { "field": "body_heaviness", "operator": "==", "value": true, "weight": 2, "label": "身体沉重" },
+        { "field": "head_heaviness", "operator": "==", "value": true, "weight": 2, "label": "头重" },
+        { "field": "stool_sticky", "operator": "==", "value": true, "weight": 1, "label": "排便黏滞" },
+        { "field": "activity", "operator": "<=", "value": 2, "weight": 1, "label": "活动偏少" }
+      ],
+      "contradicting_conditions": [
+        { "field": "subjective_puffiness", "operator": "==", "value": false, "weight": 1, "label": "明确没有浮肿感" },
+        { "field": "head_heaviness", "operator": "==", "value": false, "weight": 1, "label": "明确没有头重" }
+      ],
+      "minimum_score": 4,
+      "minimum_constituents": 2,
+      "intervention_tags": ["gentle_movement", "walking", "food_level"]
+    },
+    {
+      "id": "heat_dryness_pattern",
+      "display_name": "燥热相关感受模式",
+      "explanation": "仅观察夜间出汗、干硬便和睡眠表现；因尚未采集怕热、口干等信息，不作热证判断。",
+      "hard_requirements": [],
+      "supporting_conditions": [
+        { "field": "night_sweat", "operator": "==", "value": true, "weight": 2, "label": "夜间出汗" },
+        { "field": "stool_hard", "operator": "==", "value": true, "weight": 2, "label": "排便干硬" },
+        { "field": "early_waking", "operator": "==", "value": true, "weight": 1, "label": "早醒" },
+        { "field": "sleep_fragmentation", "operator": "==", "value": true, "weight": 1, "label": "夜间易醒" }
+      ],
+      "contradicting_conditions": [
+        { "field": "cold_sensation", "operator": "==", "value": true, "weight": 2, "label": "明显怕冷" },
+        { "field": "pain_quality.cold", "operator": "==", "value": true, "weight": 2, "label": "冷痛" }
+      ],
+      "minimum_score": 3,
+      "minimum_constituents": 2,
+      "intervention_tags": ["hydration", "sleep", "food_level"]
+    },
+    {
+      "id": "post_menstrual_recovery_pattern",
+      "display_name": "经后恢复不足样模式",
+      "explanation": "观察精力、活动、睡眠和胃口是否在经后1至5天反复下降。",
       "hard_requirements": [{ "field": "post_menstrual_window", "operator": "==", "value": true }],
-      "weighted_features": [
+      "supporting_conditions": [
         { "field": "energy", "operator": "<=", "value": 2, "weight": 3, "label": "精力偏低" },
         { "field": "emotion", "operator": "==", "value": "疲倦", "weight": 2, "label": "明显疲倦" },
         { "field": "activity", "operator": "<=", "value": 2, "weight": 1, "label": "活动偏少" },
-        { "field": "sleep", "operator": "<=", "value": 2, "weight": 2, "label": "睡眠偏低" },
-        { "field": "poor_appetite", "operator": "==", "value": "yes", "weight": 1, "label": "食欲差" }
+        { "field": "sleep", "operator": "<=", "value": 2, "weight": 2, "label": "睡眠评分偏低" },
+        { "field": "unrefreshed_sleep", "operator": "==", "value": true, "weight": 2, "label": "睡够仍累" },
+        { "field": "appetite_low", "operator": "==", "value": true, "weight": 1, "label": "食欲较差" }
       ],
-      "minimum_score": 5,
+      "contradicting_conditions": [
+        { "field": "energy", "operator": ">=", "value": 4, "weight": 2, "label": "精力较好" },
+        { "field": "sleep", "operator": ">=", "value": 4, "weight": 1, "label": "睡眠评分较好" }
+      ],
+      "minimum_score": 4,
+      "minimum_constituents": 2,
       "intervention_tags": ["food_level", "rest", "gentle_movement"]
     },
     {
-      "id": "sleep_tension_like",
-      "display_name": "睡眠 + 紧张样组合",
+      "id": "sleep_recovery_pattern",
+      "display_name": "睡眠恢复不足样模式",
+      "explanation": "区分晚睡、入睡困难、易醒、早醒和醒后疲倦，观察它们是否跨周期重复。",
       "hard_requirements": [],
-      "weighted_features": [
-        { "field": "sleep", "operator": "<=", "value": 2, "weight": 3, "label": "睡眠偏低" },
-        { "field": "bedtime", "operator": "==", "value": "after_23", "weight": 1, "label": "23点后入睡" },
-        { "field": "stress", "operator": ">=", "value": 4, "weight": 2, "label": "压力偏高" },
-        { "field": "emotion", "operator": "in", "value": ["焦虑", "生气"], "weight": 2, "label": "焦虑或生气" },
-        { "field": "head_neck_pain", "operator": "==", "value": true, "weight": 1, "label": "头部或肩颈不适" },
+      "supporting_conditions": [
+        { "field": "sleep", "operator": "<=", "value": 2, "weight": 3, "label": "睡眠评分偏低" },
+        { "field": "late_sleep", "operator": "==", "value": true, "weight": 1, "label": "23点后入睡" },
+        { "field": "sleep_onset_difficulty", "operator": "==", "value": true, "weight": 2, "label": "难入睡" },
+        { "field": "sleep_fragmentation", "operator": "==", "value": true, "weight": 2, "label": "夜间易醒" },
+        { "field": "dream_disturbed_sleep", "operator": "==", "value": true, "weight": 1, "label": "多梦" },
+        { "field": "early_waking", "operator": "==", "value": true, "weight": 1, "label": "早醒" },
+        { "field": "unrefreshed_sleep", "operator": "==", "value": true, "weight": 2, "label": "睡够仍累" },
         { "field": "energy", "operator": "<=", "value": 2, "weight": 1, "label": "精力偏低" }
       ],
-      "minimum_score": 5,
+      "contradicting_conditions": [{ "field": "sleep", "operator": ">=", "value": 4, "weight": 2, "label": "睡眠评分较好" }],
+      "minimum_score": 4,
+      "minimum_constituents": 2,
+      "intervention_tags": ["sleep", "breathing", "acupressure"]
+    },
+    {
+      "id": "stress_sleep_pattern",
+      "display_name": "紧张与睡眠紊乱样模式",
+      "explanation": "观察紧张状态与具体睡眠问题是否在同一天跨周期重复，不说明因果关系。",
+      "hard_requirements": [],
+      "supporting_conditions": [
+        { "field": "stress", "operator": ">=", "value": 4, "weight": 3, "label": "压力偏高" },
+        { "field": "anxiety", "operator": "==", "value": true, "weight": 2, "label": "焦虑" },
+        { "field": "late_sleep", "operator": "==", "value": true, "weight": 1, "label": "23点后入睡" },
+        { "field": "sleep_onset_difficulty", "operator": "==", "value": true, "weight": 2, "label": "难入睡" },
+        { "field": "sleep_fragmentation", "operator": "==", "value": true, "weight": 2, "label": "夜间易醒" },
+        { "field": "neck_shoulder_pain", "operator": "==", "value": true, "weight": 1, "label": "肩颈不适" }
+      ],
+      "contradicting_conditions": [
+        { "field": "stress", "operator": "<=", "value": 2, "weight": 2, "label": "压力较低" },
+        { "field": "sleep", "operator": ">=", "value": 4, "weight": 1, "label": "睡眠评分较好" }
+      ],
+      "minimum_score": 4,
+      "minimum_constituents": 2,
       "intervention_tags": ["sleep", "breathing", "acupressure"]
     }
   ]

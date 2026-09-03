@@ -153,7 +153,24 @@ function buildPhaseProfiles({ logs, periods, asOf, config, actions, careCache })
 
 export function buildInsights({ logs = {}, periods = [], as_of, next_start, prediction_confidence, config, observation_actions = [], tcm_clusters = [] } = {}) {
   const careCache=new WeakMap(),standard = [...profiled('insights:state-clusters',()=>analyzeStateClusters({ logs, periods, as_of, config })), ...profiled('insights:temporal-clusters',()=>analyzeTemporalClusters({ logs, periods, as_of, config })), ...profiled('insights:cycle-windows',()=>buildCycleInsights({ logs, periods, asOf: as_of, nextStart: next_start, predictionConfidence: prediction_confidence, config, actions: observation_actions,careCache })), ...profiled('insights:associations',()=>buildAssociationInsights({ logs, periods, asOf: as_of, config, actions: observation_actions,careCache })), ...profiled('insights:phase-profiles',()=>buildPhaseProfiles({ logs, periods, asOf: as_of, config, actions: observation_actions,careCache }))];
-  const tcm = tcm_clusters.filter((cluster) => cluster.status === 'detected').map((cluster) => ({ id: `insight:tcm_cluster:${cluster.cluster_id}`, type: 'tcm_cluster', title: cluster.display_name, observation: { symptom: cluster.cluster_id, sampleSize: cluster.evidence.length, validDays: cluster.data_quality.valid_days, cyclesCovered: cluster.cycles_covered, windowRate: cluster.support_rate, outsideRate: 0, effectSizeRaw: cluster.support_rate, effectSizeType: 'proportion_difference', supportingData: { cyclesSupported: cluster.cycles_supported, constituentFeatures: cluster.constituent_features, lastSupportedDate: cluster.evidence.at(-1)?.date || null, dataQuality: cluster.data_quality } }, confidenceLevel: cluster.confidence_level, action: { type: 'observation', matchedInterventionIds: [], observationAction: null }, tcmClusterId: cluster.cluster_id, status: 'active', generatedAt: cluster.generated_at, lastRecomputedAt: cluster.generated_at }));
+  const tcm = tcm_clusters.filter((cluster) => cluster.status === 'detected').map((cluster) => ({
+    id: `insight:tcm_cluster:${cluster.cluster_id}`, type: 'tcm_cluster', title: cluster.display_name,
+    observation: {
+      symptom: cluster.cluster_id, sampleSize: cluster.evidence.length, validDays: cluster.data_quality.valid_days,
+      cyclesCovered: cluster.cycles_covered, windowRate: cluster.support_rate, outsideRate: 0,
+      effectSizeRaw: cluster.support_rate, effectSizeType: 'proportion_difference',
+      supportingData: {
+        cyclesSupported: cluster.cycles_supported, constituentFeatures: cluster.constituent_features,
+        contradictingFeatures: cluster.contradicting_features, phaseSpecificity: cluster.phase_specificity,
+        recentOccurrence: cluster.recent_occurrence, explanation: cluster.explanation,
+        lastSupportedDate: cluster.evidence.at(-1)?.date || null, dataQuality: cluster.data_quality
+      }
+    },
+    confidenceLevel: cluster.confidence_level,
+    action: { type: 'observation', matchedInterventionIds: [], observationAction: null },
+    tcmClusterId: cluster.cluster_id, interventionTags: cluster.intervention_tags,
+    status: 'active', generatedAt: cluster.generated_at, lastRecomputedAt: cluster.generated_at
+  }));
   return Object.freeze([...standard, ...tcm]);
 }
 
