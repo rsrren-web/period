@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 76,
-  "updatedAt": "2026-09-04T05:26:43.676Z",
+  "revision": 77,
+  "updatedAt": "2026-09-04T05:28:21.816Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -3178,20 +3178,20 @@
     "constitutionProfile": {
       "version": 1,
       "baseline": {
-        "balanced": null,
-        "qi_deficiency": null,
-        "yang_deficiency": null,
-        "yin_deficiency": null,
-        "phlegm_damp": null,
-        "damp_heat": null,
-        "blood_stasis": null,
-        "qi_stagnation": null,
-        "inherited_special": null
+        "balanced": "low",
+        "qi_deficiency": "low",
+        "yang_deficiency": "low",
+        "yin_deficiency": "low",
+        "phlegm_damp": "moderate",
+        "damp_heat": "low",
+        "blood_stasis": "low",
+        "qi_stagnation": "moderate",
+        "inherited_special": "low"
       },
       "source": "manual",
-      "assessedAt": null,
+      "assessedAt": "2026-09-03",
       "editable": true,
-      "updatedAt": null
+      "updatedAt": "2026-09-04T05:28:19.464Z"
     },
     "safetyProfile": {
       "version": 1,
@@ -3278,6 +3278,7 @@
     "3417efbd-34d7-4530-80be-7eae372cdaca",
     "a07166eb-8ad9-4c53-b9b0-d76e3caa5fce",
     "c2f925c9-1a58-4e28-97e9-2e44e13c217b",
-    "a3587dbd-569d-4797-87be-dbf3f29566d5"
+    "a3587dbd-569d-4797-87be-dbf3f29566d5",
+    "08cd65de-6c4c-4cba-84b9-0a5b5e00f582"
   ]
 }
