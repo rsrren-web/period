@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 79,
-  "updatedAt": "2026-09-04T23:10:09.466Z",
+  "revision": 80,
+  "updatedAt": "2026-09-04T23:20:26.145Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -3026,8 +3026,8 @@
       "energy": 4,
       "sleep": 3,
       "activity": 3,
-      "stress": 1,
-      "pain": null,
+      "stress": 3,
+      "pain": 0,
       "primaryEmotion": "平静",
       "bedtime": "after_23",
       "bowelMovement": false,
@@ -3037,12 +3037,15 @@
       "socialTypes": [
         "日常"
       ],
-      "socialIntensity": null,
+      "socialIntensity": 2,
       "socialEffect": "neutral",
       "painLocations": null,
       "symptomTags": [
         "tcm:cold_sensation:yes",
+        "detail:pain_nature:none",
+        "detail:pain_response:none",
         "detail:bowel:not_passed",
+        "detail:body_sense:cold_hands_feet",
         "detail:sleep_issue:none"
       ],
       "temperature": null,
@@ -3062,13 +3065,13 @@
         "sleep": "reported",
         "activity": "reported",
         "stress": "reported",
-        "pain": "not_recorded",
+        "pain": "reported",
         "primaryEmotion": "reported",
         "bedtime": "reported",
         "bowelMovement": "reported",
         "exerciseTypes": "reported",
         "socialTypes": "reported",
-        "socialIntensity": "not_recorded",
+        "socialIntensity": "reported",
         "socialEffect": "reported",
         "painLocations": "not_recorded",
         "symptomTags": "reported",
@@ -3083,7 +3086,7 @@
         "period_episode_id": "not_recorded"
       },
       "legacySymptoms": [],
-      "updatedAt": "2026-09-04T23:10:08.208Z"
+      "updatedAt": "2026-09-04T23:20:24.932Z"
     }
   },
   "interventionUsage": [
@@ -3346,6 +3349,7 @@
     "a3587dbd-569d-4797-87be-dbf3f29566d5",
     "08cd65de-6c4c-4cba-84b9-0a5b5e00f582",
     "7f6ce260-336c-4281-9ac0-f6af53009707",
-    "a1120f44-e7e5-47da-87c9-ac945a4e34ab"
+    "a1120f44-e7e5-47da-87c9-ac945a4e34ab",
+    "343c3929-345e-4b48-952b-b352d7e971a6"
   ]
 }
