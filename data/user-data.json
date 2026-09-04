@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 75,
-  "updatedAt": "2026-09-03T23:07:41.580Z",
+  "revision": 76,
+  "updatedAt": "2026-09-04T05:26:43.676Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -3021,7 +3021,140 @@
       "updatedAt": "2026-09-03T23:07:40.264Z"
     }
   },
-  "interventionUsage": [],
+  "interventionUsage": [
+    {
+      "feedback_id": "feedback:TCM_TEA_011:2026-09-01T05:23:24.522Z",
+      "context_version": 0,
+      "record_date": "2026-08-31",
+      "cycle_phase": null,
+      "cycle_day": null,
+      "matched_signals": [],
+      "matched_states": [],
+      "matched_patterns": [],
+      "intervention_id": "TCM_TEA_011",
+      "intervention_name": "茯苓陈皮饮",
+      "target": "appetite_low",
+      "recommendation_id": "recommendation:2026-08-31:TCM_TEA_011:current_discomfort:appetite_low",
+      "source_event_id": null,
+      "source_pattern_id": null,
+      "helpful": true,
+      "before": 3,
+      "after": 1,
+      "adverse_effect": false,
+      "used_at": "2026-09-01T05:23:24.522Z",
+      "updated_at": "2026-09-01T05:23:24.522Z"
+    },
+    {
+      "feedback_id": "feedback:TCM_TEA_011:2026-09-01T05:23:45.678Z",
+      "context_version": 0,
+      "record_date": "2026-08-31",
+      "cycle_phase": null,
+      "cycle_day": null,
+      "matched_signals": [],
+      "matched_states": [],
+      "matched_patterns": [],
+      "intervention_id": "TCM_TEA_011",
+      "intervention_name": "茯苓陈皮饮",
+      "target": "appetite_low",
+      "recommendation_id": "recommendation:2026-08-31:TCM_TEA_011:current_discomfort:appetite_low",
+      "source_event_id": null,
+      "source_pattern_id": null,
+      "helpful": false,
+      "before": null,
+      "after": null,
+      "adverse_effect": false,
+      "used_at": "2026-09-01T05:23:45.678Z",
+      "updated_at": "2026-09-01T05:23:45.678Z"
+    },
+    {
+      "feedback_id": "feedback:TCM_TEA_011:2026-09-01T05:24:02.622Z",
+      "context_version": 0,
+      "record_date": "2026-08-31",
+      "cycle_phase": null,
+      "cycle_day": null,
+      "matched_signals": [],
+      "matched_states": [],
+      "matched_patterns": [],
+      "intervention_id": "TCM_TEA_011",
+      "intervention_name": "茯苓陈皮饮",
+      "target": "appetite_low",
+      "recommendation_id": "recommendation:2026-08-31:TCM_TEA_011:current_discomfort:appetite_low",
+      "source_event_id": null,
+      "source_pattern_id": null,
+      "helpful": true,
+      "before": 3,
+      "after": 1,
+      "adverse_effect": false,
+      "used_at": "2026-09-01T05:24:02.622Z",
+      "updated_at": "2026-09-01T05:24:02.622Z"
+    },
+    {
+      "feedback_id": "feedback:TCM_ACU_019:2026-09-01T05:34:25.370Z",
+      "context_version": 0,
+      "record_date": "2026-08-31",
+      "cycle_phase": null,
+      "cycle_day": null,
+      "matched_signals": [],
+      "matched_states": [],
+      "matched_patterns": [],
+      "intervention_id": "TCM_ACU_019",
+      "intervention_name": "阴陵泉（SP9）",
+      "target": "body_heaviness",
+      "recommendation_id": "recommendation:2026-08-31:TCM_ACU_019:current_discomfort:body_heaviness",
+      "source_event_id": null,
+      "source_pattern_id": null,
+      "helpful": true,
+      "before": 3,
+      "after": 2,
+      "adverse_effect": false,
+      "used_at": "2026-09-01T05:34:25.370Z",
+      "updated_at": "2026-09-01T05:34:25.370Z"
+    },
+    {
+      "feedback_id": "feedback:TCM_ACU_019:2026-09-01T05:34:44.624Z",
+      "context_version": 0,
+      "record_date": "2026-08-31",
+      "cycle_phase": null,
+      "cycle_day": null,
+      "matched_signals": [],
+      "matched_states": [],
+      "matched_patterns": [],
+      "intervention_id": "TCM_ACU_019",
+      "intervention_name": "阴陵泉（SP9）",
+      "target": "body_heaviness",
+      "recommendation_id": "recommendation:2026-08-31:TCM_ACU_019:current_discomfort:body_heaviness",
+      "source_event_id": null,
+      "source_pattern_id": null,
+      "helpful": true,
+      "before": 3,
+      "after": 2,
+      "adverse_effect": false,
+      "used_at": "2026-09-01T05:34:44.624Z",
+      "updated_at": "2026-09-01T05:34:44.624Z"
+    },
+    {
+      "feedback_id": "feedback:TCM_FOOD_006:2026-09-01T05:35:18.741Z",
+      "context_version": 0,
+      "record_date": "2026-08-31",
+      "cycle_phase": null,
+      "cycle_day": null,
+      "matched_signals": [],
+      "matched_states": [],
+      "matched_patterns": [],
+      "intervention_id": "TCM_FOOD_006",
+      "intervention_name": "白扁豆山药粥",
+      "target": "appetite_low",
+      "recommendation_id": "recommendation:2026-08-31:TCM_FOOD_006:current_discomfort:appetite_low",
+      "source_event_id": null,
+      "source_pattern_id": null,
+      "helpful": false,
+      "before": null,
+      "after": null,
+      "adverse_effect": false,
+      "used_at": "2026-09-01T05:35:18.741Z",
+      "updated_at": "2026-09-01T05:35:18.741Z"
+    }
+  ],
   "tombstones": {
     "periods": {
       "bcda2bd1-4cb3-4061-b90e-bdf2c9092b6b": "2026-07-22T04:26:30.483Z",
@@ -3041,7 +3174,34 @@
   "settings": {
     "lifeStage": "regular",
     "ownerNotify": true,
-    "partnerNotify": true
+    "partnerNotify": true,
+    "constitutionProfile": {
+      "version": 1,
+      "baseline": {
+        "balanced": null,
+        "qi_deficiency": null,
+        "yang_deficiency": null,
+        "yin_deficiency": null,
+        "phlegm_damp": null,
+        "damp_heat": null,
+        "blood_stasis": null,
+        "qi_stagnation": null,
+        "inherited_special": null
+      },
+      "source": "manual",
+      "assessedAt": null,
+      "editable": true,
+      "updatedAt": null
+    },
+    "safetyProfile": {
+      "version": 1,
+      "pregnancyStatus": "unknown",
+      "herbMedicationReview": "unknown",
+      "severeReflux": "unknown",
+      "localSkinStatus": "unknown",
+      "allergies": "",
+      "updatedAt": null
+    }
   },
   "appliedMutations": [
     "c8dea232-a55f-4cc5-8af6-2e5398d4c575",
@@ -3117,6 +3277,7 @@
     "582587c7-3cff-4cf5-895c-5433217ab5fb",
     "3417efbd-34d7-4530-80be-7eae372cdaca",
     "a07166eb-8ad9-4c53-b9b0-d76e3caa5fce",
-    "c2f925c9-1a58-4e28-97e9-2e44e13c217b"
+    "c2f925c9-1a58-4e28-97e9-2e44e13c217b",
+    "a3587dbd-569d-4797-87be-dbf3f29566d5"
   ]
 }
