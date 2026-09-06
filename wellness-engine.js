@@ -1,4 +1,5 @@
 import { compatibilityTags } from './daily-record-model.js';
+import { analyzePeriodTiming } from './analysis/period-timing.js';
 
 const escapeWellness = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const isoToday = () => { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
@@ -215,8 +216,10 @@ function renderPms(logs, context) {
 
 function renderCycleObservation(logs, context) {
   const root = document.querySelector('#cycleObservationCard'); if (!root) return;
+  const timing = analyzePeriodTiming({ periods: context.periods || [], logs, as_of: isoToday(), life_stage: context.lifeStage || 'regular', safety_profile: context.safetyProfile || {} }), latestTiming = timing.latest;
+  const timingHtml = latestTiming ? `<section class="calendar-timing-summary"><p class="eyebrow">最近一次开始时间</p><strong>${latestTiming.deltaDays === 0 ? '与个人预计中心同日' : `比个人预计中心${latestTiming.deltaDays < 0 ? '提前' : '推迟'} ${Math.abs(latestTiming.deltaDays)} 天`}</strong><span>${latestTiming.withinRange ? '仍在当时的个人预测范围内' : `超出当时的个人预测范围 ${latestTiming.outsideByDays} 天`}</span></section>` : '';
   const periods = [...(context.periods || [])].filter((period) => period.start && period.end && period.status !== 'ongoing').sort((a, b) => a.start.localeCompare(b.start)), period = periods.at(-1);
-  if (!period) { root.innerHTML = '<div class="light-empty"><strong>还没有完整周期可评分</strong><p>周期结束后生成观察分；缺失记录不会被当作身体问题扣分。</p></div>'; return; }
+  if (!period) { root.innerHTML = `${timingHtml}<div class="light-empty"><strong>还没有完整周期可评分</strong><p>周期结束后生成观察分；缺失记录不会被当作身体问题扣分。</p></div>`; return; }
   const index = periods.length - 1, priorStarts = periods.slice(Math.max(0, index - 7), index).map((item) => item.start), priorLengths = priorStarts.slice(1).map((start, position) => dayDiff(priorStarts[position], start)).filter(Number.isFinite), currentLength = index ? dayDiff(periods[index - 1].start, period.start) : null, baseline = median(priorLengths), cycleLogs = Object.entries(logs).filter(([date]) => date >= period.start && date <= period.end), painValues = cycleLogs.map(([, log]) => normalizedPain(log)).filter(Number.isFinite), sleepValues = cycleLogs.map(([, log]) => metric(log, 'sleep')).filter(Number.isFinite), energyValues = cycleLogs.map(([, log]) => metric(log, 'energy')).filter(Number.isFinite), duration = dayDiff(period.start, period.end) + 1, historicalDuration = median(periods.slice(-7, -1).map((item) => dayDiff(item.start, item.end) + 1).filter(Number.isFinite));
   const deductions = [];
   let score = 100, available = 0;
@@ -225,7 +228,7 @@ function renderCycleObservation(logs, context) {
   if (painValues.length) { available += 20; const painAverage = average(painValues), painDeduction = Math.round((painAverage / 5) * 20); score -= painDeduction; if (painDeduction) deductions.push({ text: `有${painValues.length}天疼痛记录，平均${painAverage.toFixed(1)}/5`, points: painDeduction, action: '下周期记录疼痛部位、强度和开始时间；当天先减少高强度运动，选择舒适热敷或轻走。' }); }
   if (sleepValues.length || energyValues.length) { available += 20; const recovery = average([...sleepValues, ...energyValues]), recoveryDeduction = Math.round(((5 - recovery) / 4) * 20); score -= recoveryDeduction; if (recoveryDeduction) deductions.push({ text: `睡眠与精力合计${sleepValues.length + energyValues.length}条，平均${recovery.toFixed(1)}/5`, points: recoveryDeduction, action: '经前一周优先选择23点前入睡，并连续记录次日精力，比较是否改善。' }); }
   const finalScore = Math.max(0, Math.min(100, Math.round(score))), confidence = available >= 70 ? '较高' : available >= 45 ? '中等' : '较低';
-  root.innerHTML = `<div class="cycle-score-head"><div><p class="eyebrow">最近完整周期</p><h2>本周期观察分</h2></div><strong>${finalScore}<small>/100</small></strong></div><div class="cycle-score-meta"><span>${period.start}–${period.end}</span><span>数据可信度：${confidence}</span></div>${deductions.length ? `<div class="deduction-list"><strong>主要扣分与数据</strong>${deductions.slice(0, 3).map((item) => `<div><p>${escapeWellness(item.text)}</p><b>−${item.points}分</b></div>`).join('')}</div>` : '<p class="score-steady">现有数据未发现明显扣分项。</p>'}<p class="fineprint">这是个人记录观察分，不是医学健康评分；数据完整度只影响可信度，不直接扣分。</p>`;
+  root.innerHTML = `${timingHtml}<div class="cycle-score-head"><div><p class="eyebrow">最近完整周期</p><h2>本周期观察分</h2></div><strong>${finalScore}<small>/100</small></strong></div><div class="cycle-score-meta"><span>${period.start}–${period.end}</span><span>数据可信度：${confidence}</span></div>${deductions.length ? `<div class="deduction-list"><strong>主要扣分与数据</strong>${deductions.slice(0, 3).map((item) => `<div><p>${escapeWellness(item.text)}</p><b>−${item.points}分</b></div>`).join('')}</div>` : '<p class="score-steady">现有数据未发现明显扣分项。</p>'}<p class="fineprint">这是个人记录观察分，不是医学健康评分；数据完整度只影响可信度，不直接扣分。</p>`;
 }
 
 export function renderWellnessEnhancements(context, view = 'today') {

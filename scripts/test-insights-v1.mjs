@@ -91,7 +91,9 @@ assert.match(insightsPage, /topInsights\.slice\(0, 2\)/, '首页趋势重点最�
 assert.match(insightsPage, /nextCycleWindows\.slice\(0, 2\)/, '下一周期观察最多展示两条');
 assert.match(insightsPage, /renderTemporalClusters/, '趋势页必须渲染多状态前后日关系卡片');
 assert.match(html, /今天的状态与明天有什么关系/, '趋势页必须提供前后日视觉区域');
-assert.equal(insightsConfig.version, 8, '扩展TCM模式与周期特异性后必须刷新趋势缓存');
+assert.equal(insightsConfig.version, 9, '增加周期提前/推迟观察后必须刷新趋势缓存');
+assert.match(html, /id="insightsPeriodTiming"/, '趋势页必须展示月经提前或推迟结果');
+assert.match(insightsPage, /renderPeriodTiming/, '趋势页必须渲染周期节律与TCM观察背景');
 for (const consumer of unifiedConsumers) {
   assert.match(consumer, /buildCareContext/, '分析与建议消费者必须通过统一健康上下文读取结构化记录');
   assert.doesNotMatch(consumer, /readTcmObservations|readDailyDetails/, '消费者不得绕过统一健康上下文重复解释结构化记录');

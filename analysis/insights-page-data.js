@@ -1,9 +1,10 @@
 import { rankAndFilterInsights, rankInsight } from './insight-ranker.js';
 import { runAnalysis } from './analysis-orchestrator.js';
+import { analyzePeriodTiming } from './period-timing.js';
 
 const clusterConfidenceRank = Object.freeze({ stable: 3, moderate: 2, exploratory: 1 });
 
-export function createInsightsPageData({ logs = {}, periods = [], as_of, next_start, prediction_confidence, config, tcm_rules, observation_actions = [], intervention_usage = [], constitution_profile = null, phase, phase_for_date, previous_snapshot } = {}) {
+export function createInsightsPageData({ logs = {}, periods = [], as_of, next_start, prediction_confidence, config, tcm_rules, observation_actions = [], intervention_usage = [], constitution_profile = null, life_stage = 'regular', safety_profile = {}, phase, phase_for_date, previous_snapshot } = {}) {
   const analysis = runAnalysis({ logs, periods, as_of, next_start, prediction_confidence, config, tcm_rules, observation_actions, intervention_usage, constitution_profile, phase, phase_for_date }, { previous_snapshot });
   const raw = analysis.core.raw_insights;
   const eligible = raw.filter((insight) => {
@@ -21,10 +22,11 @@ export function createInsightsPageData({ logs = {}, periods = [], as_of, next_st
   const temporalClusters = allRanked.filter((insight) => insight.type === 'temporal_cluster' && insight.status === 'active')
     .sort((a, b) => clusterConfidenceRank[b.confidenceLevel] - clusterConfidenceRank[a.confidenceLevel] || b.observation.supportingData.todayFeatures.length + b.observation.supportingData.tomorrowFeatures.length - a.observation.supportingData.todayFeatures.length - a.observation.supportingData.tomorrowFeatures.length || b.observation.effectSizeRaw - a.observation.effectSizeRaw || a.id.localeCompare(b.id));
   const qualityReport = analysis.core.quality;
+  const periodTiming = analyzePeriodTiming({ periods, logs, as_of, life_stage, safety_profile });
   const quality = Object.values(qualityReport);
   const metrics = Object.fromEntries(quality.map((item) => [item.metric, item]));
   return Object.freeze({
-    generatedAt: analysis.generated_at, topInsights: top, nextCycleWindows, phaseProfiles, stateClusters, temporalClusters, tcmStates: analysis.core.tcm_states, constitutionProfile: analysis.core.constitution_profile,
+    generatedAt: analysis.generated_at, topInsights: top, nextCycleWindows, periodTiming, phaseProfiles, stateClusters, temporalClusters, tcmStates: analysis.core.tcm_states, constitutionProfile: analysis.core.constitution_profile,
     associations: { sameDay: associations.filter((item) => item.observation.supportingData.relation === 'same_day'), previousToToday: associations.filter((item) => item.observation.supportingData.relation === 'previous_day'), todayToNextDay: associations.filter((item) => item.observation.supportingData.relation === 'next_day') },
     interventionResponses: analysis.intervention_responses,
     tcmClusters: allRanked.filter((item) => item.type === 'tcm_cluster' && item.status === 'active'),

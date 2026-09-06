@@ -1123,6 +1123,29 @@ main { width: min(1120px,calc(100% - 32px - env(safe-area-inset-left) - env(safe
 }
 .cycle-observation-card { margin: 18px 0 0 }
 .cycle-observation-card,.history-card { background: var(--surface); box-shadow: var(--shadow) }
+.calendar-timing-summary { display: grid; gap: 5px; margin: 0 0 18px; padding: 0 0 16px; border-bottom: 1px solid var(--soft-line) }
+.calendar-timing-summary p { margin: 0 }
+.calendar-timing-summary strong { color: var(--ink); font-size: 1.08rem }
+.calendar-timing-summary span { color: var(--ink-muted); font-size: var(--text-caption) }
+.period-timing-card,.period-timing-context { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--soft-line); border-radius: 18px; background: var(--surface) }
+.period-timing-card+*,.period-timing-context+* { margin-top: 10px }
+.period-timing-card header,.period-timing-context header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px }
+.period-timing-card header span,.period-timing-context header span { color: var(--ink-muted); font-size: var(--text-caption) }
+.period-timing-card header strong,.period-timing-context header strong { color: var(--ink); font-size: 1rem }
+.period-timing-card p,.period-timing-context p { margin: 0; line-height: 1.55 }
+.period-timing-card>small { color: var(--ink-muted); line-height: 1.45 }
+.period-timing-card.timing-early,.period-timing-card.timing-late { border-color: rgba(217,87,143,.28) }
+.timing-scale { position: relative; display: grid; grid-template-columns: 1fr 2fr 1fr; height: 8px; overflow: hidden; border-radius: 999px; background: var(--surface-muted) }
+.timing-scale i { background: rgba(217,87,143,.13) }
+.timing-scale b { background: var(--phase-follicular-soft) }
+.timing-scale b.timing-early,.timing-scale b.timing-late { background: var(--period-soft) }
+.timing-context-signals,.timing-safety { padding: 10px 12px; border-radius: 12px; background: var(--surface-muted) }
+.timing-context-signals small { color: var(--ink-muted) }
+.timing-context-signals p { margin-top: 4px; color: var(--ink); font-weight: 650 }
+.timing-safety { color: var(--emphasis); font-weight: 650; line-height: 1.55 }
+.timing-steady { margin: 8px 0 0 }
+.prediction-primary.is-late small,.prediction-primary.is-late strong { color: var(--emphasis) }
+@media (max-width:430px) { .period-timing-card header,.period-timing-context header { display: grid; gap: 4px } }
 .history-card .cycle-chart-wrap { padding: 4px 0 0; border: 0; border-radius: 0; background: var(--surface) }
 .history-card .cycle-line-chart svg { height: 184px }
 .history-card .cycle-line-chart .normal-band { fill: var(--surface-muted) }

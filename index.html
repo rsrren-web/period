@@ -20,7 +20,7 @@
   <link rel="apple-touch-icon" href="public/icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="https://fontsapi.zeoseven.com/184/main/result.css">
-  <link rel="stylesheet" href="styles.css?v=114">
+  <link rel="stylesheet" href="styles.css?v=115">
   <title>周期生活助手</title>
 </head>
 <body>
@@ -88,6 +88,7 @@
       <section class="insights-v1-stack" aria-live="polite">
         <section><div class="insights-section-heading"><div><p class="eyebrow">优先阅读</p><h2>最值得知道</h2></div><span id="insightsGeneratedAt" class="muted"></span></div><div id="insightsTop" class="insight-card-list"></div></section>
         <section><div class="insights-section-heading"><div><p class="eyebrow">提前观察</p><h2>下一周期值得注意</h2></div></div><div id="insightsNextCycle" class="insight-card-list compact"></div></section>
+        <section><div class="insights-section-heading"><div><p class="eyebrow">周期节律</p><h2>这次是提前还是推迟</h2></div></div><div id="insightsPeriodTiming"></div></section>
         <section class="tcm-state-overview"><div class="insights-section-heading"><div><p class="eyebrow">最近14天</p><h2>我的中医状态</h2></div></div><p class="insights-method-note">根据你主动记录的体感整理近期变化，不是体质或诊断。</p><div id="insightsTcmStates" class="tcm-state-list"><div class="insights-empty"><strong>正在整理近期状态</strong><p>未填写的项目不会当作“没有”。</p></div></div></section>
         <details class="insights-more-section" id="insightsConstitutionSection"><summary><span><small>长期基线</small><strong>我的体质倾向档案</strong></span><span>展开</span></summary><div class="insights-more-body"><p class="insights-method-note">人工基线与最近90天记录分开显示；日常记录不会自动诊断或修改你的基线。</p><div id="insightsConstitutionProfile"></div></div></details>
         <details class="insights-more-section state-cluster-section"><summary><span><small>更多规律</small><strong>哪些状态常一起出现</strong></span><span>展开</span></summary><div class="insights-more-body"><p class="insights-method-note">同一天反复共同出现的 2–4 项状态；只表示一起发生，不代表互相导致。</p><div id="insightsStateClusters" class="state-cluster-list"></div></div></details>
@@ -238,6 +239,6 @@
   <dialog id="interventionFeedbackDialog" class="feedback-dialog"><form id="interventionFeedbackForm" method="dialog"><input name="interventionId" type="hidden"><input name="interventionName" type="hidden"><input name="target" type="hidden"><div class="dialog-head"><div><p class="eyebrow">调养反馈</p><h2>这次对你有帮助吗？</h2></div><button type="button" class="close-dialog round-button emoji-icon" aria-label="关闭">✖️</button></div><p id="interventionFeedbackName" class="muted"></p><fieldset class="choice-field"><legend>你的感受</legend><div class="choice-pills"><label><input name="helpful" type="radio" value="yes" required><span>有帮助</span></label><label><input name="helpful" type="radio" value="no"><span>没明显帮助</span></label></div></fieldset><fieldset class="choice-field"><legend>是否出现不适</legend><div class="choice-pills"><label><input name="adverseEffect" type="radio" value="no" required><span>没有</span></label><label><input name="adverseEffect" type="radio" value="yes"><span>有不适</span></label></div></fieldset><div class="feedback-score-grid"><label>使用前不适程度<input name="before" type="number" min="0" max="5" step="1" inputmode="numeric" placeholder="0–5"></label><label>使用后不适程度<input name="after" type="number" min="0" max="5" step="1" inputmode="numeric" placeholder="0–5"></label></div><p class="field-hint">分数可不填；只在相似周期阶段与状态下累计至少3次后，才会影响推荐顺序。</p><div class="dialog-actions"><button type="button" class="close-dialog soft">取消</button><button value="default" class="primary">保存反馈</button></div></form></dialog>
 
   <div id="toast" class="toast" role="status"></div>
-  <script src="sync-config.js"></script><script type="module" src="app.js?v=114"></script>
+  <script src="sync-config.js"></script><script type="module" src="app.js?v=115"></script>
 </body>
 </html>

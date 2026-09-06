@@ -98,6 +98,29 @@ function renderInterventions(data) {
   const root = document.querySelector('#insightsInterventions');
   if (root) root.innerHTML = data.interventionResponses.length ? data.interventionResponses.map((item) => `<article class="intervention-response-card"><div><strong>${esc(item.interventionName)}</strong><span>${esc(item.dataLabel)}</span></div><p>使用 ${item.uses} 次 · 记录有帮助 ${item.improvementCount} 次 · 有帮助 ${pct(item.helpfulRate)}</p>${item.meanDelta === null ? '' : `<p>不适评分平均下降 ${item.meanDelta > 0 ? '+' : ''}${item.meanDelta}</p>`}${item.contexts?.length ? `<p><strong>曾在哪些情境使用：</strong>${item.contexts.map(esc).join('；')}</p>` : ''}${item.adverseEffects ? `<p class="field-hint">其中 ${item.adverseEffects} 次记录了不适；建议暂停并核对方案。</p>` : ''}</article>`).join('') : empty('还没有足够的调养反馈', '在首页调养建议中记录效果；同一方案至少3次后才开始汇总。');
 }
+function renderPeriodTiming(data) {
+  const root = document.querySelector('#insightsPeriodTiming');
+  if (!root) return;
+  const report = data.periodTiming || {}, latest = report.latest, current = report.current, trend = report.trend || {}, context = report.tcmContext || {};
+  if (!latest && !current) { root.innerHTML = empty('正在建立个人日期基准', '至少需要三个已确认的月经开始日，才能回看一次个性化提前或推迟。'); return; }
+  const parts = [];
+  if (current?.status === 'past_window') {
+    parts.push(`<article class="period-timing-card timing-late"><header><span>当前周期</span><strong>已超过预计范围 ${current.daysPastWindow} 天</strong></header><p>预计中心为 ${dateText(current.expectedStart)}，个人可能范围为 ${dateText(current.windowStart)}–${dateText(current.windowEnd)}。</p>${current.pregnancyCheckRelevant ? '<div class="timing-safety">如存在怀孕可能，请先验孕；若伴随明显疼痛、异常出血或持续不适，应及时寻求专业评估。</div>' : ''}<p class="fineprint">日期来自个人历史估算，推迟本身不能说明原因。</p></article>`);
+  }
+  if (latest) {
+    const centered = latest.deltaDays === 0 ? '与预计中心同日' : `比预计中心${latest.deltaDays < 0 ? '提前' : '推迟'} ${Math.abs(latest.deltaDays)} 天`;
+    const range = latest.withinRange ? '仍在个人预测范围内' : `超出个人预测范围 ${latest.outsideByDays} 天`;
+    const tone = latest.direction === 'within_range' ? 'timing-within' : latest.direction === 'early' ? 'timing-early' : 'timing-late';
+    parts.push(`<article class="period-timing-card ${tone}"><header><span>最近一次 · ${dateText(latest.actualStart)}</span><strong>${esc(centered)}</strong></header><p>${esc(range)}；当时的可能范围是 ${dateText(latest.windowStart)}–${dateText(latest.windowEnd)}。</p><div class="timing-scale"><i></i><b class="${tone}"></b><i></i></div><small>预测只使用该次月经之前的记录，不会用结果反推预测。</small></article>`);
+  }
+  if (trend.direction) {
+    const direction = trend.direction === 'early' ? '提前' : '推迟', signals = context.signals || [];
+    parts.push(`<article class="period-timing-context"><header><strong>最近 ${trend.sampleSize} 次中有 ${trend.count} 次超出范围并${direction}</strong><span>初步节律变化</span></header>${signals.length ? `<div class="timing-context-signals"><small>这些周期开始前14天也重复记录到</small><p>${signals.map((item) => `${esc(item.label)} · ${item.count}个周期`).join('；')}</p></div>` : '<p>暂时没有足够的同期日常记录可以对照。</p>'}<p class="fineprint">这是 TCM 与生活观察的背景线索，不等于证型、诊断或因果关系；不会因为提前或推迟直接推荐中药。</p></article>`);
+  } else if (trend.sampleSize >= 2) {
+    parts.push('<p class="insights-method-note timing-steady">最近记录没有形成连续同方向、且超出个人预测范围的提前或推迟。</p>');
+  }
+  root.innerHTML = parts.join('');
+}
 function renderTcmStates(data) {
   const root = document.querySelector('#insightsTcmStates');
   if (!root) return;
@@ -144,7 +167,7 @@ function renderQuality(data) {
 }
 function addOneDay(value) { return new Date(Date.parse(`${value}T12:00:00Z`) + 86400000).toISOString().slice(0, 10); }
 function renderPage(data, actions) {
-  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderProfiles(data); renderTemporalClusters(data); renderInterventions(data); renderTcmStates(data); renderConstitution(data); renderTcm(data); renderQuality(data);
+  renderTop(data, actions); renderStateClusters(data); renderNext(data, actions); renderPeriodTiming(data); renderProfiles(data); renderTemporalClusters(data); renderInterventions(data); renderTcmStates(data); renderConstitution(data); renderTcm(data); renderQuality(data);
   const stamp = document.querySelector('#insightsGeneratedAt');
   if (stamp) stamp.textContent = `更新于 ${new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' }).format(new Date(data.generatedAt))}`;
 }
@@ -154,7 +177,7 @@ globalThis.renderInsightsV1 = async (context) => {
   const token = ++renderToken;
   const now = new Date();
   const asOf = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const input = { logs: context?.logs || {}, periods: context?.periods || [], as_of: asOf, next_start: context?.next, prediction_confidence: context?.predictionConfidence, intervention_usage: readInterventionUsage(), constitution_profile: context?.constitutionProfile || null };
+  const input = { logs: context?.logs || {}, periods: context?.periods || [], as_of: asOf, next_start: context?.next, prediction_confidence: context?.predictionConfidence, intervention_usage: readInterventionUsage(), constitution_profile: context?.constitutionProfile || null, life_stage: context?.lifeStage || 'regular', safety_profile: context?.safetyProfile || {} };
   try {
     const { config, tcmRules, observationActions } = await loadResources();
     if (token !== renderToken || context?.isCurrent?.() === false) return false;
