@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 81,
-  "updatedAt": "2026-09-06T21:06:11.285Z",
+  "revision": 82,
+  "updatedAt": "2026-09-07T02:38:04.451Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -3090,22 +3090,23 @@
     },
     "2026-09-06": {
       "modelVersion": 3,
-      "mood": null,
-      "energy": null,
+      "mood": 5,
+      "energy": 3,
       "sleep": 2,
-      "activity": null,
+      "activity": 1,
       "stress": 2,
       "pain": null,
-      "primaryEmotion": null,
-      "bedtime": null,
+      "primaryEmotion": "开心",
+      "bedtime": "after_23",
       "bowelMovement": true,
       "exerciseTypes": null,
       "socialTypes": [
         "工作",
+        "娱乐",
         "日常"
       ],
-      "socialIntensity": 4,
-      "socialEffect": null,
+      "socialIntensity": 5,
+      "socialEffect": "draining",
       "painLocations": null,
       "symptomTags": [
         "detail:bowel:normal",
@@ -3124,19 +3125,19 @@
       "spotting_context": null,
       "period_episode_id": null,
       "fieldStatus": {
-        "mood": "not_recorded",
-        "energy": "not_recorded",
+        "mood": "reported",
+        "energy": "reported",
         "sleep": "reported",
-        "activity": "not_recorded",
+        "activity": "reported",
         "stress": "reported",
         "pain": "not_recorded",
-        "primaryEmotion": "not_recorded",
-        "bedtime": "not_recorded",
+        "primaryEmotion": "reported",
+        "bedtime": "reported",
         "bowelMovement": "reported",
         "exerciseTypes": "not_recorded",
         "socialTypes": "reported",
         "socialIntensity": "reported",
-        "socialEffect": "not_recorded",
+        "socialEffect": "reported",
         "painLocations": "not_recorded",
         "symptomTags": "reported",
         "temperature": "not_recorded",
@@ -3150,7 +3151,7 @@
         "period_episode_id": "not_recorded"
       },
       "legacySymptoms": [],
-      "updatedAt": "2026-09-06T21:06:09.639Z"
+      "updatedAt": "2026-09-07T02:38:02.667Z"
     }
   },
   "interventionUsage": [
@@ -3415,6 +3416,7 @@
     "7f6ce260-336c-4281-9ac0-f6af53009707",
     "a1120f44-e7e5-47da-87c9-ac945a4e34ab",
     "343c3929-345e-4b48-952b-b352d7e971a6",
-    "0798e550-9a17-4a2f-9547-2d465810c391"
+    "0798e550-9a17-4a2f-9547-2d465810c391",
+    "3acda8e0-0dfa-4aed-955e-365542283c65"
   ]
 }
