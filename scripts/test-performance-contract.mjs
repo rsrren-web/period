@@ -53,8 +53,12 @@ assert.match(line('renderCalendarStatusAsync'), /isCurrentRender\('calendar',nav
 assert.match(line('loadTraditionalCare'), /import\('\.\/traditional-care\.js'\)/, '传统调养必须动态加载');
 assert.match(line('loadTraditionalCare'), /traditionalCarePromise=null;traditionalCareAttempt\+\+;traditionalCareState='error'/, '传统调养加载失败后必须清空 Promise 并推进重试版本');
 assert.match(line('loadTraditionalCare'), /traditionalCareAttempt\?import\(`\.\/traditional-care\.js\?retry=/, '传统调养失败后必须绕过浏览器失败模块缓存');
-assert.match(line('renderAdvice'), /traditionalCareState==='active'\|\|traditionalCareState==='loading'\)return/, '基础建议 renderer 不得覆盖已加载或正在加载的增强 TCM');
-assert.match(renderView, /heavy\|\|traditionalCareState==='active'/, '保存后的轻量 today render 必须局部刷新已激活 TCM');
+assert.match(line('renderAdvice'), /phaseChanged=root\.dataset\.phase!==p\.key/, '传统调养必须识别页面显示阶段是否已过期');
+assert.match(line('renderAdvice'), /\(traditionalCareState==='active'\|\|traditionalCareState==='loading'\)\&\&!phaseChanged\)return/, '只有阶段一致时基础 renderer 才能保留已加载或正在加载的增强 TCM');
+assert.match(line('renderAdvice'), /root\.dataset\.phase=p\.key/, '基础传统调养必须记录当前渲染阶段');
+assert.match(renderView, /heavy\|\|traditionalCareState==='active'\|\|traditionalCareState==='loading'/, '保存或同步期间的轻量 today render 必须更新正在加载或已激活的 TCM payload');
+const traditionalCare = readFileSync(new URL('../traditional-care.js', import.meta.url), 'utf8');
+assert.match(traditionalCare, /root\.dataset\.phase = phase\.key/, '增强传统调养完成渲染时必须记录当前阶段');
 assert.match(line('renderHistory'), /allItems\.length-36/, '历史图默认最多绘制最近 36 个周期');
 assert.doesNotMatch(app, /3200/, '不得保留固定 3.2 秒后的历史图重渲染');
 assert.match(line('scheduleHistoryRender'), /requestIdleCallback/, '历史图必须在空闲阶段绘制');

@@ -242,6 +242,7 @@ globalThis.renderTraditionalAdvice = (phase, log = {}, logs = {}, constitutionPr
   document.querySelector('#tcmPhaseTitle').textContent = theory.title;
   document.querySelector('#tcmPhaseDot').className = `phase-dot phase-${phase.key}`;
   const token = ++recommendationRenderToken;
+  root.dataset.phase = phase.key;
   root.innerHTML = `
     <section class="tcm-reasoning"><p>${esc(practicalReason)}</p>${practicalEvidence.length ? `<ul>${practicalEvidence.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>` : ''}</section>
     ${bodySenseAction}
