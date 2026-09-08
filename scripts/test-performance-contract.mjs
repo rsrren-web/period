@@ -20,6 +20,15 @@ assert.equal((renderView.match(/cycleModel\(/g) || []).length, 1, '一次视图�
 assert.equal((renderView.match(/phaseInfo\(/g) || []).length, 1, '一次视图渲染只能创建一次阶段信息');
 assert.equal((renderView.match(/analysisContext\(/g) || []).length, 1, '一次视图渲染只能创建一次分析上下文');
 assert.match(line('phaseForDate'), /^function phaseForDate\(date,m\)/, 'phaseForDate 必须显式接收 model');
+const toDate = value => new Date(`${value}T12:00:00Z`);
+const addTestDays = (value, amount) => { const date = toDate(value); date.setUTCDate(date.getUTCDate() + amount); return date.toISOString().slice(0, 10); };
+const inTestRange = (value, start, end) => value >= start && value <= end;
+const nextTestStart = (starts, value) => starts.find(start => start > value);
+const phaseForDate = new Function('nextStartAfter', 'addDays', 'inRange', `return (${line('phaseForDate')})`)(nextTestStart, addTestDays, inTestRange);
+const phaseModel = { periodByDate: new Map(), starts: ['2026-08-09'], next: '2026-09-07' };
+assert.equal(phaseForDate('2026-09-06', phaseModel), 'pms', '预计开始日前必须属于经前/黄体阶段');
+assert.equal(phaseForDate('2026-09-07', phaseModel), 'pms', '预计开始日尚未记录月经时不得提前重置为卵泡期');
+assert.equal(phaseForDate('2026-09-10', phaseModel), 'pms', '月经推迟且未记录新周期时必须继续保持经前/黄体阶段');
 assert.match(line('renderHero'), /^function renderHero\(p\)/, 'today 子渲染器必须复用阶段信息');
 assert.match(line('renderAdvice'), /^function renderAdvice\(p\)/, '建议渲染器必须复用阶段信息');
 
