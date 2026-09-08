@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 84,
-  "updatedAt": "2026-09-08T03:11:23.400Z",
+  "revision": 85,
+  "updatedAt": "2026-09-08T03:11:57.920Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -3350,6 +3350,31 @@
       "adverse_effect": false,
       "used_at": "2026-09-01T05:35:18.741Z",
       "updated_at": "2026-09-01T05:35:18.741Z"
+    },
+    {
+      "feedback_id": "c8e41935-dc2e-4660-a9a4-0c9501aca6ac",
+      "context_version": 1,
+      "record_date": "2026-09-07",
+      "cycle_phase": "early_follicular",
+      "cycle_day": 30,
+      "matched_signals": [
+        "irritability",
+        "social_aftereffect"
+      ],
+      "matched_states": [],
+      "matched_patterns": [],
+      "intervention_id": "TCM_TEA_007",
+      "intervention_name": "茉莉玫瑰饮",
+      "target": "irritability",
+      "recommendation_id": "recommendation:2026-09-07:TCM_TEA_007:current_discomfort:irritability",
+      "source_event_id": null,
+      "source_pattern_id": null,
+      "helpful": true,
+      "before": 3,
+      "after": 1,
+      "adverse_effect": false,
+      "used_at": "2026-09-08T03:11:56.722Z",
+      "updated_at": "2026-09-08T03:11:56.722Z"
     }
   ],
   "tombstones": {
@@ -3483,6 +3508,7 @@
     "0798e550-9a17-4a2f-9547-2d465810c391",
     "3acda8e0-0dfa-4aed-955e-365542283c65",
     "c7ff8253-07bf-4255-bf1a-c037c963c0d5",
-    "76a3937b-e368-4127-9ae8-d2497590f722"
+    "76a3937b-e368-4127-9ae8-d2497590f722",
+    "e56f6b58-ef16-4379-b02b-3fbccc12b207"
   ]
 }
