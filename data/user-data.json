@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 86,
-  "updatedAt": "2026-09-08T23:16:41.962Z",
+  "revision": 87,
+  "updatedAt": "2026-09-09T19:33:06.947Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -3219,25 +3219,29 @@
     },
     "2026-09-08": {
       "modelVersion": 3,
-      "mood": 2,
-      "energy": 1,
-      "sleep": 1,
+      "mood": 3,
+      "energy": 4,
+      "sleep": 4,
       "activity": null,
-      "stress": 5,
-      "pain": 2,
-      "primaryEmotion": "疲倦",
-      "bedtime": null,
-      "bowelMovement": null,
-      "exerciseTypes": null,
-      "socialTypes": null,
-      "socialIntensity": null,
-      "socialEffect": null,
-      "painLocations": [
-        "胃/上腹"
+      "stress": 2,
+      "pain": null,
+      "primaryEmotion": "普通",
+      "bedtime": "before_23",
+      "bowelMovement": true,
+      "exerciseTypes": [],
+      "socialTypes": [
+        "日常"
       ],
+      "socialIntensity": 2,
+      "socialEffect": "neutral",
+      "painLocations": null,
       "symptomTags": [
-        "detail:body_sense:night_sweat",
-        "detail:sleep_issue:waking"
+        "tcm:diarrhea:yes",
+        "tcm:bloating:yes",
+        "detail:pain_nature:stabbing",
+        "detail:pain_nature:dull",
+        "detail:bowel:diarrhea",
+        "detail:sleep_issue:dreamy"
       ],
       "temperature": null,
       "menstrual_status": "not_on_period",
@@ -3256,15 +3260,15 @@
         "sleep": "reported",
         "activity": "not_recorded",
         "stress": "reported",
-        "pain": "reported",
+        "pain": "not_recorded",
         "primaryEmotion": "reported",
-        "bedtime": "not_recorded",
-        "bowelMovement": "not_recorded",
-        "exerciseTypes": "not_recorded",
-        "socialTypes": "not_recorded",
-        "socialIntensity": "not_recorded",
-        "socialEffect": "not_recorded",
-        "painLocations": "reported",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "exerciseTypes": "reported",
+        "socialTypes": "reported",
+        "socialIntensity": "reported",
+        "socialEffect": "reported",
+        "painLocations": "not_recorded",
         "symptomTags": "reported",
         "temperature": "not_recorded",
         "menstrual_status": "system_generated",
@@ -3277,7 +3281,7 @@
         "period_episode_id": "not_recorded"
       },
       "legacySymptoms": [],
-      "updatedAt": "2026-09-08T23:16:30.140Z"
+      "updatedAt": "2026-09-09T19:33:05.381Z"
     }
   },
   "interventionUsage": [
@@ -3572,6 +3576,7 @@
     "c7ff8253-07bf-4255-bf1a-c037c963c0d5",
     "76a3937b-e368-4127-9ae8-d2497590f722",
     "e56f6b58-ef16-4379-b02b-3fbccc12b207",
-    "bf4f55fa-daeb-4335-8295-221f79ecdff8"
+    "bf4f55fa-daeb-4335-8295-221f79ecdff8",
+    "4a075192-e319-40ef-a199-35770fa721fc"
   ]
 }
