@@ -69,8 +69,17 @@ export function sleepFocusVariant(date = isoToday()) {
   return variants[seed % variants.length];
 }
 
+export function migrateLegacyFocusHistory(legacy = [], date = isoToday()) {
+  const id = Array.isArray(legacy) && typeof legacy[0] === 'string' ? legacy[0] : '';
+  return id ? [{ date: shiftDate(date, -2), id }, { date: shiftDate(date, -1), id }] : [];
+}
+
 function readDailyFocusHistory() {
-  try { return focusHistory(JSON.parse(localStorage.getItem(DAILY_FOCUS_HISTORY_KEY) || '[]')); } catch { return []; }
+  try {
+    const stored = focusHistory(JSON.parse(localStorage.getItem(DAILY_FOCUS_HISTORY_KEY) || '[]'));
+    if (stored.length) return stored;
+    return migrateLegacyFocusHistory(JSON.parse(localStorage.getItem('period-recent-actions-v2') || '[]'));
+  } catch { return []; }
 }
 
 function rememberDailyFocus(date, id, history = readDailyFocusHistory()) {
