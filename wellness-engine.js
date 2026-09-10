@@ -34,6 +34,49 @@ function phaseFor(date, context) {
 }
 
 const PHASE_NAMES = { period: '月经期', follicular: '卵泡期', ovulation: '排卵估算期', pms: '黄体期', unknown: '阶段未定' };
+const DAILY_FOCUS_HISTORY_KEY = 'period-daily-focus-history-v1';
+
+function focusHistory(value = []) {
+  return Array.isArray(value) ? value.filter((entry) => entry && /^\d{4}-\d{2}-\d{2}$/.test(entry.date) && typeof entry.id === 'string').sort((a, b) => a.date.localeCompare(b.date)).slice(-30) : [];
+}
+
+function consecutiveFocusDays(history, id, date) {
+  let count = 0;
+  for (let offset = 1; offset <= 7; offset += 1) {
+    const prior = history.find((entry) => entry.date === shiftDate(date, -offset));
+    if (prior?.id !== id) break;
+    count += 1;
+  }
+  return count;
+}
+
+export function chooseDailyFocus(candidates = [], history = [], date = isoToday()) {
+  const prior = focusHistory(history).filter((entry) => entry.date < date), recentStart = shiftDate(date, -2);
+  return candidates.map((candidate) => {
+    const consecutive = consecutiveFocusDays(prior, candidate.id, date), shownRecently = prior.some((entry) => entry.id === candidate.id && entry.date >= recentStart);
+    const repeatPenalty = candidate.bypassCooldown ? 0 : consecutive >= 2 ? 20 : shownRecently ? 4 : 0;
+    return { ...candidate, adjustedPriority: candidate.priority - repeatPenalty };
+  }).sort((left, right) => right.adjustedPriority - left.adjustedPriority || right.priority - left.priority || left.id.localeCompare(right.id))[0] || null;
+}
+
+export function sleepFocusVariant(date = isoToday()) {
+  const variants = [
+    { title: '今晚把收尾时间提前一点', action: '今晚提前20分钟停止新任务，并把屏幕调暗' },
+    { title: '今晚给入睡留出过渡', action: '设一个比平时早20分钟的收尾提醒，随后只做洗漱和准备明天物品' },
+    { title: '今天少留一个睡眠干扰', action: '如果喝咖啡或浓茶，下午2点后不再加量；今晚按计划时间上床' }
+  ];
+  const seed = [...date].reduce((sum, char) => sum + (Number(char) || 0), 0);
+  return variants[seed % variants.length];
+}
+
+function readDailyFocusHistory() {
+  try { return focusHistory(JSON.parse(localStorage.getItem(DAILY_FOCUS_HISTORY_KEY) || '[]')); } catch { return []; }
+}
+
+function rememberDailyFocus(date, id, history = readDailyFocusHistory()) {
+  const next = [...history.filter((entry) => entry.date !== date), { date, id }].sort((a, b) => a.date.localeCompare(b.date)).slice(-30);
+  localStorage.setItem(DAILY_FOCUS_HISTORY_KEY, JSON.stringify(next));
+}
 
 function rangeEntries(logs, days = 7, end = isoToday()) {
   const start = shiftDate(end, -(days - 1));
@@ -113,9 +156,9 @@ function adviceCandidates(logs, context, log) {
   const avgActivity = average(recent.map(([, item]) => metric(item, 'activity')).filter(Number.isFinite));
   const avgMood = average(recent.map(([, item]) => metric(item, 'mood')).filter(Number.isFinite));
   const stress = metric(log, 'stress') ?? 3;
-  if (noBowel >= 2) candidates.push({ id: 'bowel', priority: 10 + noBowel, title: `已连续${noBowel}天记录未排便`, reason: '这是近一周最连续的变化', action: '今天分次补水，正餐加入蔬菜或全谷物，餐后舒适步行10分钟' });
-  if (pain >= 3) candidates.push({ id: 'pain', priority: 10 + pain, title: '今天先照顾疼痛', reason: `${pain}/5的疼痛是今天最明显的身体负担`, action: '暂停高强度运动；若温热后舒服，可隔布热敷15分钟' });
-  if (late >= 3) candidates.push({ id: 'sleep', priority: 8 + late, title: '今晚把收尾时间提前一点', reason: `近7天有${late}天在23点后入睡`, action: '今晚提前20分钟停止新任务，并把屏幕调暗' });
+  if (noBowel >= 2) candidates.push({ id: 'bowel', priority: 10 + noBowel, bypassCooldown: noBowel >= 3, title: `已连续${noBowel}天记录未排便`, reason: '这是近一周最连续的变化', action: '今天分次补水，正餐加入蔬菜或全谷物，餐后舒适步行10分钟' });
+  if (pain >= 3) candidates.push({ id: 'pain', priority: 10 + pain, bypassCooldown: pain >= 4, title: '今天先照顾疼痛', reason: `${pain}/5的疼痛是今天最明显的身体负担`, action: '暂停高强度运动；若温热后舒服，可隔布热敷15分钟' });
+  if (late >= 3) candidates.push({ id: 'sleep', priority: 8 + late, ...sleepFocusVariant(isoToday()), reason: `近7天有${late}天在23点后入睡` });
   if (avgActivity !== null && avgActivity <= 2.3) candidates.push({ id: 'activity', priority: 7, title: '今天补一点轻活动', reason: `近7天运动量平均${avgActivity.toFixed(1)}/5，低于中间水平`, action: '选择散步、拉伸或八段锦中的一项，做10分钟即可' });
   if (stress >= 4) candidates.push({ id: 'stress', priority: 9, title: '今天减少一次额外消耗', reason: `压力${stress}/5，是今天较突出的负担`, action: '取消一项非必要任务，留10分钟不处理消息' });
   if (avgMood !== null && avgMood <= 2.2) candidates.push({ id: 'mood', priority: 8, title: '情绪连续偏低，先降低要求', reason: `近7天情绪平均${avgMood.toFixed(1)}/5`, action: '今天只保留一项必须完成的任务，并联系一个让你安心的人' });
@@ -127,9 +170,7 @@ function adviceCandidates(logs, context, log) {
     unknown: { id: 'steady', title: '今天保持基本节律', reason: '目前记录不足以形成明确结论', action: '规律进食、适量活动，并完成今天的状态记录' }
   }[phase];
   candidates.push({ ...fallback, priority: 1 });
-  const recentIds = JSON.parse(localStorage.getItem('period-recent-actions-v2') || '[]');
-  candidates.forEach((candidate) => { if (recentIds.includes(candidate.id)) candidate.priority -= 2; });
-  return candidates.sort((a, b) => b.priority - a.priority);
+  return candidates;
 }
 
 function renderUsefulDecision(logs, context) {
@@ -140,8 +181,8 @@ function renderUsefulDecision(logs, context) {
     root.innerHTML = `<span class="decision-kicker">今天的一个重点</span><h2>记录后再给结论</h2><p>不会只根据周期阶段猜测你的状态。</p>`;
     return;
   }
-  const choice = adviceCandidates(logs, context, log)[0], recentIds = JSON.parse(localStorage.getItem('period-recent-actions-v2') || '[]');
-  localStorage.setItem('period-recent-actions-v2', JSON.stringify([choice.id, ...recentIds.filter((id) => id !== choice.id)].slice(0, 7)));
+  const date = isoToday(), history = readDailyFocusHistory(), choice = chooseDailyFocus(adviceCandidates(logs, context, log), history, date);
+  rememberDailyFocus(date, choice.id, history);
   root.innerHTML = `<div class="decision-simple-head"><h2>${escapeWellness(choice.title)}</h2></div><p class="decision-reason">${escapeWellness(choice.reason)}</p><div class="decision-action"><small>今日行动</small><strong>${escapeWellness(choice.action)}</strong></div><p class="decision-comparison"><span>相较个人${escapeWellness(PHASE_NAMES[phaseFor(isoToday(), context)])}平均</span>${escapeWellness(todayComparison(logs, context, log))}</p>`;
 }
 
