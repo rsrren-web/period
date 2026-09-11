@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 90,
-  "updatedAt": "2026-09-11T19:48:16.211Z",
+  "revision": 91,
+  "updatedAt": "2026-09-11T19:48:28.222Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -3380,6 +3380,7 @@
       "socialEffect": "neutral",
       "painLocations": null,
       "symptomTags": [
+        "tcm:poor_appetite:yes",
         "detail:bowel:loose",
         "detail:sleep_issue:none"
       ],
@@ -3421,7 +3422,7 @@
         "period_episode_id": "system_generated"
       },
       "legacySymptoms": [],
-      "updatedAt": "2026-09-11T19:48:14.353Z"
+      "updatedAt": "2026-09-11T19:48:27.245Z"
     }
   },
   "interventionUsage": [
@@ -3720,6 +3721,7 @@
     "4a075192-e319-40ef-a199-35770fa721fc",
     "843b606e-1a36-45b5-b56d-6b3ecd39f206",
     "337e1047-7a74-4593-a42d-f0bb25f7f2ac",
-    "69de699e-595c-404a-a842-82acced20d50"
+    "69de699e-595c-404a-a842-82acced20d50",
+    "eabce346-8556-42e8-8960-6a03c86d7934"
   ]
 }
