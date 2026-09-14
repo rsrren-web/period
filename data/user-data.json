@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 93,
-  "updatedAt": "2026-09-14T01:30:09.417Z",
+  "revision": 94,
+  "updatedAt": "2026-09-14T01:30:35.148Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -3564,6 +3564,63 @@
       },
       "legacySymptoms": [],
       "updatedAt": "2026-09-14T01:30:08.203Z"
+    },
+    "2026-09-11": {
+      "modelVersion": 3,
+      "mood": null,
+      "energy": null,
+      "sleep": null,
+      "activity": null,
+      "stress": null,
+      "pain": null,
+      "primaryEmotion": null,
+      "bedtime": null,
+      "bowelMovement": null,
+      "exerciseTypes": null,
+      "socialTypes": null,
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": null,
+      "symptomTags": null,
+      "temperature": null,
+      "menstrual_status": "on_period",
+      "cycle_day": 3,
+      "cycle_day_source": "auto_calculated",
+      "cycle_day_anchor_start": "2026-09-09",
+      "flow_level": "medium",
+      "blood_color": "dark_red",
+      "clot_presence": "yes",
+      "clot_level": "small",
+      "spotting_context": null,
+      "period_episode_id": "56a6b195-583a-4902-bc34-d80260639fb2",
+      "fieldStatus": {
+        "mood": "not_recorded",
+        "energy": "not_recorded",
+        "sleep": "not_recorded",
+        "activity": "not_recorded",
+        "stress": "not_recorded",
+        "pain": "not_recorded",
+        "primaryEmotion": "not_recorded",
+        "bedtime": "not_recorded",
+        "bowelMovement": "not_recorded",
+        "exerciseTypes": "not_recorded",
+        "socialTypes": "not_recorded",
+        "socialIntensity": "not_recorded",
+        "socialEffect": "not_recorded",
+        "painLocations": "not_recorded",
+        "symptomTags": "not_recorded",
+        "temperature": "not_recorded",
+        "menstrual_status": "system_generated",
+        "cycle_day": "system_generated",
+        "flow_level": "reported",
+        "blood_color": "reported",
+        "clot_presence": "reported",
+        "clot_level": "reported",
+        "spotting_context": "not_recorded",
+        "period_episode_id": "system_generated"
+      },
+      "legacySymptoms": [],
+      "updatedAt": "2026-09-14T01:30:34.220Z"
     }
   },
   "interventionUsage": [
@@ -3865,6 +3922,7 @@
     "69de699e-595c-404a-a842-82acced20d50",
     "eabce346-8556-42e8-8960-6a03c86d7934",
     "7ace6134-de94-430b-8e5a-ce795bbd71e9",
-    "3b758430-1666-4e23-a9ca-ec9bac52af27"
+    "3b758430-1666-4e23-a9ca-ec9bac52af27",
+    "7ca24058-c2f0-4eac-ba18-f25d41c62f00"
   ]
 }
