@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 96,
-  "updatedAt": "2026-09-16T18:26:57.272Z",
+  "revision": 97,
+  "updatedAt": "2026-09-16T18:27:03.667Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -25,11 +25,11 @@
     {
       "id": "56a6b195-583a-4902-bc34-d80260639fb2",
       "start": "2026-09-09",
-      "end": "2026-09-09",
+      "end": "2026-09-16",
       "type": "period",
       "source": "本设备",
-      "status": "ongoing",
-      "updatedAt": "2026-09-10T01:52:06.814Z"
+      "status": "confirmed",
+      "updatedAt": "2026-09-16T18:27:02.769Z"
     }
   ],
   "logs": {
@@ -4060,6 +4060,7 @@
     "3b758430-1666-4e23-a9ca-ec9bac52af27",
     "7ca24058-c2f0-4eac-ba18-f25d41c62f00",
     "02f1b6cc-9de7-4b1f-9544-428f89fe34c5",
-    "3c56543e-2d12-4f80-b097-fa27b659efdd"
+    "3c56543e-2d12-4f80-b097-fa27b659efdd",
+    "cb2295a3-c867-4815-bddc-df01e81f5fa1"
   ]
 }
