@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
-  "revision": 95,
-  "updatedAt": "2026-09-16T18:26:04.756Z",
+  "revision": 96,
+  "updatedAt": "2026-09-16T18:26:57.272Z",
   "periods": [
     {
       "id": "6cc42882-c972-40fb-9e64-2a66b2da4610",
@@ -3686,6 +3686,76 @@
       },
       "legacySymptoms": [],
       "updatedAt": "2026-09-16T18:26:03.177Z"
+    },
+    "2026-09-14": {
+      "modelVersion": 3,
+      "mood": 2,
+      "energy": 2,
+      "sleep": 3,
+      "activity": null,
+      "stress": 1,
+      "pain": null,
+      "primaryEmotion": "疲倦",
+      "bedtime": "after_23",
+      "bowelMovement": false,
+      "exerciseTypes": [],
+      "socialTypes": [],
+      "socialIntensity": null,
+      "socialEffect": null,
+      "painLocations": [],
+      "symptomTags": [
+        "tcm:cold_sensation:no",
+        "tcm:warmth_relief:no",
+        "tcm:nausea:no",
+        "tcm:diarrhea:no",
+        "tcm:bloating:no",
+        "tcm:poor_appetite:no",
+        "tcm:body_heaviness:no",
+        "detail:pain_nature:none",
+        "detail:pain_response:none",
+        "detail:bowel:not_passed",
+        "detail:body_sense:none",
+        "detail:sleep_issue:none"
+      ],
+      "temperature": null,
+      "menstrual_status": "on_period",
+      "cycle_day": 6,
+      "cycle_day_source": "auto_calculated",
+      "cycle_day_anchor_start": "2026-09-09",
+      "flow_level": "light",
+      "blood_color": "dark_red",
+      "clot_presence": "yes",
+      "clot_level": "small",
+      "spotting_context": null,
+      "period_episode_id": "56a6b195-583a-4902-bc34-d80260639fb2",
+      "fieldStatus": {
+        "mood": "reported",
+        "energy": "reported",
+        "sleep": "reported",
+        "activity": "not_recorded",
+        "stress": "reported",
+        "pain": "not_recorded",
+        "primaryEmotion": "reported",
+        "bedtime": "reported",
+        "bowelMovement": "reported",
+        "exerciseTypes": "reported",
+        "socialTypes": "reported",
+        "socialIntensity": "not_recorded",
+        "socialEffect": "not_recorded",
+        "painLocations": "reported",
+        "symptomTags": "reported",
+        "temperature": "not_recorded",
+        "menstrual_status": "system_generated",
+        "cycle_day": "system_generated",
+        "flow_level": "reported",
+        "blood_color": "reported",
+        "clot_presence": "reported",
+        "clot_level": "reported",
+        "spotting_context": "not_recorded",
+        "period_episode_id": "system_generated"
+      },
+      "legacySymptoms": [],
+      "updatedAt": "2026-09-16T18:26:56.020Z"
     }
   },
   "interventionUsage": [
@@ -3989,6 +4059,7 @@
     "7ace6134-de94-430b-8e5a-ce795bbd71e9",
     "3b758430-1666-4e23-a9ca-ec9bac52af27",
     "7ca24058-c2f0-4eac-ba18-f25d41c62f00",
-    "02f1b6cc-9de7-4b1f-9544-428f89fe34c5"
+    "02f1b6cc-9de7-4b1f-9544-428f89fe34c5",
+    "3c56543e-2d12-4f80-b097-fa27b659efdd"
   ]
 }
